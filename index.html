@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>에듀이노 · 이미지 학습 추론 체험</title>
+
+<!-- TensorFlow.js + MobileNet (전이학습용 특징 추출기) -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
+
+<!-- 폰트 -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Gowun+Dodum&display=swap" rel="stylesheet" />
+
+<style>
+  :root {
+    --bg: #0f1419;
+    --panel: #1a2129;
+    --panel-2: #222b35;
+    --line: #2e3a47;
+    --ink: #e8eef4;
+    --ink-dim: #8a99a8;
+    --accent: #34e3b0;     /* 라임 시안 — 학습/활성 */
+    --accent-2: #ffb454;   /* 코랄 옐로 — 추론/강조 */
+    --danger: #ff6b6b;
+    --radius: 14px;
+    --mono: 'Space Grotesk', sans-serif;
+    --kr: 'Gowun Dodum', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--kr);
+    background:
+      radial-gradient(900px 600px at 85% -10%, rgba(52,227,176,0.10), transparent 60%),
+      radial-gradient(700px 500px at -5% 110%, rgba(255,180,84,0.08), transparent 60%),
+      var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 28px 22px 60px;
+  }
+
+  /* ── 헤더 ─────────────────────────── */
+  header {
+    max-width: 1180px; margin: 0 auto 22px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    flex-wrap: wrap; gap: 14px;
+  }
+  .brand h1 {
+    font-family: var(--mono); font-weight: 700; font-size: 26px; letter-spacing: -0.5px;
+  }
+  .brand h1 span { color: var(--accent); }
+  .brand p { color: var(--ink-dim); font-size: 14px; margin-top: 4px; }
+
+  #status-pill {
+    font-family: var(--mono); font-size: 13px; font-weight: 500;
+    padding: 8px 16px; border-radius: 999px;
+    background: var(--panel-2); border: 1px solid var(--line);
+    display: flex; align-items: center; gap: 8px;
+  }
+  #status-pill::before {
+    content: ''; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--ink-dim); box-shadow: 0 0 8px currentColor;
+  }
+  #status-pill.busy::before { background: var(--accent-2); animation: pulse 1s infinite; }
+  #status-pill.ready::before { background: var(--accent); }
+  @keyframes pulse { 50% { opacity: .35; } }
+
+  /* ── 스텝 인디케이터 ───────────────── */
+  .steps {
+    max-width: 1180px; margin: 0 auto 18px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+  }
+  .step {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 16px; display: flex; align-items: center; gap: 12px;
+    transition: .25s;
+  }
+  .step .n {
+    font-family: var(--mono); font-weight: 700; font-size: 15px;
+    width: 30px; height: 30px; border-radius: 8px; flex: 0 0 auto;
+    display: grid; place-items: center;
+    background: var(--panel-2); color: var(--ink-dim); border: 1px solid var(--line);
+  }
+  .step .t { font-size: 14px; }
+  .step .t small { display: block; color: var(--ink-dim); font-size: 11px; margin-top: 2px; }
+  .step.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .step.active .n { background: var(--accent); color: #06281f; border-color: var(--accent); }
+
+  /* ── 메인 레이아웃 ─────────────────── */
+  main {
+    max-width: 1180px; margin: 0 auto;
+    display: grid; grid-template-columns: 320px 1fr 340px; gap: 16px;
+  }
+  @media (max-width: 1080px) { main { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 18px;
+  }
+  .card h2 {
+    font-family: var(--mono); font-size: 13px; font-weight: 700; letter-spacing: .5px;
+    text-transform: uppercase; color: var(--ink-dim); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card h2 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+
+  /* ── 클래스 패널 (①) ──────────────── */
+  .class-item {
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px; margin-bottom: 10px; transition: .2s;
+  }
+  .class-item.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .class-row { display: flex; align-items: center; gap: 8px; }
+  .class-color { width: 12px; height: 12px; border-radius: 4px; flex: 0 0 auto; }
+  .class-item input.name {
+    background: transparent; border: none; color: var(--ink);
+    font-family: var(--kr); font-size: 15px; flex: 1; outline: none; min-width: 0;
+  }
+  .class-item .count {
+    font-family: var(--mono); font-size: 12px; color: var(--accent);
+    background: rgba(52,227,176,.1); padding: 2px 8px; border-radius: 6px;
+  }
+  .class-item .del {
+    background: none; border: none; color: var(--ink-dim); cursor: pointer;
+    font-size: 16px; padding: 0 2px; line-height: 1;
+  }
+  .class-item .del:hover { color: var(--danger); }
+  .thumbs { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
+  .thumbs img { width: 30px; height: 30px; object-fit: cover; border-radius: 5px; border: 1px solid var(--line); }
+  .thumbs .more { font-size: 11px; color: var(--ink-dim); align-self: center; font-family: var(--mono); }
+
+  /* ── 버튼 ─────────────────────────── */
+  button.btn {
+    font-family: var(--kr); font-size: 14px; cursor: pointer;
+    border-radius: 10px; padding: 11px 16px; border: 1px solid var(--line);
+    background: var(--panel-2); color: var(--ink); transition: .15s; width: 100%;
+  }
+  button.btn:hover:not(:disabled) { border-color: var(--accent); }
+  button.btn:disabled { opacity: .4; cursor: not-allowed; }
+  button.btn.primary { background: var(--accent); color: #06281f; border-color: var(--accent); font-weight: 700; }
+  button.btn.primary:hover:not(:disabled) { filter: brightness(1.08); }
+  button.btn.amber { background: var(--accent-2); color: #3a2606; border-color: var(--accent-2); font-weight: 700; }
+  button.btn.ghost { background: transparent; }
+
+  /* ── 카메라 (②) ───────────────────── */
+  .stage { display: flex; flex-direction: column; gap: 14px; }
+  .video-wrap {
+    position: relative; border-radius: 12px; overflow: hidden;
+    background: #000; aspect-ratio: 4/3; border: 1px solid var(--line);
+  }
+  .video-wrap video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+  .video-overlay {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    color: var(--ink-dim); font-size: 14px; text-align: center; padding: 20px;
+  }
+  .cap-target {
+    position: absolute; top: 10px; left: 10px;
+    font-family: var(--mono); font-size: 12px; padding: 5px 10px; border-radius: 8px;
+    background: rgba(15,20,25,.8); border: 1px solid var(--line); backdrop-filter: blur(4px);
+  }
+  .capture-row { display: flex; gap: 10px; }
+  .capture-row .btn { flex: 1; }
+
+  /* ── 학습 (③) ─────────────────────── */
+  .train-meta { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .train-meta label { font-size: 13px; color: var(--ink-dim); }
+  .train-meta input {
+    width: 64px; background: var(--panel-2); border: 1px solid var(--line); color: var(--ink);
+    border-radius: 8px; padding: 7px 9px; font-family: var(--mono); text-align: center;
+  }
+  .progress { height: 8px; background: var(--panel-2); border-radius: 999px; overflow: hidden; margin: 12px 0 8px; }
+  .progress > div { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .2s; }
+  .metrics { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 12px; color: var(--ink-dim); }
+  .metrics b { color: var(--ink); }
+
+  /* ── 추론 (④) ─────────────────────── */
+  .top-pred {
+    text-align: center; padding: 16px; border-radius: 12px; margin-bottom: 14px;
+    background: var(--panel-2); border: 1px solid var(--line);
+  }
+  .top-pred .label { font-size: 22px; font-weight: 700; }
+  .top-pred .conf { font-family: var(--mono); font-size: 13px; color: var(--accent-2); margin-top: 4px; }
+  .top-pred.idle .label { color: var(--ink-dim); font-size: 16px; font-weight: 400; }
+
+  .bar-row { margin-bottom: 11px; }
+  .bar-row .bl { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+  .bar-row .bl .pct { font-family: var(--mono); color: var(--ink-dim); }
+  .bar-track { height: 9px; background: var(--panel-2); border-radius: 999px; overflow: hidden; }
+  .bar-track > div { height: 100%; width: 0%; border-radius: 999px; transition: width .15s; }
+
+  .hint { color: var(--ink-dim); font-size: 12.5px; line-height: 1.6; margin-top: 10px; }
+  .mt { margin-top: 12px; }
+  footer { max-width: 1180px; margin: 26px auto 0; color: var(--ink-dim); font-size: 12px; text-align: center; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>EDUINO <span>이미지 학습·추론</span> 체험</h1>
+    <p>직접 데이터를 모으고 → AI를 학습시키고 → 결과를 추론합니다 (지도학습 · 이미지 분류)</p>
+  </div>
+  <div id="status-pill">모델 로딩 중…</div>
+</header>
+
+<div class="steps">
+  <div class="step active" data-step="1"><div class="n">1</div><div class="t">클래스 만들기<small>분류할 종류 정의</small></div></div>
+  <div class="step" data-step="2"><div class="n">2</div><div class="t">데이터 수집<small>카메라로 촬영</small></div></div>
+  <div class="step" data-step="3"><div class="n">3</div><div class="t">학습하기<small>모델 훈련</small></div></div>
+  <div class="step" data-step="4"><div class="n">4</div><div class="t">추론하기<small>실시간 분류</small></div></div>
+</div>
+
+<main>
+  <!-- ① 클래스 -->
+  <section class="card">
+    <h2><span class="dot"></span> ① 클래스</h2>
+    <div id="class-list"></div>
+    <button class="btn ghost mt" id="add-class">+ 클래스 추가</button>
+    <p class="hint">분류하고 싶은 종류를 추가하세요. (예: 가위 / 바위 / 보) 이름은 눌러서 바꿀 수 있습니다.</p>
+  </section>
+
+  <!-- ② 카메라 + ③ 학습 -->
+  <section class="stage">
+    <div class="card">
+      <h2><span class="dot"></span> ② 카메라 · 데이터 수집</h2>
+      <div class="video-wrap">
+        <video id="webcam" autoplay playsinline muted></video>
+        <div class="cap-target" id="cap-target">수집 대상: —</div>
+        <div class="video-overlay" id="cam-overlay">카메라를 켜면 미리보기가 표시됩니다.</div>
+      </div>
+      <div class="capture-row mt">
+        <button class="btn" id="cam-toggle">카메라 켜기</button>
+        <button class="btn primary" id="capture" disabled>📸 촬영 (꾹 누르면 연속)</button>
+      </div>
+      <p class="hint">왼쪽에서 클래스를 선택한 뒤 촬영하세요. 각도·거리를 바꿔가며 클래스당 20장 이상 모으면 정확해집니다.</p>
+    </div>
+
+    <div class="card">
+      <h2><span class="dot"></span> ③ 학습</h2>
+      <div class="train-meta">
+        <label>학습 횟수(epoch)</label>
+        <input type="number" id="epochs" value="30" min="5" max="100" />
+        <button class="btn primary" id="train" disabled style="flex:1">모델 학습 시작</button>
+      </div>
+      <div class="progress"><div id="train-bar"></div></div>
+      <div class="metrics">
+        <span>진행 <b id="m-epoch">0 / 0</b></span>
+        <span>손실 <b id="m-loss">—</b></span>
+        <span>정확도 <b id="m-acc">—</b></span>
+      </div>
+      <p class="hint" id="train-hint">클래스 2개 이상 + 각 클래스에 데이터가 있어야 학습할 수 있습니다.</p>
+    </div>
+  </section>
+
+  <!-- ④ 추론 -->
+  <section class="card">
+    <h2><span class="dot"></span> ④ 추론 결과</h2>
+    <div class="top-pred idle" id="top-pred"><div class="label">아직 학습 전입니다</div><div class="conf"></div></div>
+    <div id="bars"></div>
+    <button class="btn amber mt" id="infer-toggle" disabled>추론 시작</button>
+    <p class="hint">학습이 끝나면 실시간으로 카메라 영상을 분류합니다. 각 막대는 그 클래스일 확률(신뢰도)입니다.</p>
+  </section>
+</main>
+
+<footer>EDUINO ML Trainer · 브라우저에서 TensorFlow.js(MobileNet 전이학습)로 동작 · 데이터는 기기 밖으로 나가지 않습니다.</footer>
+
+<script>
+/* =========================================================================
+   에듀이노 이미지 학습·추론 체험
+   - MobileNet(특징 추출) + 분류 헤드(직접 학습) = 전이학습
+   - 워크플로우: 클래스 정의 → 카메라 데이터 수집 → 학습 → 실시간 추론
+   ========================================================================= */
+
+const PALETTE = ['#34e3b0', '#ffb454', '#6ab0ff', '#ff6b9d', '#c084fc', '#ffd93d', '#4ade80', '#fb7185'];
+
+const state = {
+  classes: [],          // { id, name, color, embeddings: number[][], thumbs: string[] }
+  selectedId: null,
+  mobilenet: null,      // 특징 추출기
+  head: null,           // 학습된 분류 헤드(tf.Sequential)
+  stream: null,
+  capturing: false,
+  inferring: false,
+  trained: false,
+};
+let classSeq = 0;
+
+const $ = (id) => document.getElementById(id);
+const els = {
+  status: $('status-pill'), classList: $('class-list'), addClass: $('add-class'),
+  video: $('webcam'), camOverlay: $('cam-overlay'), camToggle: $('cam-toggle'),
+  capture: $('capture'), capTarget: $('cap-target'),
+  epochs: $('epochs'), train: $('train'), trainBar: $('train-bar'), trainHint: $('train-hint'),
+  mEpoch: $('m-epoch'), mLoss: $('m-loss'), mAcc: $('m-acc'),
+  topPred: $('top-pred'), bars: $('bars'), inferToggle: $('infer-toggle'),
+};
+
+function setStatus(text, kind) {
+  els.status.textContent = text;
+  els.status.className = kind || '';
+}
+function setActiveStep(n) {
+  document.querySelectorAll('.step').forEach((s) =>
+    s.classList.toggle('active', +s.dataset.step === n));
+}
+
+/* ── 모델 로드 ─────────────────────── */
+async function init() {
+  try {
+    setStatus('모델 로딩 중…', 'busy');
+    state.mobilenet = await mobilenet.load({ version: 2, alpha: 1.0 });
+    setStatus('준비 완료', 'ready');
+  } catch (e) {
+    console.error(e);
+    setStatus('모델 로드 실패 — 인터넷 연결 확인', '');
+  }
+  // 기본 클래스 2개로 시작
+  addClass('클래스 1'); addClass('클래스 2');
+}
+
+/* ── 클래스 관리 (①) ──────────────── */
+function addClass(name) {
+  const id = ++classSeq;
+  const color = PALETTE[(id - 1) % PALETTE.length];
+  state.classes.push({ id, name: name || ('클래스 ' + id), color, embeddings: [], thumbs: [] });
+  if (state.selectedId === null) state.selectedId = id;
+  renderClasses(); renderBars(); refreshGuards();
+}
+function removeClass(id) {
+  state.classes = state.classes.filter((c) => c.id !== id);
+  if (state.selectedId === id) state.selectedId = state.classes[0]?.id ?? null;
+  state.trained = false; state.head = null;
+  renderClasses(); renderBars(); refreshGuards(); resetTopPred();
+}
+function selectClass(id) { state.selectedId = id; renderClasses(); }
+
+function renderClasses() {
+  els.classList.innerHTML = '';
+  state.classes.forEach((c) => {
+    const div = document.createElement('div');
+    div.className = 'class-item' + (c.id === state.selectedId ? ' selected' : '');
+    div.onclick = () => selectClass(c.id);
+
+    const row = document.createElement('div');
+    row.className = 'class-row';
+    row.innerHTML = `<span class="class-color" style="background:${c.color}"></span>`;
+
+    const input = document.createElement('input');
+    input.className = 'name'; input.value = c.name;
+    input.onclick = (e) => e.stopPropagation();
+    input.oninput = () => { c.name = input.value || c.name; renderBars(); };
+
+    const count = document.createElement('span');
+    count.className = 'count'; count.textContent = c.embeddings.length + '장';
+
+    const del = document.createElement('button');
+    del.className = 'del'; del.textContent = '✕';
+    del.title = '삭제';
+    del.onclick = (e) => { e.stopPropagation(); removeClass(c.id); };
+
+    row.append(input, count, del);
+    div.append(row);
+
+    if (c.thumbs.length) {
+      const t = document.createElement('div'); t.className = 'thumbs';
+      c.thumbs.slice(-8).forEach((src) => {
+        const im = document.createElement('img'); im.src = src; t.append(im);
+      });
+      if (c.embeddings.length > 8) {
+        const more = document.createElement('span'); more.className = 'more';
+        more.textContent = '+' + (c.embeddings.length - 8); t.append(more);
+      }
+      div.append(t);
+    }
+    els.classList.append(div);
+  });
+  const sel = state.classes.find((c) => c.id === state.selectedId);
+  els.capTarget.textContent = '수집 대상: ' + (sel ? sel.name : '—');
+}
+
+/* ── 카메라 (②) ───────────────────── */
+async function toggleCam() {
+  if (state.stream) {
+    state.stream.getTracks().forEach((t) => t.stop());
+    state.stream = null; els.video.srcObject = null;
+    els.camOverlay.style.display = 'grid';
+    els.camToggle.textContent = '카메라 켜기';
+    els.capture.disabled = true; stopInfer();
+    return;
+  }
+  try {
+    state.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+    els.video.srcObject = state.stream;
+    els.camOverlay.style.display = 'none';
+    els.camToggle.textContent = '카메라 끄기';
+    els.capture.disabled = false;
+    setActiveStep(2);
+  } catch (e) {
+    console.error(e);
+    els.camOverlay.textContent = '카메라 접근이 거부되었습니다. 브라우저 권한을 확인하세요.';
+  }
+}
+
+/* 현재 프레임 → MobileNet 임베딩 + 썸네일 저장 */
+function captureSample() {
+  const sel = state.classes.find((c) => c.id === state.selectedId);
+  if (!sel || !state.mobilenet || !state.stream) return;
+
+  const emb = tf.tidy(() => state.mobilenet.infer(els.video, true).flatten());
+  const arr = Array.from(emb.dataSync());
+  emb.dispose();
+  sel.embeddings.push(arr);
+
+  // 썸네일
+  const cv = document.createElement('canvas');
+  cv.width = 64; cv.height = 48;
+  cv.getContext('2d').drawImage(els.video, 0, 0, 64, 48);
+  sel.thumbs.push(cv.toDataURL('image/jpeg', 0.6));
+
+  renderClasses(); refreshGuards();
+}
+
+/* ── 학습 (③) ─────────────────────── */
+async function train() {
+  const usable = state.classes.filter((c) => c.embeddings.length > 0);
+  if (usable.length < 2) return;
+
+  setStatus('학습 중…', 'busy'); setActiveStep(3);
+  els.train.disabled = true; els.inferToggle.disabled = true; stopInfer();
+
+  // 데이터셋 구성
+  const xsArr = [], ysArr = [];
+  usable.forEach((c, idx) => {
+    c.embeddings.forEach((e) => {
+      xsArr.push(e);
+      const oh = new Array(usable.length).fill(0); oh[idx] = 1; ysArr.push(oh);
+    });
+  });
+  const xs = tf.tensor2d(xsArr);
+  const ys = tf.tensor2d(ysArr);
+  const featDim = xsArr[0].length;
+
+  // 분류 헤드 정의
+  if (state.head) state.head.dispose();
+  state.head = tf.sequential();
+  state.head.add(tf.layers.dense({ inputShape: [featDim], units: 100, activation: 'relu' }));
+  state.head.add(tf.layers.dropout({ rate: 0.2 }));
+  state.head.add(tf.layers.dense({ units: usable.length, activation: 'softmax' }));
+  state.head.compile({ optimizer: tf.train.adam(0.001), loss: 'categoricalCrossentropy', metrics: ['accuracy'] });
+  state.head._classNames = usable.map((c) => ({ name: c.name, color: c.color }));
+
+  const epochs = Math.max(5, Math.min(100, +els.epochs.value || 30));
+  await state.head.fit(xs, ys, {
+    epochs, shuffle: true, batchSize: Math.min(16, xsArr.length),
+    callbacks: {
+      onEpochEnd: (ep, logs) => {
+        const p = Math.round(((ep + 1) / epochs) * 100);
+        els.trainBar.style.width = p + '%';
+        els.mEpoch.textContent = (ep + 1) + ' / ' + epochs;
+        els.mLoss.textContent = logs.loss.toFixed(3);
+        const acc = logs.acc ?? logs.accuracy;
+        els.mAcc.textContent = acc != null ? Math.round(acc * 100) + '%' : '—';
+      },
+    },
+  });
+
+  xs.dispose(); ys.dispose();
+  state.trained = true;
+  setStatus('학습 완료', 'ready');
+  els.train.disabled = false;
+  els.inferToggle.disabled = !state.stream;
+  els.trainHint.textContent = '학습 완료! ④에서 [추론 시작]을 눌러 실시간 분류를 확인하세요.';
+  renderBars(); setActiveStep(4);
+}
+
+/* ── 추론 (④) ─────────────────────── */
+function renderBars() {
+  const names = state.head?._classNames || state.classes.map((c) => ({ name: c.name, color: c.color }));
+  els.bars.innerHTML = '';
+  names.forEach((c, i) => {
+    const row = document.createElement('div'); row.className = 'bar-row';
+    row.innerHTML =
+      `<div class="bl"><span>${c.name}</span><span class="pct" id="pct-${i}">0%</span></div>` +
+      `<div class="bar-track"><div id="bar-${i}" style="background:${c.color}"></div></div>`;
+    els.bars.append(row);
+  });
+}
+function resetTopPred() {
+  els.topPred.className = 'top-pred idle';
+  els.topPred.querySelector('.label').textContent = '아직 학습 전입니다';
+  els.topPred.querySelector('.conf').textContent = '';
+}
+
+async function inferLoop() {
+  if (!state.inferring || !state.head || !state.stream) return;
+  const probs = tf.tidy(() => {
+    const feat = state.mobilenet.infer(els.video, true);
+    return state.head.predict(feat).dataSync();
+  });
+  const names = state.head._classNames;
+  let topI = 0;
+  probs.forEach((p, i) => { if (p > probs[topI]) topI = i; });
+
+  names.forEach((c, i) => {
+    const pct = Math.round(probs[i] * 100);
+    const bar = $('bar-' + i), lab = $('pct-' + i);
+    if (bar) bar.style.width = pct + '%';
+    if (lab) lab.textContent = pct + '%';
+  });
+  els.topPred.className = 'top-pred';
+  els.topPred.querySelector('.label').textContent = names[topI].name;
+  els.topPred.querySelector('.label').style.color = names[topI].color;
+  els.topPred.querySelector('.conf').textContent = '신뢰도 ' + Math.round(probs[topI] * 100) + '%';
+
+  requestAnimationFrame(inferLoop);
+}
+function startInfer() {
+  if (!state.trained || !state.stream) return;
+  state.inferring = true; els.inferToggle.textContent = '추론 멈춤';
+  els.inferToggle.classList.remove('amber');
+  inferLoop();
+}
+function stopInfer() {
+  state.inferring = false;
+  els.inferToggle.textContent = '추론 시작';
+  els.inferToggle.classList.add('amber');
+}
+function toggleInfer() { state.inferring ? stopInfer() : startInfer(); }
+
+/* ── 가드(버튼 활성화 조건) ───────── */
+function refreshGuards() {
+  const withData = state.classes.filter((c) => c.embeddings.length > 0);
+  const canTrain = state.classes.length >= 2 && withData.length >= 2;
+  els.train.disabled = !canTrain;
+  if (canTrain && !state.trained) {
+    els.trainHint.textContent = '준비 완료 — [모델 학습 시작]을 누르세요.';
+  }
+}
+
+/* ── 이벤트 바인딩 ─────────────────── */
+els.addClass.onclick = () => addClass();
+els.camToggle.onclick = toggleCam;
+els.train.onclick = train;
+els.inferToggle.onclick = toggleInfer;
+
+// 촬영: 클릭 1장 / 꾹 누르면 연속 캡처
+let holdTimer = null;
+function startHold() {
+  if (els.capture.disabled) return;
+  captureSample();
+  holdTimer = setInterval(captureSample, 120);
+}
+function endHold() { clearInterval(holdTimer); holdTimer = null; }
+els.capture.addEventListener('mousedown', startHold);
+els.capture.addEventListener('touchstart', (e) => { e.preventDefault(); startHold(); });
+window.addEventListener('mouseup', endHold);
+window.addEventListener('touchend', endHold);
+
+init();
+</script>
+</body>
+</html>
