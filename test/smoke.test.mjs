@@ -52,6 +52,65 @@ test('학습 곡선(pushChartPoint)이 polyline 좌표를 누적해 그린다', 
   assert.match(acc, /^[\d.]+,[\d.]+\s+[\d.]+,[\d.]+$/);
 });
 
+// 이미지 탭에서 두 클래스에 임베딩을 수집하고 학습을 돌리는 헬퍼
+async function trainImageTab(window, doc, { epochs = 5, perClass = 3 } = {}) {
+  await window.toggleCam();
+  const items = doc.querySelectorAll('#class-list .class-item');
+  items[0].click();
+  for (let i = 0; i < perClass; i++) window.captureSample();
+  items[1].click();
+  for (let i = 0; i < perClass; i++) window.captureSample();
+  doc.getElementById('epochs').value = String(epochs);
+  await window.train();
+  await new Promise((r) => setTimeout(r, 0)); // 혼동행렬 마이크로태스크 정리
+}
+
+test('학습 흐름: head 생성·fit·학습곡선·혼동행렬이 동작한다 (이미지 탭)', async () => {
+  const { window, doc, errors } = await loadApp();
+  await trainImageTab(window, doc, { epochs: 5 });
+  assert.deepEqual(errors, [], '학습 중 오류: ' + errors.map(String).join(' | '));
+  // 학습 완료 안내
+  assert.match(doc.getElementById('train-hint').textContent, /학습 완료/);
+  // 학습곡선 5 epoch
+  assert.equal(doc.getElementById('chart-acc').getAttribute('points').trim().split(/\s+/).length, 5);
+});
+
+test('혼동행렬이 클래스 수(2x2) 만큼 데이터 셀을 렌더한다', async () => {
+  const { window, doc } = await loadApp();
+  await trainImageTab(window, doc, { epochs: 5 });
+  const cells = doc.querySelectorAll('#confusion-table-wrap tbody td').length;
+  assert.equal(cells, 4, '2x2 = 4개 데이터 셀');
+  assert.equal(doc.getElementById('confusion-box').classList.contains('on'), true);
+});
+
+test('학습 흐름(동작 탭): 공통 trainHead 경로가 동작한다', async () => {
+  const { window, doc, errors } = await loadApp();
+  doc.querySelector('.main-tab[data-tab="supervised"]').click();
+  await window.poseToggleCam();
+  const items = doc.querySelectorAll('#p-class-list .class-item');
+  items[0].click();
+  for (let i = 0; i < 3; i++) await window.poseCaptureSample();
+  items[1].click();
+  for (let i = 0; i < 3; i++) await window.poseCaptureSample();
+  doc.getElementById('p-epochs').value = '5';
+  await window.poseTrain();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(errors, [], '동작 학습 중 오류: ' + errors.map(String).join(' | '));
+  assert.match(doc.getElementById('p-train-hint').textContent, /학습 완료/);
+  assert.equal(doc.querySelectorAll('#p-confusion-table-wrap tbody td').length, 4);
+});
+
+test('추론 1틱이 막대와 최상위 예측을 갱신한다 (이미지 탭)', async () => {
+  const { window, doc } = await loadApp();
+  await trainImageTab(window, doc, { epochs: 5 });
+  window.startInfer(); // RAF 는 stub 이라 inferLoop 1회만 실행
+  await new Promise((r) => setTimeout(r, 0));
+  // 막대 퍼센트가 채워졌는지(0% 가 아닌 값 또는 갱신 흔적)
+  assert.ok(doc.getElementById('pct-0').textContent.endsWith('%'));
+  const tpName = doc.querySelector('#top-pred .tp-name').textContent;
+  assert.ok(tpName.length > 0, '최상위 예측 이름이 표시됨');
+});
+
 test('회귀: 카메라 켠 상태에서 탭 전환 시 스트림이 정지된다 (stopAllActivity)', async () => {
   const { window, doc } = await loadApp();
   await window.toggleCam(); // 이미지 탭 카메라 시작 → 가짜 스트림 생성

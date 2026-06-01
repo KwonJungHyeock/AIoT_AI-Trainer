@@ -1501,11 +1501,14 @@ function captureSample() {
 }
 
 /* ── 학습 ───────────────────────────────────────────── */
-async function train() {
-  const usable = state.classes.filter(c => c.embeddings.length > 0);
+/* 분류 헤드 학습 공통 코어 — 이미지/동작 탭이 아키텍처·기본 epochs·UI 요소·
+   상태 메시지만 다르고 학습 절차(원핫 인코딩 → 헤드 구성 → fit → 혼동행렬)는
+   동일하다. 탭별 차이는 cfg 콜백으로 주입한다. */
+async function trainHead(cfg) {
+  const usable = cfg.classes.filter(c => c.embeddings.length > 0);
   if (usable.length < 2) return;
-  setStatus('TRAINING', 'busy');
-  els.train.disabled = true; els.inferToggle.disabled = true; stopInfer();
+  cfg.onStart();
+  cfg.ui.train.disabled = true; cfg.ui.inferToggle.disabled = true;
 
   const xsArr = [], ysArr = [];
   usable.forEach((c, idx) => {
@@ -1516,46 +1519,63 @@ async function train() {
   });
   const xs = tf.tensor2d(xsArr);
   const ys = tf.tensor2d(ysArr);
-  const featDim = xsArr[0].length;
 
-  if (state.head) state.head.dispose();
-  state.head = tf.sequential();
-  state.head.add(tf.layers.dense({ inputShape: [featDim], units: 100, activation: 'relu' }));
-  state.head.add(tf.layers.dropout({ rate: 0.2 }));
-  state.head.add(tf.layers.dense({ units: usable.length, activation: 'softmax' }));
-  state.head.compile({ optimizer: tf.train.adam(0.001), loss: 'categoricalCrossentropy', metrics: ['accuracy'] });
-  state.head._classNames = usable.map(c => ({ name: c.name, color: c.color }));
+  cfg.disposeHead();
+  const head = tf.sequential();
+  head.add(tf.layers.dense({ inputShape: [cfg.featDim ?? xsArr[0].length], units: cfg.hiddenUnits, activation: 'relu' }));
+  head.add(tf.layers.dropout({ rate: 0.2 }));
+  head.add(tf.layers.dense({ units: usable.length, activation: 'softmax' }));
+  head.compile({ optimizer: tf.train.adam(0.001), loss: 'categoricalCrossentropy', metrics: ['accuracy'] });
+  head._classNames = usable.map(c => ({ name: c.name, color: c.color }));
+  cfg.setHead(head);
 
-  const epochs = Math.max(5, Math.min(100, +els.epochs.value || 30));
+  const epochs = Math.max(5, Math.min(100, +cfg.ui.epochs.value || cfg.defaultEpochs));
+  cfg.resetChart();
+  cfg.ui.chartBox.classList.add('on');
+  cfg.ui.confBox.classList.remove('on');
 
-  resetChart();
-  document.getElementById('train-chart-box').classList.add('on');
-  document.getElementById('confusion-box').classList.remove('on');
-
-  await state.head.fit(xs, ys, {
+  await head.fit(xs, ys, {
     epochs, shuffle: true, batchSize: Math.min(16, xsArr.length),
     callbacks: {
       onEpochEnd: (ep, logs) => {
-        const p = Math.round(((ep + 1) / epochs) * 100);
-        els.trainBar.style.width = p + '%';
-        els.mEpoch.textContent = (ep + 1) + ' / ' + epochs;
-        els.mLoss.textContent = logs.loss.toFixed(3);
+        cfg.ui.trainBar.style.width = Math.round(((ep + 1) / epochs) * 100) + '%';
+        cfg.ui.mEpoch.textContent = (ep + 1) + ' / ' + epochs;
+        cfg.ui.mLoss.textContent = logs.loss.toFixed(3);
         const acc = logs.acc ?? logs.accuracy;
-        els.mAcc.textContent = acc != null ? Math.round(acc * 100) + '%' : '—';
-        pushChartPoint(ep + 1, epochs, logs.loss, acc);
+        cfg.ui.mAcc.textContent = acc != null ? Math.round(acc * 100) + '%' : '—';
+        cfg.pushPoint(ep + 1, epochs, logs.loss, acc);
       },
     },
   });
 
-  buildConfusionMatrix(xs, ys, usable);
+  await cfg.buildConf(xs, ys, usable);
   xs.dispose(); ys.dispose();
 
-  state.trained = true;
-  setStatus('TRAINED · READY', 'ready');
-  els.train.disabled = false;
-  els.inferToggle.disabled = !state.stream;
-  els.trainHint.textContent = '학습 완료. 우측 [추론 시작]을 누르세요.';
-  renderBars(); refresh();
+  cfg.ui.train.disabled = false;
+  cfg.ui.trainHint.textContent = '학습 완료. 우측 [추론 시작]을 누르세요.';
+  cfg.onDone();
+}
+
+async function train() {
+  await trainHead({
+    classes: state.classes,
+    ui: {
+      train: els.train, inferToggle: els.inferToggle, epochs: els.epochs,
+      trainBar: els.trainBar, mEpoch: els.mEpoch, mLoss: els.mLoss, mAcc: els.mAcc,
+      chartBox: $('train-chart-box'), confBox: $('confusion-box'), trainHint: els.trainHint,
+    },
+    hiddenUnits: 100, defaultEpochs: 30,
+    onStart: () => { setStatus('TRAINING', 'busy'); stopInfer(); },
+    disposeHead: () => { if (state.head) state.head.dispose(); },
+    setHead: (h) => { state.head = h; },
+    resetChart, pushPoint: pushChartPoint, buildConf: buildConfusionMatrix,
+    onDone: () => {
+      state.trained = true;
+      setStatus('TRAINED · READY', 'ready');
+      els.inferToggle.disabled = !state.stream;
+      renderBars(); refresh();
+    },
+  });
 }
 
 /* ── 학습 곡선 (SVG) ─────────────────────────────────── */
@@ -1586,11 +1606,13 @@ function pushChartPoint(ep, totalEp, loss, acc) {
 }
 
 /* ── 혼동 행렬 (학습 데이터 self-prediction) ──────────── */
-async function buildConfusionMatrix(xs, ys, usable) {
+/* 공통 로직 — head 와 대상 엘리먼트만 탭별로 다르다. xs/ys 가 dispose 되기 전에
+   호출부에서 반드시 await 해야 한다(예측·정답 텐서를 비동기로 읽으므로). */
+async function buildConfusion(head, xs, ys, usable, wrapEl, boxEl) {
   const n = usable.length;
   const mat = Array.from({ length: n }, () => new Array(n).fill(0));
 
-  const preds = state.head.predict(xs);
+  const preds = head.predict(xs);
   const predArr = await preds.array();
   const trueArr = await ys.array();
   preds.dispose();
@@ -1601,7 +1623,6 @@ async function buildConfusionMatrix(xs, ys, usable) {
     mat[truth][pred]++;
   }
 
-  const wrap = document.getElementById('confusion-table-wrap');
   let html = '<table class="confusion-table"><thead><tr><th></th>';
   usable.forEach(c => {
     html += `<th title="${c.name}">${c.name.slice(0, 6)}</th>`;
@@ -1617,8 +1638,12 @@ async function buildConfusionMatrix(xs, ys, usable) {
     html += '</tr>';
   }
   html += '</tbody></table>';
-  wrap.innerHTML = html;
-  document.getElementById('confusion-box').classList.add('on');
+  wrapEl.innerHTML = html;
+  boxEl.classList.add('on');
+}
+
+function buildConfusionMatrix(xs, ys, usable) {
+  return buildConfusion(state.head, xs, ys, usable, $('confusion-table-wrap'), $('confusion-box'));
 }
 
 /* ── 갤러리 (클래스 썸네일 큰 화면) ───────────────────── */
@@ -1857,54 +1882,24 @@ function poseStartHold() {
 function poseEndHold() { clearInterval(poseHoldTimer); poseHoldTimer = null; }
 
 async function poseTrain() {
-  const usable = pose.classes.filter(c => c.embeddings.length > 0);
-  if (usable.length < 2) return;
-  pEls.train.disabled = true; pEls.inferToggle.disabled = true; poseStopInfer();
-
-  const xsArr = [], ysArr = [];
-  usable.forEach((c, idx) => {
-    c.embeddings.forEach(e => {
-      xsArr.push(e);
-      const oh = new Array(usable.length).fill(0); oh[idx] = 1; ysArr.push(oh);
-    });
-  });
-  const xs = tf.tensor2d(xsArr);
-  const ys = tf.tensor2d(ysArr);
-
-  if (pose.head) pose.head.dispose();
-  pose.head = tf.sequential();
-  pose.head.add(tf.layers.dense({ inputShape: [POSE_FEAT_DIM], units: 64, activation: 'relu' }));
-  pose.head.add(tf.layers.dropout({ rate: 0.2 }));
-  pose.head.add(tf.layers.dense({ units: usable.length, activation: 'softmax' }));
-  pose.head.compile({ optimizer: tf.train.adam(0.001), loss: 'categoricalCrossentropy', metrics: ['accuracy'] });
-  pose.head._classNames = usable.map(c => ({ name: c.name, color: c.color }));
-
-  const epochs = Math.max(5, Math.min(100, +pEls.epochs.value || 40));
-  poseResetChart(); pEls.chartBox.classList.add('on'); pEls.confBox.classList.remove('on');
-
-  await pose.head.fit(xs, ys, {
-    epochs, shuffle: true, batchSize: Math.min(16, xsArr.length),
-    callbacks: {
-      onEpochEnd: (ep, logs) => {
-        const p = Math.round(((ep + 1) / epochs) * 100);
-        pEls.trainBar.style.width = p + '%';
-        pEls.mEpoch.textContent = (ep + 1) + ' / ' + epochs;
-        pEls.mLoss.textContent = logs.loss.toFixed(3);
-        const acc = logs.acc ?? logs.accuracy;
-        pEls.mAcc.textContent = acc != null ? Math.round(acc * 100) + '%' : '—';
-        posePushChartPoint(ep + 1, epochs, logs.loss, acc);
-      },
+  await trainHead({
+    classes: pose.classes,
+    ui: {
+      train: pEls.train, inferToggle: pEls.inferToggle, epochs: pEls.epochs,
+      trainBar: pEls.trainBar, mEpoch: pEls.mEpoch, mLoss: pEls.mLoss, mAcc: pEls.mAcc,
+      chartBox: pEls.chartBox, confBox: pEls.confBox, trainHint: pEls.trainHint,
+    },
+    featDim: POSE_FEAT_DIM, hiddenUnits: 64, defaultEpochs: 40,
+    onStart: () => { poseStopInfer(); },
+    disposeHead: () => { if (pose.head) pose.head.dispose(); },
+    setHead: (h) => { pose.head = h; },
+    resetChart: poseResetChart, pushPoint: posePushChartPoint, buildConf: poseBuildConfusion,
+    onDone: () => {
+      pose.trained = true;
+      pEls.inferToggle.disabled = !pose.stream;
+      poseRenderBars(); poseRefresh();
     },
   });
-
-  await poseBuildConfusion(xs, ys, usable);
-  xs.dispose(); ys.dispose();
-
-  pose.trained = true;
-  pEls.train.disabled = false;
-  pEls.inferToggle.disabled = !pose.stream;
-  pEls.trainHint.textContent = '학습 완료. 우측 [추론 시작]을 누르세요.';
-  poseRenderBars(); poseRefresh();
 }
 
 const poseChartHist = { loss: [], acc: [] };
@@ -1917,33 +1912,8 @@ function posePushChartPoint(ep, totalEp, loss, acc) {
   drawChart(poseChartHist, pEls.chartAcc, pEls.chartLoss, totalEp, loss, acc);
 }
 
-async function poseBuildConfusion(xs, ys, usable) {
-  const n = usable.length;
-  const mat = Array.from({length:n}, () => new Array(n).fill(0));
-  const preds = pose.head.predict(xs);
-  const predArr = await preds.array();
-  const trueArr = await ys.array();
-  preds.dispose();
-  for (let i=0;i<predArr.length;i++) {
-    const p = predArr[i].indexOf(Math.max(...predArr[i]));
-    const t = trueArr[i].indexOf(1);
-    mat[t][p]++;
-  }
-  let html = '<table class="confusion-table"><thead><tr><th></th>';
-  usable.forEach(c => { html += `<th title="${c.name}">${c.name.slice(0,6)}</th>`; });
-  html += '</tr></thead><tbody>';
-  for (let r=0;r<n;r++) {
-    html += `<tr><th class="row-label" title="${usable[r].name}">${usable[r].name.slice(0,8)}</th>`;
-    for (let c=0;c<n;c++) {
-      const v = mat[r][c];
-      const cls = v===0?'cell zero':(r===c?'cell diag':'cell');
-      html += `<td class="${cls}">${v}</td>`;
-    }
-    html += '</tr>';
-  }
-  html += '</tbody></table>';
-  pEls.confWrap.innerHTML = html;
-  pEls.confBox.classList.add('on');
+function poseBuildConfusion(xs, ys, usable) {
+  return buildConfusion(pose.head, xs, ys, usable, pEls.confWrap, pEls.confBox);
 }
 
 function poseRenderBars() {
@@ -1965,13 +1935,7 @@ async function poseInferLoop() {
     const out = await pose.head.predict(x).data();
     x.dispose();
     const names = pose.head._classNames;
-    let topI = 0; for (let i=1;i<out.length;i++) if (out[i] > out[topI]) topI = i;
-    names.forEach((c, i) => {
-      const pct = Math.round(out[i] * 100);
-      const pctEl = $('p-pct-'+i); const fillEl = $('p-fill-'+i);
-      if (pctEl) pctEl.textContent = pct + '%';
-      if (fillEl) fillEl.style.width = pct + '%';
-    });
+    const topI = renderProbResults(out, names, (i) => `p-pct-${i}`, (i) => `p-fill-${i}`);
     pEls.topPred.className = 'top-pred active';
     pEls.topPred.querySelector('.tp-name').textContent = names[topI].name;
     pEls.topPred.querySelector('.tp-conf').textContent = Math.round(out[topI]*100) + '%';
@@ -2482,6 +2446,20 @@ function resetTopPred() {
   els.topPred.querySelector('.tp-conf').textContent = '';
   els.topPred.querySelector('.tp-name').style.color = '';
 }
+/* 추론 결과를 신뢰도 막대에 반영하고 최상위 클래스 인덱스를 돌려준다.
+   특징 추출은 탭마다 다르지만 막대 갱신 로직은 공통이다. */
+function renderProbResults(probs, names, pctId, fillId) {
+  let topI = 0;
+  for (let i = 1; i < probs.length; i++) if (probs[i] > probs[topI]) topI = i;
+  names.forEach((c, i) => {
+    const pct = Math.round(probs[i] * 100);
+    const fill = $(fillId(i)), lab = $(pctId(i));
+    if (fill) fill.style.width = pct + '%';
+    if (lab) lab.textContent = pct + '%';
+  });
+  return topI;
+}
+
 async function inferLoop() {
   if (!state.inferring || !state.head || !state.stream) return;
   const probs = tf.tidy(() => {
@@ -2489,15 +2467,7 @@ async function inferLoop() {
     return state.head.predict(feat).dataSync();
   });
   const names = state.head._classNames;
-  let topI = 0;
-  probs.forEach((p, i) => { if (p > probs[topI]) topI = i; });
-
-  names.forEach((c, i) => {
-    const pct = Math.round(probs[i] * 100);
-    const bar = $('bar-' + i), lab = $('pct-' + i);
-    if (bar) bar.style.width = pct + '%';
-    if (lab) lab.textContent = pct + '%';
-  });
+  const topI = renderProbResults(probs, names, (i) => `pct-${i}`, (i) => `bar-${i}`);
 
   els.topPred.className = 'top-pred';
   els.topPred.querySelector('.tp-name').textContent = names[topI].name;

@@ -56,14 +56,19 @@ python -m http.server 8000
 
 ## 테스트
 
-브라우저 없이 jsdom 으로 인라인 스크립트를 로드해 **DOM 참조 무결성·클래스 관리·탭 전환 라이프사이클**을 검증하는 스모크 테스트가 있습니다 (모델 추론 자체는 대상 아님).
+브라우저 없이 jsdom 으로 인라인 스크립트를 로드해 **DOM 참조 무결성·클래스 관리·탭 전환 라이프사이클·학습/추론/혼동행렬 흐름**을 검증하는 스모크 테스트가 있습니다.
 
 ```bash
 npm install   # 최초 1회 (jsdom)
 npm test
 ```
 
-`test/load-app.mjs` 가 CDN 모델 의존성 없이 앱을 로드하고, `test/smoke.test.mjs` 가 기본 동작과 회귀(탭 전환 시 카메라 스트림 정지)를 검증합니다.
+`test/load-app.mjs` 가 TensorFlow.js·MobileNet·MoveNet 을 경량 스텁으로 주입해 CDN 없이 앱을 로드하고(실제 추론이 아닌 API 표면을 결정적으로 흉내냄), `test/smoke.test.mjs` 가 다음을 검증합니다.
+
+- 기본 동작 — 스크립트 로드, 기본 클래스 렌더, 클래스 추가/제한, 막대·학습곡선 렌더
+- 학습 흐름 — 이미지/동작 탭 모두 공통 `trainHead` 경로로 head 생성·fit·혼동행렬 렌더
+- 추론 — 한 틱이 신뢰도 막대·최상위 예측을 갱신
+- 회귀 — 탭 전환 시 카메라 스트림 정지(`stopAllActivity`), 혼동행렬 텐서 use-after-dispose 방지
 
 ---
 
