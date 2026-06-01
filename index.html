@@ -445,9 +445,29 @@
   .stage-card { padding: 0; overflow: hidden; }
   .video-wrap {
     position: relative; background: #0a0e1a;
-    aspect-ratio: 16/10;
+    aspect-ratio: 1 / 1;
+    max-width: 540px; margin-inline: auto;
     overflow: hidden;
   }
+
+  /* 수치 가시화용 게이지 바 */
+  .gauge {
+    height: 8px; background: var(--panel-soft);
+    border: 1px solid var(--border); border-radius: 999px;
+    overflow: hidden; margin-top: 6px;
+  }
+  .gauge-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--blue), var(--cyan, #06b6d4));
+    border-radius: 999px; transition: width .15s ease;
+  }
+  .det-row {
+    font-family: var(--mono); font-size: 11px;
+    padding: 7px 10px; background: var(--panel-soft);
+    border: 1px solid var(--border); border-radius: 6px;
+  }
+  .det-row .det-head { display: flex; justify-content: space-between; }
+  .det-row .det-pct { color: var(--blue); }
   .video-wrap video {
     width: 100%; height: 100%; object-fit: cover;
     transform: scaleX(-1);
@@ -1269,9 +1289,11 @@
         <div class="card-b">
           <div class="metrics" style="grid-template-columns:1fr">
             <div><span class="k">PERSON PIXELS</span><span class="v" id="s-person-px">—</span></div>
-            <div style="margin-top:8px"><span class="k">RATIO</span><span class="v" id="s-ratio">—</span></div>
+            <div style="margin-top:8px"><span class="k">RATIO</span><span class="v" id="s-ratio">—</span>
+              <div class="gauge"><div class="gauge-fill" id="s-ratio-bar"></div></div>
+            </div>
           </div>
-          <p class="hint" style="margin-top:12px">사람과 배경을 픽셀 단위로 <b>분리</b>하는 기능입니다(얼굴 인식·분류 아님). 기본은 배경을 어둡게 가리고, 버튼을 누르면 인물에 색을 칠하는 강조 모드로 바뀝니다.</p>
+          <p class="hint" style="margin-top:12px">사람과 배경을 픽셀 단위로 <b>분리</b>하는 기능입니다(얼굴 인식·분류 아님). 기본은 배경을 초록색으로 덮어 가리고(크로마키), 버튼을 누르면 인물만 색으로 강조하는 모드로 바뀝니다.</p>
         </div>
       </aside>
     </div>
@@ -2356,10 +2378,13 @@ async function detectLoop() {
         ctx.fillStyle = '#000'; ctx.fillText(label, mx + 5, y - 5);
       });
       dEls.count.textContent = preds.length;
-      dEls.list.innerHTML = preds.slice(0, 8).map(p =>
-        `<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;padding:6px 10px;background:var(--panel-soft);border:1px solid var(--border);border-radius:4px">
-          <span>${p.class}</span><span style="color:var(--blue)">${Math.round(p.score*100)}%</span>
-        </div>`).join('');
+      dEls.list.innerHTML = preds.slice(0, 8).map(p => {
+        const pct = Math.round(p.score * 100);
+        return `<div class="det-row">
+          <div class="det-head"><span>${p.class}</span><span class="det-pct">${pct}%</span></div>
+          <div class="gauge"><div class="gauge-fill" style="width:${pct}%"></div></div>
+        </div>`;
+      }).join('');
       const now = performance.now();
       const fps = 1000 / (now - detect.lastT); detect.lastT = now;
       dEls.fps.textContent = fps.toFixed(1);
@@ -2376,7 +2401,7 @@ const sEls = {
   video: $('s-webcam'), canvas: $('s-canvas'), camOverlay: $('s-cam-overlay'),
   camToggle: $('s-cam-toggle'), modeToggle: $('s-mode-toggle'),
   status: $('s-status'), fps: $('s-fps'),
-  personPx: $('s-person-px'), ratio: $('s-ratio'),
+  personPx: $('s-person-px'), ratio: $('s-ratio'), ratioBar: $('s-ratio-bar'),
 };
 async function segmentInit() {
   sEls.camToggle.addEventListener('click', segmentToggle);
@@ -2431,19 +2456,21 @@ async function segmentLoop() {
         if (mask[i] === 1) {
           personPx++;
           if (seg.mode === 'highlight') {
-            // 인물에 반투명 파란 틴트 (배경은 투명 → 원본 영상 노출)
-            data[o] = 0; data[o+1] = 150; data[o+2] = 255; data[o+3] = 150;
+            // 인물에 진한 시안 틴트 (배경은 투명 → 원본 영상 노출)
+            data[o] = 0; data[o+1] = 220; data[o+2] = 255; data[o+3] = 205;
           }
           // remove 모드: 인물은 투명 → 뒤 비디오가 그대로 보임
         } else if (seg.mode === 'remove') {
-          // 배경을 불투명 어둡게 덮기
-          data[o] = 10; data[o+1] = 12; data[o+2] = 18; data[o+3] = 255;
+          // 배경을 선명한 그린(크로마키 느낌)으로 완전히 덮어 분리를 명확히 표시
+          data[o] = 16; data[o+1] = 185; data[o+2] = 129; data[o+3] = 255;
         }
       }
       ctx.putImageData(img, 0, 0);
       const total = mask.length;
+      const ratioPct = personPx * 100 / total;
       sEls.personPx.textContent = personPx.toLocaleString();
-      sEls.ratio.textContent = (personPx * 100 / total).toFixed(1) + '%';
+      sEls.ratio.textContent = ratioPct.toFixed(1) + '%';
+      if (sEls.ratioBar) sEls.ratioBar.style.width = ratioPct.toFixed(1) + '%';
       const now = performance.now();
       const fps = 1000 / (now - seg.lastT); seg.lastT = now;
       sEls.fps.textContent = fps.toFixed(1);
