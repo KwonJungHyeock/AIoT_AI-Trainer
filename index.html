@@ -1201,8 +1201,8 @@
       <section>
         <div class="card stage-card">
           <div class="video-wrap">
-            <video id="s-webcam" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></video>
-            <canvas id="s-canvas" style="position:absolute;inset:0;width:100%;height:100%;transform:scaleX(-1)"></canvas>
+            <video id="s-webcam" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)"></video>
+            <canvas id="s-canvas" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)"></canvas>
             <div class="video-overlay" id="s-cam-overlay">
               <div><div class="ph">CAMERA · STANDBY</div><div class="ph-msg">카메라를 켜면 인물만 분리됩니다</div></div>
             </div>
@@ -2350,6 +2350,7 @@ async function segmentToggle() {
     if (!seg.net) seg.net = await bodyPix.load({ architecture: 'MobileNetV1', outputStride: 16, multiplier: 0.75 });
     seg.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
     sEls.video.srcObject = seg.stream;
+    await sEls.video.play().catch(() => {});
     sEls.camOverlay.style.display = 'none';
     sEls.camToggle.textContent = '카메라 끄기';
     sEls.status.textContent = 'LIVE';
@@ -2365,22 +2366,24 @@ async function segmentLoop() {
     try {
       const segmentation = await seg.net.segmentPerson(sEls.video, { internalResolution: 'medium', segmentationThreshold: 0.6 });
       const ctx = sEls.canvas.getContext('2d');
-      ctx.drawImage(sEls.video, 0, 0, vw, vh);
-      const img = ctx.getImageData(0, 0, vw, vh);
-      const data = img.data; const mask = segmentation.data;
+      const mask = segmentation.data;
+      // 비디오를 배경 레이어로 그대로 노출하고 캔버스는 투명 오버레이로만 사용한다.
+      // (가려진 비디오를 drawImage 하면 일부 브라우저에서 검은 프레임이 나오는 문제 회피)
+      const img = ctx.createImageData(vw, vh);
+      const data = img.data;
       let personPx = 0;
       for (let i = 0; i < mask.length; i++) {
+        const o = i * 4;
         if (mask[i] === 1) {
           personPx++;
           if (seg.mode === 'highlight') {
-            data[i*4]   = Math.min(255, data[i*4]   * 0.5 + 0);
-            data[i*4+1] = Math.min(255, data[i*4+1] * 0.5 + 100);
-            data[i*4+2] = Math.min(255, data[i*4+2] * 0.5 + 200);
+            // 인물에 반투명 파란 틴트 (배경은 투명 → 원본 영상 노출)
+            data[o] = 0; data[o+1] = 150; data[o+2] = 255; data[o+3] = 120;
           }
-        } else {
-          if (seg.mode === 'remove') {
-            data[i*4] = 20; data[i*4+1] = 24; data[i*4+2] = 35;
-          }
+          // remove 모드: 인물은 투명 → 뒤 비디오가 그대로 보임
+        } else if (seg.mode === 'remove') {
+          // 배경을 불투명 어둡게 덮기
+          data[o] = 10; data[o+1] = 12; data[o+2] = 18; data[o+3] = 255;
         }
       }
       ctx.putImageData(img, 0, 0);
