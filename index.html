@@ -24,34 +24,35 @@
 <style>
   :root {
     /* ── 라이트 베이스 (SpaceX 콘솔 미학) ── */
-    --bg:           #f6f7f9;
-    --bg-grid:      rgba(15, 23, 42, 0.04);
-    --panel:        #ffffff;
-    --panel-soft:   #fafbfc;
-    --border:       #e3e6ea;
-    --border-strong:#cfd4d9;
+    /* ── 다크 베이스 ── */
+    --bg:           #0d1016;
+    --bg-grid:      rgba(255, 255, 255, 0.035);
+    --panel:        #161b24;
+    --panel-soft:   #1c222d;
+    --border:       #2a313f;
+    --border-strong:#3a4150;
 
-    /* 텍스트 위계 */
-    --ink:          #0a0e1a;     /* 텔레메트리 진한 본문 */
-    --ink-2:        #344155;
-    --ink-3:        #64748b;
-    --ink-4:        #94a3b8;
+    /* 텍스트 위계 (다크) */
+    --ink:          #eef1f6;
+    --ink-2:        #c3ccd9;
+    --ink-3:        #8c97a7;
+    --ink-4:        #5f6976;
 
     /* 액센트 */
-    --blue:         #0066ff;     /* 일렉트릭 블루 — 데이터 시각화 */
-    --blue-soft:    #e6efff;
-    --cyan:         #06b6d4;     /* 라이브/실행 표시 */
-    --green:        #059669;     /* 학습완료 */
-    --amber:        #d97706;     /* 추론 활성 */
-    --rose:         #e11d48;     /* 위험/삭제 */
+    --blue:         #4d8dff;     /* 데이터 시각화 */
+    --blue-soft:    rgba(77,141,255,.16);
+    --cyan:         #22c5e0;     /* 라이브/실행 표시 */
+    --green:        #2bb583;     /* 학습완료 */
+    --amber:        #e0913a;     /* 추론 활성 */
+    --rose:         #f0506e;     /* 위험/삭제 */
 
-    /* 메인 포인트 — 코랄 레드 (Eduino 커리큘럼 톤) */
+    /* 메인 포인트 — 코랄 레드 */
     --accent:       #f15a4f;
-    --accent-soft:  #fdecea;
-    --accent-ink:   #c8392e;
+    --accent-soft:  rgba(241,90,79,.16);
+    --accent-ink:   #ff9a8f;
 
-    --shadow-sm:    0 1px 2px rgba(15,23,42,.05);
-    --shadow:       0 2px 6px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.05);
+    --shadow-sm:    0 1px 2px rgba(0,0,0,.35);
+    --shadow:       0 2px 8px rgba(0,0,0,.4), 0 8px 26px rgba(0,0,0,.32);
 
     --radius:       12px;
     --radius-sm:    8px;
@@ -81,7 +82,7 @@
   /* ───────────────────────────── 헤더 ────────────────────────────── */
   .topbar {
     position: sticky; top: 0; z-index: 50;
-    background: linear-gradient(180deg, rgba(255,255,255,.93), rgba(255,255,255,.82));
+    background: linear-gradient(180deg, #11151d 0%, #0d1016 100%);
     backdrop-filter: saturate(160%) blur(12px);
     -webkit-backdrop-filter: saturate(160%) blur(12px);
     border-bottom: 1px solid var(--border);
@@ -250,7 +251,7 @@
   .sidebar {
     position: sticky; top: 0; align-self: start;
     border-right: 1px solid var(--border-strong);
-    background: linear-gradient(180deg, #eef1f6, #e8ecf3);
+    background: linear-gradient(180deg, #12161e, #0e1219);
     padding: 20px 12px; min-height: calc(100vh - 57px);
   }
   .nav-group { margin-bottom: 16px; }
@@ -270,7 +271,7 @@
     font-family: var(--sans); font-size: 13.5px; font-weight: 500; color: var(--ink-2);
     transition: .14s;
   }
-  .nav-item:hover:not(.active):not(.disabled) { background: rgba(255,255,255,.6); color: var(--ink); }
+  .nav-item:hover:not(.active):not(.disabled) { background: rgba(255,255,255,.05); color: var(--ink); }
   .nav-item.active {
     background: var(--accent-soft); color: var(--accent-ink); font-weight: 600;
     box-shadow: inset 3px 0 0 var(--accent);
@@ -281,7 +282,7 @@
   .nav-badge {
     font-family: var(--mono); font-size: 8.5px; font-weight: 600; letter-spacing: .03em;
     padding: 2px 6px; border-radius: 999px; flex: none;
-    background: var(--accent-soft); color: var(--accent-ink); border: 1px solid #f6d3cf;
+    background: var(--accent-soft); color: var(--accent-ink); border: 1px solid rgba(241,90,79,.35);
   }
   .nav-badge.soon { background: var(--panel-soft); color: var(--ink-4); border-color: var(--border); }
   .content { padding: 20px 24px 56px; min-width: 0; }
@@ -309,12 +310,12 @@
   .steps-bar { display: none; }
 
   .feature-info {
-    background: linear-gradient(135deg, #ffffff 0%, var(--accent-soft) 100%);
+    background: linear-gradient(135deg, var(--panel) 0%, rgba(241,90,79,.12) 100%);
     border: 1px solid var(--border); border-left: 3px solid var(--accent);
     border-radius: var(--radius); box-shadow: var(--shadow-sm);
     padding: 14px 18px; margin-bottom: 16px;
   }
-  .fi-model { background: var(--accent-soft) !important; color: var(--accent-ink) !important; border-color: #f6d3cf !important; }
+  .fi-model { background: var(--accent-soft) !important; color: var(--accent-ink) !important; border-color: rgba(241,90,79,.35) !important; }
   .fi-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .fi-name { font-size: 16px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
   .fi-type, .fi-model {
@@ -325,7 +326,7 @@
   .fi-model { background: rgba(0,102,255,0.08); color: var(--blue); border-color: rgba(0,102,255,0.2); }
   .fi-desc { margin: 8px 0 0; font-size: 13px; color: var(--ink-3); line-height: 1.5; }
   .fi-theory { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
-  .fi-tcard { background: rgba(255,255,255,.6); border: 1px solid var(--border); border-radius: 8px; padding: 11px 13px; }
+  .fi-tcard { background: rgba(255,255,255,.035); border: 1px solid var(--border); border-radius: 8px; padding: 11px 13px; }
   .fi-th { font-family: var(--mono); font-size: 10px; letter-spacing: .05em; color: var(--accent-ink); margin-bottom: 6px; font-weight: 700; }
   .fi-tcard p { margin: 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.55; }
   @media (max-width: 720px) { .fi-theory { grid-template-columns: 1fr; } }
@@ -429,16 +430,16 @@
   }
   /* 좌/우 영역에 은은한 배경 톤을 줘서 영역을 구분 (좌=쿨, 우=웜) */
   .sub-panel.active > aside.card:first-child {
-    background: linear-gradient(180deg, #fbfcfe 0%, #eef2f8 100%);
+    background: linear-gradient(180deg, #181d27 0%, #141923 100%);
   }
   .sub-panel.active > aside.card:last-child {
-    background: linear-gradient(180deg, #fffdfc 0%, #fbeeec 100%);
+    background: linear-gradient(180deg, #1d1714 0%, #181311 100%);
   }
   .card-h {
     padding: 13px 16px 11px;
     display: flex; align-items: center; justify-content: space-between;
     border-bottom: 1px solid var(--border);
-    background: linear-gradient(180deg, rgba(255,255,255,.5), rgba(244,247,251,.5));
+    background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015));
     border-radius: var(--radius) var(--radius) 0 0;
   }
   .card-h .label {
