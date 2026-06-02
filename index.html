@@ -1402,6 +1402,16 @@
             <button class="btn ghost ff-mode" data-fmode="blur">블러</button>
             <button class="btn ghost ff-mode" data-fmode="motion">모션 감지</button>
           </div>
+          <div class="param" style="margin-top:14px">
+            <label class="param-label">밝기 <span id="ff-bright-val">100%</span></label>
+            <input type="range" id="ff-bright" min="20" max="200" value="100" class="slider">
+            <label class="param-label" style="margin-top:10px">대비 <span id="ff-contrast-val">100%</span></label>
+            <input type="range" id="ff-contrast" min="20" max="300" value="100" class="slider">
+            <label class="param-label" style="margin-top:10px">블러 <span id="ff-blur-val">0px</span></label>
+            <input type="range" id="ff-blur" min="0" max="12" value="0" class="slider">
+            <p class="param-hint">슬라이더를 움직여 효과를 조절하세요. (모션 감지 모드에는 적용되지 않습니다)</p>
+            <button class="btn ghost" id="ff-compare" style="width:100%;margin-top:8px">원본 보기 (누르는 동안)</button>
+          </div>
         </div>
       </aside>
       <section style="display:flex;flex-direction:column;gap:14px">
@@ -2743,7 +2753,7 @@ async function segmentLoop() {
 /* ============================================================
    ▌ 영상처리 — 영상 필터 (CSS 필터) + 모션 감지 (프레임 차분)
    ============================================================ */
-const ff = { stream: null, raf: null, mode: 'none', prev: null, lastT: 0 };
+const ff = { stream: null, raf: null, mode: 'none', prev: null, lastT: 0, params: { bright: 100, contrast: 100, blur: 0 } };
 const ffEls = {
   video: $('ff-webcam'), canvas: $('ff-canvas'), camOverlay: $('ff-cam-overlay'),
   camToggle: $('ff-cam-toggle'), status: $('ff-status'), fps: $('ff-fps'),
@@ -2752,6 +2762,15 @@ const ffEls = {
 const FF_CSS = { none: '', gray: 'grayscale(1)', invert: 'invert(1)', contrast: 'grayscale(1) contrast(4) brightness(1.1)', blur: 'blur(6px)' };
 const FF_LABEL = { none: '원본', gray: '흑백', invert: '색 반전', contrast: '고대비', blur: '블러', motion: '모션 감지' };
 
+/* 모드 프리셋 + 사용자 파라미터(밝기/대비/블러)를 합성한 CSS 필터 문자열 */
+function ffBuildCSS() {
+  const p = ff.params;
+  const preset = ff.mode === 'motion' ? '' : (FF_CSS[ff.mode] || '');
+  return `${preset} brightness(${p.bright}%) contrast(${p.contrast}%) blur(${p.blur}px)`.trim();
+}
+function ffApply() {
+  if (ff.mode !== 'motion') ffEls.video.style.filter = ffBuildCSS();
+}
 function ffClearCanvas() {
   const ctx = ffEls.canvas.getContext('2d');
   ctx.clearRect(0, 0, ffEls.canvas.width, ffEls.canvas.height);
@@ -2774,7 +2793,7 @@ function setFilterMode(mode) {
   } else {
     if (ff.raf) cancelAnimationFrame(ff.raf);
     ff.raf = null;
-    ffEls.video.style.filter = FF_CSS[mode];
+    ffEls.video.style.filter = ffBuildCSS();
     ffClearCanvas();
     ffResetMotion();
   }
@@ -2844,6 +2863,30 @@ function filterInit() {
   document.querySelectorAll('.ff-mode').forEach((b) => {
     b.addEventListener('click', () => setFilterMode(b.dataset.fmode));
   });
+  // 파라미터 슬라이더 — 실시간으로 효과 합성
+  const bind = (id, key, unit) => {
+    const el = document.getElementById(id), val = document.getElementById(id + '-val');
+    if (!el) return;
+    el.addEventListener('input', () => {
+      ff.params[key] = +el.value;
+      if (val) val.textContent = el.value + unit;
+      ffApply();
+    });
+  };
+  bind('ff-bright', 'bright', '%');
+  bind('ff-contrast', 'contrast', '%');
+  bind('ff-blur', 'blur', 'px');
+  // 원본 비교 — 누르는 동안 필터 해제
+  const cmp = document.getElementById('ff-compare');
+  if (cmp) {
+    const showOrig = () => { if (ff.mode !== 'motion') ffEls.video.style.filter = ''; };
+    const restore = () => ffApply();
+    cmp.addEventListener('mousedown', showOrig);
+    cmp.addEventListener('touchstart', (e) => { e.preventDefault(); showOrig(); });
+    cmp.addEventListener('mouseup', restore);
+    cmp.addEventListener('mouseleave', restore);
+    cmp.addEventListener('touchend', restore);
+  }
 }
 
 /* ============================================================
