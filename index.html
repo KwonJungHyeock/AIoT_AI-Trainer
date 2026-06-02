@@ -12,6 +12,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands@0.5.4/dist/speech-commands.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.2.0/dist/body-pix.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.1.0/dist/blazeface.min.js"></script>
 
 <!-- 폰트: Pretendard (한국어 본문) + JetBrains Mono (텔레메트리 데이터) -->
 <link rel="preconnect" href="https://cdn.jsdelivr.net" />
@@ -1401,6 +1402,82 @@
         </div>
       </aside>
     </div>
+
+    <!-- ─── 뼈대(포즈) 검출 ─── -->
+    <div id="sub-skeleton" class="sub-panel" style="display:none">
+      <aside class="card">
+        <div class="card-h"><span class="label">MODEL</span><span class="meta">MOVENET</span></div>
+        <div class="card-b">
+          <p class="hint" style="margin:0 0 12px"><b>MoveNet</b>으로 사람의 관절 17개를 추정해 실시간 뼈대를 그립니다. 학습 없이 바로 동작합니다.</p>
+          <div class="metrics" style="margin-top:8px">
+            <div><span class="k">KEYPOINTS</span><span class="v">17</span></div>
+            <div><span class="k">STATUS</span><span class="v" id="sk-status">IDLE</span></div>
+            <div><span class="k">FPS</span><span class="v" id="sk-fps">—</span></div>
+          </div>
+        </div>
+      </aside>
+      <section style="display:flex;flex-direction:column;gap:14px">
+        <div class="card stage-card">
+          <div class="video-wrap">
+            <video id="sk-webcam" autoplay playsinline muted></video>
+            <canvas id="sk-canvas" class="pose-overlay"></canvas>
+            <div class="video-overlay" id="sk-cam-overlay">
+              <div><div class="ph">CAMERA · STANDBY</div><div class="ph-msg">카메라를 켜면 뼈대가 표시됩니다</div></div>
+            </div>
+          </div>
+          <div class="cam-controls">
+            <button class="btn primary" id="sk-cam-toggle" style="width:100%">카메라 켜기 · 뼈대 시작</button>
+          </div>
+        </div>
+      </section>
+      <aside class="card">
+        <div class="card-h"><span class="label">DETECTED</span><span class="meta" id="sk-count">—</span></div>
+        <div class="card-b">
+          <div style="margin-bottom:10px"><span style="font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-4)">검출 신뢰 관절</span>
+            <div class="gauge"><div class="gauge-fill" id="sk-conf-bar"></div></div>
+          </div>
+          <p class="hint" style="margin-top:12px">관절(파랑)과 뼈대(선)가 실시간으로 그려집니다. 팔다리를 움직여 보세요.</p>
+        </div>
+      </aside>
+    </div>
+
+    <!-- ─── 얼굴 검출 ─── -->
+    <div id="sub-face" class="sub-panel" style="display:none">
+      <aside class="card">
+        <div class="card-h"><span class="label">MODEL</span><span class="meta">BLAZEFACE</span></div>
+        <div class="card-b">
+          <p class="hint" style="margin:0 0 12px"><b>BlazeFace</b>로 화면 속 얼굴 위치를 실시간 박스로 검출합니다(누구인지 식별하는 인식과는 다릅니다).</p>
+          <div class="metrics" style="margin-top:8px">
+            <div><span class="k">MODEL</span><span class="v">BLAZE</span></div>
+            <div><span class="k">STATUS</span><span class="v" id="fc-status">IDLE</span></div>
+            <div><span class="k">FPS</span><span class="v" id="fc-fps">—</span></div>
+          </div>
+        </div>
+      </aside>
+      <section style="display:flex;flex-direction:column;gap:14px">
+        <div class="card stage-card">
+          <div class="video-wrap">
+            <video id="fc-webcam" autoplay playsinline muted></video>
+            <canvas id="fc-canvas" class="pose-overlay" style="transform:none"></canvas>
+            <div class="video-overlay" id="fc-cam-overlay">
+              <div><div class="ph">CAMERA · STANDBY</div><div class="ph-msg">카메라를 켜면 얼굴이 검출됩니다</div></div>
+            </div>
+          </div>
+          <div class="cam-controls">
+            <button class="btn primary" id="fc-cam-toggle" style="width:100%">카메라 켜기 · 검출 시작</button>
+          </div>
+        </div>
+      </section>
+      <aside class="card">
+        <div class="card-h"><span class="label">DETECTED</span><span class="meta" id="fc-count">0</span></div>
+        <div class="card-b">
+          <div style="margin-bottom:10px"><span style="font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-4)">검출된 얼굴 수</span>
+            <div class="gauge"><div class="gauge-fill" id="fc-count-bar"></div></div>
+          </div>
+          <p class="hint" style="margin-top:12px">여러 명이 함께 화면에 들어오면 각 얼굴에 박스가 그려집니다.</p>
+        </div>
+      </aside>
+    </div>
   </div>
   <!-- ╚═════════════ /사전학습 추론 ═════════════╝ -->
 </main>
@@ -2688,6 +2765,134 @@ function filterInit() {
 }
 
 /* ============================================================
+   ▌ 영상처리 — 뼈대(포즈) 검출 (MoveNet 재사용, 학습 없음)
+   ============================================================ */
+const skel = { stream: null, raf: null, lastT: 0 };
+const skEls = {
+  video: $('sk-webcam'), canvas: $('sk-canvas'), camOverlay: $('sk-cam-overlay'),
+  camToggle: $('sk-cam-toggle'), status: $('sk-status'), fps: $('sk-fps'),
+  count: $('sk-count'), confBar: $('sk-conf-bar'),
+};
+function skelInit() { skEls.camToggle.addEventListener('click', skelToggle); }
+async function skelToggle() {
+  if (skel.stream) {
+    skel.stream.getTracks().forEach((t) => t.stop());
+    skel.stream = null; skEls.video.srcObject = null;
+    if (skel.raf) cancelAnimationFrame(skel.raf); skel.raf = null;
+    skEls.canvas.getContext('2d').clearRect(0, 0, skEls.canvas.width, skEls.canvas.height);
+    skEls.camOverlay.style.display = 'grid';
+    skEls.camToggle.textContent = '카메라 켜기 · 뼈대 시작';
+    skEls.status.textContent = 'IDLE'; skEls.fps.textContent = '—'; skEls.count.textContent = '—';
+    return;
+  }
+  if (!pose.detector) { skEls.status.textContent = 'MODEL LOADING'; return; }
+  try {
+    skel.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+    skEls.video.srcObject = skel.stream;
+    await skEls.video.play().catch(() => {});
+    skEls.camOverlay.style.display = 'none';
+    skEls.camToggle.textContent = '카메라 끄기';
+    skEls.status.textContent = 'LIVE'; skel.lastT = performance.now();
+    skelLoop();
+  } catch (e) {
+    skEls.camOverlay.innerHTML = '<div><div class="ph" style="color:#ef4444">CAMERA DENIED</div><div class="ph-msg">브라우저 카메라 권한을 확인하세요</div></div>';
+  }
+}
+async function skelLoop() {
+  if (!skel.stream) return;
+  if (skEls.video.readyState >= 2 && pose.detector) {
+    const vw = skEls.video.videoWidth, vh = skEls.video.videoHeight;
+    skEls.canvas.width = vw; skEls.canvas.height = vh;
+    try {
+      const poses = await pose.detector.estimatePoses(skEls.video);
+      const ctx = skEls.canvas.getContext('2d');
+      ctx.clearRect(0, 0, vw, vh);
+      let good = 0;
+      if (poses[0]) {
+        const kp = poses[0].keypoints;
+        ctx.strokeStyle = '#0066ff'; ctx.lineWidth = 3;
+        POSE_EDGES.forEach(([a, b]) => {
+          if (kp[a].score > 0.3 && kp[b].score > 0.3) {
+            ctx.beginPath(); ctx.moveTo(kp[a].x, kp[a].y); ctx.lineTo(kp[b].x, kp[b].y); ctx.stroke();
+          }
+        });
+        ctx.fillStyle = '#06b6d4';
+        kp.forEach((p) => { if (p.score > 0.3) { good++; ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI * 2); ctx.fill(); } });
+      }
+      skEls.count.textContent = good + ' / 17';
+      if (skEls.confBar) skEls.confBar.style.width = Math.round(good / 17 * 100) + '%';
+      const now = performance.now();
+      skEls.fps.textContent = (1000 / (now - skel.lastT)).toFixed(1); skel.lastT = now;
+    } catch (e) { /* skip */ }
+  }
+  skel.raf = requestAnimationFrame(skelLoop);
+}
+
+/* ============================================================
+   ▌ 영상처리 — 얼굴 검출 (BlazeFace)
+   ============================================================ */
+const face = { model: null, stream: null, raf: null, lastT: 0 };
+const fcEls = {
+  video: $('fc-webcam'), canvas: $('fc-canvas'), camOverlay: $('fc-cam-overlay'),
+  camToggle: $('fc-cam-toggle'), status: $('fc-status'), fps: $('fc-fps'),
+  count: $('fc-count'), countBar: $('fc-count-bar'),
+};
+function faceInit() { fcEls.camToggle.addEventListener('click', faceToggle); }
+async function faceToggle() {
+  if (face.stream) {
+    face.stream.getTracks().forEach((t) => t.stop());
+    face.stream = null; fcEls.video.srcObject = null;
+    if (face.raf) cancelAnimationFrame(face.raf); face.raf = null;
+    fcEls.canvas.getContext('2d').clearRect(0, 0, fcEls.canvas.width, fcEls.canvas.height);
+    fcEls.camOverlay.style.display = 'grid';
+    fcEls.camToggle.textContent = '카메라 켜기 · 검출 시작';
+    fcEls.status.textContent = 'IDLE'; fcEls.fps.textContent = '—'; fcEls.count.textContent = '0';
+    return;
+  }
+  if (!window.blazeface) { console.error('[face] blazeface missing'); fcEls.status.textContent = 'NOT AVAILABLE'; return; }
+  fcEls.status.textContent = 'LOADING';
+  try {
+    if (!face.model) face.model = await blazeface.load();
+    face.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+    fcEls.video.srcObject = face.stream;
+    await fcEls.video.play().catch(() => {});
+    fcEls.camOverlay.style.display = 'none';
+    fcEls.camToggle.textContent = '카메라 끄기';
+    fcEls.status.textContent = 'LIVE'; face.lastT = performance.now();
+    faceLoop();
+  } catch (e) { console.error('[face] fail:', e); fcEls.status.textContent = 'ERROR'; }
+}
+async function faceLoop() {
+  if (!face.stream || !face.model) return;
+  if (fcEls.video.readyState >= 2) {
+    const vw = fcEls.video.videoWidth, vh = fcEls.video.videoHeight;
+    fcEls.canvas.width = vw; fcEls.canvas.height = vh;
+    try {
+      const preds = await face.model.estimateFaces(fcEls.video, false);
+      const ctx = fcEls.canvas.getContext('2d');
+      ctx.clearRect(0, 0, vw, vh);
+      ctx.font = 'bold 16px JetBrains Mono';
+      preds.forEach((p) => {
+        const x1 = p.topLeft[0], y1 = p.topLeft[1];
+        const w = p.bottomRight[0] - x1, h = p.bottomRight[1] - y1;
+        const mx = vw - x1 - w; // 비디오가 좌우 반전이므로 박스 X 반전(캔버스는 transform:none)
+        ctx.strokeStyle = '#f15a4f'; ctx.lineWidth = 3;
+        ctx.strokeRect(mx, y1, w, h);
+        const label = 'FACE ' + Math.round((Array.isArray(p.probability) ? p.probability[0] : p.probability) * 100) + '%';
+        const tw = ctx.measureText(label).width;
+        ctx.fillStyle = '#f15a4f'; ctx.fillRect(mx, y1 - 20, tw + 10, 20);
+        ctx.fillStyle = '#fff'; ctx.fillText(label, mx + 5, y1 - 5);
+      });
+      fcEls.count.textContent = preds.length;
+      if (fcEls.countBar) fcEls.countBar.style.width = Math.min(100, preds.length * 25) + '%';
+      const now = performance.now();
+      fcEls.fps.textContent = (1000 / (now - face.lastT)).toFixed(1); face.lastT = now;
+    } catch (e) { /* skip */ }
+  }
+  face.raf = requestAnimationFrame(faceLoop);
+}
+
+/* ============================================================
    ▌ 사전학습 추론 — 깊이 추정 (AR Portrait Depth)
    ============================================================ */
 const depth = { estimator: null, stream: null, raf: null, lastT: 0 };
@@ -2875,6 +3080,8 @@ function stopAllActivity() {
   if (detect.stream)   detectToggle();     // 객체 탐지
   if (seg.stream)      segmentToggle();    // 인물 분리
   if (ff.stream)       filterToggle();     // 영상 필터/모션
+  if (skel.stream)     skelToggle();       // 뼈대 검출
+  if (face.stream)     faceToggle();       // 얼굴 검출
   if (depth.stream)    depthToggle();      // 깊이 추정
 }
 
@@ -2896,10 +3103,10 @@ const FEATURES = {
 
   filter:  { name: '영상 효과(필터)', icon: IC('<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/>'), badge: '알고리즘',
     panel: 'panel-pretrained', sub: 'sub-filter', type: '영상처리 알고리즘', model: 'Canvas · 프레임 차분', desc: '흑백·색반전·고대비·블러 필터와 모션 감지를 실시간으로 체험합니다.' },
-  face:    { name: '얼굴 검출', icon: IC('<circle cx="12" cy="11" r="8"/><path d="M9 10h.01M15 10h.01M9 15s1.2 1.5 3 1.5 3-1.5 3-1.5"/>'), disabled: true, badge: '준비중',
-    type: '영상처리 알고리즘', model: 'BlazeFace', desc: '얼굴 위치를 실시간 박스로 검출합니다. (준비 중)' },
-  skeleton:{ name: '뼈대(포즈) 검출', icon: IC('<circle cx="12" cy="4" r="2"/><path d="M12 6v6m0 0l-4 6m4-6l4 6M6 9l6 1 6-1"/>'), disabled: true, badge: '준비중',
-    type: '영상처리 알고리즘', model: 'MoveNet', desc: '학습 없이 관절 뼈대를 실시간으로 그립니다. (준비 중)' },
+  face:    { name: '얼굴 검출', icon: IC('<circle cx="12" cy="11" r="8"/><path d="M9 10h.01M15 10h.01M9 15s1.2 1.5 3 1.5 3-1.5 3-1.5"/>'), badge: '알고리즘', panel: 'panel-pretrained', sub: 'sub-face',
+    type: '영상처리 알고리즘', model: 'BlazeFace', desc: '얼굴 위치를 실시간 박스로 검출합니다(누구인지 식별이 아니라 위치 검출).' },
+  skeleton:{ name: '뼈대(포즈) 검출', icon: IC('<circle cx="12" cy="4" r="2"/><path d="M12 6v6m0 0l-4 6m4-6l4 6M6 9l6 1 6-1"/>'), badge: '알고리즘', panel: 'panel-pretrained', sub: 'sub-skeleton',
+    type: '영상처리 알고리즘', model: 'MoveNet', desc: '학습 없이 관절 뼈대를 실시간으로 그립니다.' },
   detect:  { name: '객체 탐지', icon: IC('<path d="M3 7V4h3M21 7V4h-3M3 17v3h3M21 17v3h-3"/><rect x="8" y="8" width="8" height="8" rx="1"/>'), badge: '사전학습',
     panel: 'panel-pretrained', sub: 'sub-detect', type: '사전학습 추론', model: 'COCO-SSD', desc: '추가 학습 없이 90종 사물을 실시간으로 박스 탐지합니다.' },
   segment: { name: '인물 분리', icon: IC('<circle cx="12" cy="8" r="3.5"/><path d="M5 21c0-4 3.5-6 7-6s7 2 7 6"/>'), badge: '사전학습',
@@ -2994,6 +3201,8 @@ audioInit();
 detectInit();
 segmentInit();
 filterInit();
+skelInit();
+faceInit();
 // depthInit(); // 깊이 추정(ARPortraitDepth)은 실험적·불안정으로 탭 숨김 처리 (JS는 휴면)
 
 selectFeature('image'); // 좌측 사이드바 초기 선택
