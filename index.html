@@ -492,11 +492,18 @@
   /* ──────────────────────── ② 카메라 / 단계 ───────────────────────── */
   /* 단계 인디케이터 — 카메라 박스 상단 통합 */
   .steps-bar {
-    display: flex; align-items: center;
+    display: none; align-items: center;
     padding: 12px 16px;
     border-bottom: 1px solid var(--border);
     background: var(--panel-soft);
     gap: 0;
+  }
+  /* 완료 단계 (상단 StepNav) */
+  .step-pill.done:not(.active) {
+    background: rgba(43,181,131,.14); border-color: var(--green); color: var(--green);
+  }
+  .step-pill.done:not(.active) .step-pill-num {
+    background: var(--green); color: #fff; border-color: var(--green);
   }
   .step {
     display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0;
@@ -1675,6 +1682,7 @@ function updateSteps() {
   if (trained) active = 3;
   if (inferring) active = 3;
   steps[active].classList.add('active');
+  syncStepNav();
 }
 
 /* ── 모델 로드 ───────────────────────────────────────── */
@@ -2328,12 +2336,14 @@ function poseStartInfer() {
   pose.inferring = true;
   pEls.inferToggle.textContent = '추론 중지';
   pEls.inferMeta.textContent = 'LIVE';
+  syncStepNav();
   poseInferLoop();
 }
 function poseStopInfer() {
   pose.inferring = false;
   pEls.inferToggle.textContent = '추론 시작';
   pEls.inferMeta.textContent = 'IDLE';
+  syncStepNav();
   poseResetTopPred();
 }
 
@@ -2342,6 +2352,7 @@ function poseRefresh() {
   pEls.train.disabled = usable.length < 2;
   poseRenderBars();
   if (!pose.trained) poseResetTopPred();
+  syncStepNav();
 }
 
 /* ============================================================
@@ -2586,6 +2597,7 @@ function audioRefresh() {
   const counts = audio.classes.filter(c => c.count > 0);
   aEls.train.disabled = counts.length < 2 || counts.some(c => c.count < 3);
   audioRenderBars();
+  syncStepNav();
 }
 
 /* ============================================================
@@ -3326,7 +3338,7 @@ const NAV_GROUPS = [
 ];
 
 /* 단계 네비 — 학습추론/영상처리 기능군에 따라 단계 라벨이 다르다. */
-const LEARN_STEPS = ['데이터 수집', '라벨링', '학습', '추론·평가'];
+const LEARN_STEPS = ['클래스 만들기', '데이터 수집', '모델 학습', '추론·평가'];
 const VISION_STEPS = ['개념', '실행', '파라미터 조정'];
 NAV_GROUPS[0].items.forEach((k) => { if (FEATURES[k]) FEATURES[k].steps = LEARN_STEPS; });
 NAV_GROUPS[1].items.forEach((k) => { if (FEATURES[k]) FEATURES[k].steps = VISION_STEPS; });
@@ -3369,9 +3381,37 @@ function buildSidebar() {
   });
 }
 
+let currentFeature = 'image';
+
+/* 학습추론 기능의 진행 단계를 계산해 상단 StepNav 에 done/active 로 표시.
+   영상처리 기능은 진행 개념이 없어 클릭 하이라이트만 유지. */
+function syncStepNav() {
+  const sn = $('step-nav'); if (!sn) return;
+  const pills = sn.querySelectorAll('.step-pill'); if (!pills.length) return;
+  let done = null;
+  if (currentFeature === 'image') {
+    const u = state.classes.filter(c => c.embeddings.length > 0);
+    done = [state.classes.length >= 2, u.length >= 2, state.trained, state.inferring];
+  } else if (currentFeature === 'pose') {
+    const u = pose.classes.filter(c => c.embeddings.length > 0);
+    done = [pose.classes.length >= 2, u.length >= 2, pose.trained, pose.inferring];
+  } else if (currentFeature === 'audio') {
+    const u = audio.classes.filter(c => c.count > 0);
+    done = [audio.classes.length >= 2, u.length >= 2, audio.trained, audio.inferring];
+  }
+  if (!done) return; // 영상처리 기능
+  let active = 0;
+  done.forEach((d, i) => { if (d) active = Math.min(3, i + 1); });
+  pills.forEach((p, i) => {
+    p.classList.toggle('done', !!done[i]);
+    p.classList.toggle('active', i === active);
+  });
+}
+
 function selectFeature(key) {
   const f = FEATURES[key];
   if (!f || f.disabled || !f.panel) return;
+  currentFeature = key;
   stopAllActivity();
   document.querySelectorAll('.nav-item').forEach((b) => b.classList.toggle('active', b.dataset.feature === key));
   document.querySelectorAll('.tab-panel').forEach((p) => p.classList.toggle('active', p.id === f.panel));
@@ -3405,6 +3445,7 @@ function selectFeature(key) {
       sn.querySelectorAll('.step-pill').forEach((b) => b.addEventListener('click', () => {
         sn.querySelectorAll('.step-pill').forEach((x) => x.classList.toggle('active', x === b));
       }));
+      syncStepNav(); // 학습추론 기능이면 진행상황 반영
     } else {
       sn.style.display = 'none';
     }
