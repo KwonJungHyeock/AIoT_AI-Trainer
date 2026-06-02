@@ -323,6 +323,11 @@
   .fi-type { background: var(--panel-soft); color: var(--ink-3); }
   .fi-model { background: rgba(0,102,255,0.08); color: var(--blue); border-color: rgba(0,102,255,0.2); }
   .fi-desc { margin: 8px 0 0; font-size: 13px; color: var(--ink-3); line-height: 1.5; }
+  .fi-theory { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .fi-tcard { background: rgba(255,255,255,.6); border: 1px solid var(--border); border-radius: 8px; padding: 11px 13px; }
+  .fi-th { font-family: var(--mono); font-size: 10px; letter-spacing: .05em; color: var(--accent-ink); margin-bottom: 6px; font-weight: 700; }
+  .fi-tcard p { margin: 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.55; }
+  @media (max-width: 720px) { .fi-theory { grid-template-columns: 1fr; } }
 
   @media (max-width: 1024px) {
     .app-shell { grid-template-columns: 1fr; }
@@ -900,6 +905,10 @@
         <span class="fi-model" id="fi-model">MobileNet v2</span>
       </div>
       <p class="fi-desc" id="fi-desc">카메라로 직접 클래스를 만들어 사진을 분류합니다.</p>
+      <div class="fi-theory" id="fi-theory">
+        <div class="fi-tcard"><div class="fi-th">📊 학습 정보</div><p id="fi-learn"></p></div>
+        <div class="fi-tcard"><div class="fi-th">⚙️ 알고리즘 정보</div><p id="fi-algo"></p></div>
+      </div>
     </div>
 
     <!-- 단계 네비 (기능별 진행 단계) -->
@@ -3263,6 +3272,26 @@ const VISION_STEPS = ['개념', '실행', '파라미터 조정'];
 NAV_GROUPS[0].items.forEach((k) => { if (FEATURES[k]) FEATURES[k].steps = LEARN_STEPS; });
 NAV_GROUPS[1].items.forEach((k) => { if (FEATURES[k]) FEATURES[k].steps = VISION_STEPS; });
 
+/* 이론 영역 — 학습 정보(데이터·목표·예시) + 알고리즘 정보(원리, K-12 눈높이) */
+const THEORY = {
+  image:   { learn: '내가 찍은 사진들이 데이터셋이 됩니다(보통 2~4종류). 목표는 카메라 사진을 내가 정한 종류로 자동 분류하기. 예: 캔·페트·종이 분리수거 도우미.',
+             algo:  'MobileNet이 사진의 특징을 뽑고, 그 위에 작은 분류기만 새로 학습합니다(전이학습). 적은 사진으로도 빠르게 배웁니다.' },
+  audio:   { learn: '단어마다 짧은 녹음 여러 개를 모읍니다. 목표는 말소리를 단어로 분류하기. 예: "켜"/"꺼"로 무언가 제어.',
+             algo:  '소리를 스펙트로그램(소리 사진)으로 바꿔 사전학습 모델이 특징을 뽑고, 분류기만 새로 학습합니다.' },
+  pose:    { learn: '동작마다 자세 데이터를 모읍니다. 목표는 몸 동작을 분류하기. 예: 만세/앉기 같은 자세 인식 게임.',
+             algo:  'MoveNet이 관절 17곳의 위치를 찾고, 그 좌표를 입력으로 작은 분류기를 학습합니다.' },
+  filter:  { learn: '학습이 필요 없는 고전 영상처리입니다. 목표는 픽셀을 바꾸면 화면이 어떻게 변하는지 체험하기.',
+             algo:  '각 픽셀의 색(R·G·B)을 규칙대로 바꿉니다. 흑백=평균, 색반전=255-값, 모션감지=이전 프레임과의 차이.' },
+  colortrack:{ learn: '학습이 필요 없습니다. 목표는 "특정 색 찾기"의 원리를 체험하기. 색 물체를 들고 움직여 보세요.',
+             algo:  '각 픽셀 색이 고른 색과 얼마나 가까운지(거리) 계산해, 가까우면 남기고 멀면 어둡게 가립니다(임계값).' },
+  face:    { learn: '대규모 얼굴 데이터로 미리 학습된 모델을 그대로 씁니다. 목표는 "검출"과 "인식"의 차이 이해하기.',
+             algo:  'BlazeFace가 화면을 훑어 얼굴이 있을 법한 위치에 상자를 칩니다. 누구인지까지는 알지 못합니다(위치만).' },
+  skeleton:{ learn: '미리 학습된 자세 추정 모델을 그대로 씁니다. 목표는 컴퓨터가 몸을 어떻게 "점과 선"으로 보는지 체험.',
+             algo:  'MoveNet이 관절 17곳을 찾아 점으로 찍고, 정해진 연결 규칙대로 선을 이어 뼈대를 그립니다.' },
+  detect:  { learn: 'COCO(90종 사물) 데이터로 미리 학습된 모델을 그대로 씁니다. 목표는 사전학습 모델의 힘 체험.',
+             algo:  'COCO-SSD가 화면을 한 번에 훑어 사물의 위치와 종류를 동시에 예측하고 상자·이름·확률을 표시합니다.' },
+};
+
 function buildSidebar() {
   const nav = document.getElementById('sidebar');
   nav.innerHTML = NAV_GROUPS.map((g) => `
@@ -3298,6 +3327,13 @@ function selectFeature(key) {
   $('fi-type').textContent = f.type;
   $('fi-model').textContent = f.model;
   $('fi-desc').textContent = f.desc;
+
+  // 이론 영역 (학습 정보 / 알고리즘 정보)
+  const th = THEORY[key], ft = $('fi-theory');
+  if (ft) {
+    if (th) { ft.style.display = ''; $('fi-learn').textContent = th.learn; $('fi-algo').textContent = th.algo; }
+    else ft.style.display = 'none';
+  }
 
   // 상단 단계 네비 (config.steps 기반)
   const sn = $('step-nav');
