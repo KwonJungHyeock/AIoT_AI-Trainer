@@ -255,8 +255,12 @@
   .nav-group { margin-bottom: 16px; }
   .nav-group + .nav-group { border-top: 1px solid var(--border); padding-top: 16px; }
   .nav-group-title {
-    font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
-    text-transform: uppercase; color: var(--ink-4); padding: 0 10px 8px;
+    font-family: var(--sans); font-size: 12.5px; font-weight: 700; letter-spacing: .01em;
+    color: var(--ink-2); padding: 4px 10px 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .nav-group-title::before {
+    content: ''; width: 3px; height: 14px; border-radius: 2px; background: var(--accent); flex: none;
   }
   .nav-item {
     display: flex; align-items: center; gap: 10px; width: 100%;
@@ -415,12 +419,21 @@
 
   .card {
     background: var(--panel); border: 1px solid var(--border);
-    border-radius: var(--radius); box-shadow: var(--shadow-sm);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+  }
+  /* 좌/우 영역에 은은한 배경 톤을 줘서 영역을 구분 (좌=쿨, 우=웜) */
+  .sub-panel.active > aside.card:first-child {
+    background: linear-gradient(180deg, #fbfcfe 0%, #eef2f8 100%);
+  }
+  .sub-panel.active > aside.card:last-child {
+    background: linear-gradient(180deg, #fffdfc 0%, #fbeeec 100%);
   }
   .card-h {
-    padding: 14px 16px 10px;
+    padding: 13px 16px 11px;
     display: flex; align-items: center; justify-content: space-between;
     border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(255,255,255,.5), rgba(244,247,251,.5));
+    border-radius: var(--radius) var(--radius) 0 0;
   }
   .card-h .label {
     font-family: var(--mono); font-size: 11px; font-weight: 500;
@@ -546,6 +559,12 @@
   }
   .det-row .det-head { display: flex; justify-content: space-between; }
   .det-row .det-pct { color: var(--blue); }
+  .ct-color {
+    width: 34px; height: 34px; border-radius: 9px; border: 2px solid var(--border);
+    cursor: pointer; transition: .12s; padding: 0;
+  }
+  .ct-color:hover { transform: translateY(-1px); }
+  .ct-color.active { border-color: var(--ink); box-shadow: 0 0 0 3px var(--accent-soft); }
   .video-wrap video {
     width: 100%; height: 100%; object-fit: cover;
     transform: scaleX(-1);
@@ -1475,6 +1494,49 @@
             <div class="gauge"><div class="gauge-fill" id="fc-count-bar"></div></div>
           </div>
           <p class="hint" style="margin-top:12px">여러 명이 함께 화면에 들어오면 각 얼굴에 박스가 그려집니다.</p>
+        </div>
+      </aside>
+    </div>
+
+    <!-- ─── 색상 추적 ─── -->
+    <div id="sub-colortrack" class="sub-panel" style="display:none">
+      <aside class="card">
+        <div class="card-h"><span class="label">알고리즘</span><span class="meta">RGB THRESHOLD</span></div>
+        <div class="card-b">
+          <p class="hint" style="margin:0 0 12px">선택한 색과 비슷한 픽셀만 남기고 배경을 어둡게 처리합니다. 추적할 색을 고르세요.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <button class="ct-color active" data-r="220" data-g="50" data-b="50" style="background:#dc3232" title="빨강"></button>
+            <button class="ct-color" data-r="40" data-g="180" data-b="80" style="background:#28b450" title="초록"></button>
+            <button class="ct-color" data-r="50" data-g="110" data-b="230" style="background:#326ee6" title="파랑"></button>
+            <button class="ct-color" data-r="235" data-g="210" data-b="55" style="background:#ebd237" title="노랑"></button>
+          </div>
+          <div class="metrics" style="margin-top:14px;grid-template-columns:1fr 1fr">
+            <div><span class="k">STATUS</span><span class="v" id="ct-status">IDLE</span></div>
+            <div><span class="k">FPS</span><span class="v" id="ct-fps">—</span></div>
+          </div>
+        </div>
+      </aside>
+      <section style="display:flex;flex-direction:column;gap:14px">
+        <div class="card stage-card">
+          <div class="video-wrap">
+            <video id="ct-webcam" autoplay playsinline muted></video>
+            <canvas id="ct-canvas" class="pose-overlay"></canvas>
+            <div class="video-overlay" id="ct-cam-overlay">
+              <div><div class="ph">CAMERA · STANDBY</div><div class="ph-msg">카메라를 켜면 색을 추적합니다</div></div>
+            </div>
+          </div>
+          <div class="cam-controls">
+            <button class="btn primary" id="ct-cam-toggle" style="width:100%">카메라 켜기 · 추적 시작</button>
+          </div>
+        </div>
+      </section>
+      <aside class="card">
+        <div class="card-h"><span class="label">MATCH</span><span class="meta" id="ct-meta">—</span></div>
+        <div class="card-b">
+          <div style="margin-bottom:10px"><span style="font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-4)">선택 색 매칭 비율</span>
+            <div class="gauge"><div class="gauge-fill" id="ct-match-bar"></div></div>
+          </div>
+          <p class="hint" style="margin-top:12px">조명에 따라 인식이 달라집니다. 선명한 단색 물체가 가장 잘 추적됩니다.</p>
         </div>
       </aside>
     </div>
@@ -2785,14 +2847,13 @@ async function skelToggle() {
     skEls.status.textContent = 'IDLE'; skEls.fps.textContent = '—'; skEls.count.textContent = '—';
     return;
   }
-  if (!pose.detector) { skEls.status.textContent = 'MODEL LOADING'; return; }
   try {
     skel.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
     skEls.video.srcObject = skel.stream;
     await skEls.video.play().catch(() => {});
     skEls.camOverlay.style.display = 'none';
     skEls.camToggle.textContent = '카메라 끄기';
-    skEls.status.textContent = 'LIVE'; skel.lastT = performance.now();
+    skEls.status.textContent = pose.detector ? 'LIVE' : 'MODEL LOADING'; skel.lastT = performance.now();
     skelLoop();
   } catch (e) {
     skEls.camOverlay.innerHTML = '<div><div class="ph" style="color:#ef4444">CAMERA DENIED</div><div class="ph-msg">브라우저 카메라 권한을 확인하세요</div></div>';
@@ -2819,6 +2880,7 @@ async function skelLoop() {
         ctx.fillStyle = '#06b6d4';
         kp.forEach((p) => { if (p.score > 0.3) { good++; ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI * 2); ctx.fill(); } });
       }
+      skEls.status.textContent = 'LIVE';
       skEls.count.textContent = good + ' / 17';
       if (skEls.confBar) skEls.confBar.style.width = Math.round(good / 17 * 100) + '%';
       const now = performance.now();
@@ -2849,22 +2911,28 @@ async function faceToggle() {
     fcEls.status.textContent = 'IDLE'; fcEls.fps.textContent = '—'; fcEls.count.textContent = '0';
     return;
   }
-  if (!window.blazeface) { console.error('[face] blazeface missing'); fcEls.status.textContent = 'NOT AVAILABLE'; return; }
-  fcEls.status.textContent = 'LOADING';
+  // 카메라를 먼저 켜고(모델 로드 실패와 무관하게 화면 표시), 모델은 이후 로드
   try {
-    if (!face.model) face.model = await blazeface.load();
     face.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
     fcEls.video.srcObject = face.stream;
     await fcEls.video.play().catch(() => {});
     fcEls.camOverlay.style.display = 'none';
     fcEls.camToggle.textContent = '카메라 끄기';
-    fcEls.status.textContent = 'LIVE'; face.lastT = performance.now();
+    fcEls.status.textContent = 'LOADING'; face.lastT = performance.now();
     faceLoop();
-  } catch (e) { console.error('[face] fail:', e); fcEls.status.textContent = 'ERROR'; }
+  } catch (e) {
+    fcEls.camOverlay.innerHTML = '<div><div class="ph" style="color:#ef4444">CAMERA DENIED</div><div class="ph-msg">브라우저 카메라 권한을 확인하세요</div></div>';
+    return;
+  }
+  try {
+    if (!window.blazeface) { fcEls.status.textContent = '모델 없음'; return; }
+    if (!face.model) face.model = await blazeface.load();
+    fcEls.status.textContent = 'LIVE';
+  } catch (e) { console.error('[face] model:', e); fcEls.status.textContent = 'MODEL ERROR'; }
 }
 async function faceLoop() {
-  if (!face.stream || !face.model) return;
-  if (fcEls.video.readyState >= 2) {
+  if (!face.stream) return;
+  if (face.model && fcEls.video.readyState >= 2) {
     const vw = fcEls.video.videoWidth, vh = fcEls.video.videoHeight;
     fcEls.canvas.width = vw; fcEls.canvas.height = vh;
     try {
@@ -2890,6 +2958,73 @@ async function faceLoop() {
     } catch (e) { /* skip */ }
   }
   face.raf = requestAnimationFrame(faceLoop);
+}
+
+/* ============================================================
+   ▌ 영상처리 — 색상 추적 (RGB 임계값, tf.fromPixels 읽기 + 투명 오버레이)
+   ============================================================ */
+const ct = { stream: null, raf: null, lastT: 0, target: { r: 220, g: 50, b: 50 } };
+const ctEls = {
+  video: $('ct-webcam'), canvas: $('ct-canvas'), camOverlay: $('ct-cam-overlay'),
+  camToggle: $('ct-cam-toggle'), status: $('ct-status'), fps: $('ct-fps'),
+  meta: $('ct-meta'), matchBar: $('ct-match-bar'),
+};
+function ctInit() {
+  ctEls.camToggle.addEventListener('click', ctToggle);
+  document.querySelectorAll('.ct-color').forEach((b) => b.addEventListener('click', () => {
+    ct.target = { r: +b.dataset.r, g: +b.dataset.g, b: +b.dataset.b };
+    document.querySelectorAll('.ct-color').forEach((x) => x.classList.toggle('active', x === b));
+  }));
+}
+async function ctToggle() {
+  if (ct.stream) {
+    ct.stream.getTracks().forEach((t) => t.stop());
+    ct.stream = null; ctEls.video.srcObject = null;
+    if (ct.raf) cancelAnimationFrame(ct.raf); ct.raf = null;
+    ctEls.canvas.getContext('2d').clearRect(0, 0, ctEls.canvas.width, ctEls.canvas.height);
+    ctEls.camOverlay.style.display = 'grid';
+    ctEls.camToggle.textContent = '카메라 켜기 · 추적 시작';
+    ctEls.status.textContent = 'IDLE'; ctEls.fps.textContent = '—'; ctEls.meta.textContent = '—';
+    return;
+  }
+  try {
+    ct.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+    ctEls.video.srcObject = ct.stream;
+    await ctEls.video.play().catch(() => {});
+    ctEls.camOverlay.style.display = 'none';
+    ctEls.camToggle.textContent = '카메라 끄기';
+    ctEls.status.textContent = 'LIVE'; ct.lastT = performance.now();
+    ctLoop();
+  } catch (e) {
+    ctEls.camOverlay.innerHTML = '<div><div class="ph" style="color:#ef4444">CAMERA DENIED</div><div class="ph-msg">브라우저 카메라 권한을 확인하세요</div></div>';
+  }
+}
+async function ctLoop() {
+  if (!ct.stream) return;
+  if (ctEls.video.readyState >= 2 && window.tf) {
+    const W = 160, H = 120;
+    try {
+      const t = tf.tidy(() => tf.image.resizeBilinear(tf.browser.fromPixels(ctEls.video), [H, W]));
+      const d = await t.data(); t.dispose();
+      ctEls.canvas.width = W; ctEls.canvas.height = H;
+      const ctx = ctEls.canvas.getContext('2d');
+      const img = ctx.createImageData(W, H);
+      const tg = ct.target; let matched = 0;
+      for (let i = 0; i < W * H; i++) {
+        const dist = Math.abs(d[i * 3] - tg.r) + Math.abs(d[i * 3 + 1] - tg.g) + Math.abs(d[i * 3 + 2] - tg.b);
+        const o = i * 4;
+        if (dist < 140) { matched++; /* 매칭 → 투명(뒤 비디오 노출) */ }
+        else { img.data[o] = 8; img.data[o + 1] = 10; img.data[o + 2] = 16; img.data[o + 3] = 195; }
+      }
+      ctx.putImageData(img, 0, 0);
+      const pct = matched * 100 / (W * H);
+      ctEls.meta.textContent = pct.toFixed(1) + '%';
+      if (ctEls.matchBar) ctEls.matchBar.style.width = Math.min(100, pct * 4).toFixed(0) + '%';
+      const now = performance.now();
+      ctEls.fps.textContent = (1000 / (now - ct.lastT)).toFixed(1); ct.lastT = now;
+    } catch (e) { /* skip */ }
+  }
+  ct.raf = requestAnimationFrame(ctLoop);
 }
 
 /* ============================================================
@@ -3080,6 +3215,7 @@ function stopAllActivity() {
   if (detect.stream)   detectToggle();     // 객체 탐지
   if (seg.stream)      segmentToggle();    // 인물 분리
   if (ff.stream)       filterToggle();     // 영상 필터/모션
+  if (ct.stream)       ctToggle();         // 색상 추적
   if (skel.stream)     skelToggle();       // 뼈대 검출
   if (face.stream)     faceToggle();       // 얼굴 검출
   if (depth.stream)    depthToggle();      // 깊이 추정
@@ -3107,6 +3243,8 @@ const FEATURES = {
     type: '영상처리 알고리즘', model: 'BlazeFace', desc: '얼굴 위치를 실시간 박스로 검출합니다(누구인지 식별이 아니라 위치 검출).' },
   skeleton:{ name: '뼈대(포즈) 검출', icon: IC('<circle cx="12" cy="4" r="2"/><path d="M12 6v6m0 0l-4 6m4-6l4 6M6 9l6 1 6-1"/>'), badge: '알고리즘', panel: 'panel-pretrained', sub: 'sub-skeleton',
     type: '영상처리 알고리즘', model: 'MoveNet', desc: '학습 없이 관절 뼈대를 실시간으로 그립니다.' },
+  colortrack:{ name: '색상 추적', icon: IC('<circle cx="9" cy="9" r="5"/><circle cx="16" cy="15" r="4"/>'), badge: '알고리즘',
+    panel: 'panel-pretrained', sub: 'sub-colortrack', type: '영상처리 알고리즘', model: 'RGB 임계값', desc: '선택한 색을 가진 영역만 남기고 배경을 어둡게 처리합니다. 색 물체를 들고 움직여 보세요.' },
   detect:  { name: '객체 탐지', icon: IC('<path d="M3 7V4h3M21 7V4h-3M3 17v3h3M21 17v3h-3"/><rect x="8" y="8" width="8" height="8" rx="1"/>'), badge: '사전학습',
     panel: 'panel-pretrained', sub: 'sub-detect', type: '사전학습 추론', model: 'COCO-SSD', desc: '추가 학습 없이 90종 사물을 실시간으로 박스 탐지합니다.' },
   segment: { name: '인물 분리', icon: IC('<circle cx="12" cy="8" r="3.5"/><path d="M5 21c0-4 3.5-6 7-6s7 2 7 6"/>'), badge: '사전학습',
@@ -3116,7 +3254,7 @@ const FEATURES = {
 /* 사이드바 그룹 구성 — 이 배열 순서대로 렌더된다. */
 const NAV_GROUPS = [
   { title: 'AI 학습·추론 · 만드는 AI', items: ['image', 'audio', 'pose', 'text'] },
-  { title: 'AI 영상처리 · 체험하는 AI', items: ['filter', 'face', 'skeleton', 'detect', 'segment'] },
+  { title: 'AI 영상처리 · 체험하는 AI', items: ['filter', 'colortrack', 'face', 'skeleton', 'detect'] },
 ];
 
 /* 단계 네비 — 학습추론/영상처리 기능군에 따라 단계 라벨이 다르다. */
@@ -3201,6 +3339,7 @@ audioInit();
 detectInit();
 segmentInit();
 filterInit();
+ctInit();
 skelInit();
 faceInit();
 // depthInit(); // 깊이 추정(ARPortraitDepth)은 실험적·불안정으로 탭 숨김 처리 (JS는 휴면)
