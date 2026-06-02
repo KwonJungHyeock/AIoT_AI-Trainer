@@ -85,8 +85,25 @@ npm test
 
 - 기본 동작 — 스크립트 로드, 기본 클래스 렌더, 클래스 추가/제한, 막대·학습곡선 렌더
 - 학습 흐름 — 이미지/동작 탭 모두 공통 `trainHead` 경로로 head 생성·fit·혼동행렬 렌더
-- 추론 — 한 틱이 신뢰도 막대·최상위 예측을 갱신
+- 추론 — 한 틱이 신뢰도 막대·도넛·최상위 예측을 갱신
+- UI — 사이드바 config 생성, StepNav 진행 연동, 영상 필터/색상추적 파라미터
 - 회귀 — 탭 전환 시 카메라 스트림 정지(`stopAllActivity`), 혼동행렬 텐서 use-after-dispose 방지
+
+---
+
+## 데스크톱 앱 (.exe) 빌드
+
+바탕화면에서 더블클릭으로 실행하는 독립 앱은 **Electron** 으로 패키징합니다. (카메라는 `file://` 보안 컨텍스트 + 권한 핸들러로 정상 동작)
+
+```bash
+npm install          # 최초 1회 (electron, electron-builder 포함)
+npm run app          # 개발 실행 (바로 앱 창 띄우기)
+npm run dist         # 배포본 빌드 → dist/ 에 포터블 .exe 생성 (Windows)
+```
+
+- `dist/Eduino AI Lab *.exe` 를 바탕화면에 두고 더블클릭하면 실행됩니다(설치 불필요, 포터블).
+- 앱 아이콘을 바꾸려면 `build/icon.ico` 를 추가하고 `package.json > build.win.icon` 을 지정하세요.
+- 모델(TensorFlow.js)은 최초 실행 시 CDN 에서 받으므로 **첫 실행은 인터넷 필요**, 이후 캐시됩니다.
 
 ---
 
@@ -112,10 +129,12 @@ app.mount("/ml-trainer", StaticFiles(directory="ml-trainer", html=True))
 
 ```
 eduino-ml-trainer/
-├── index.html              # 앱 본체 (단일 파일 · 3탭 전체)
+├── index.html              # 앱 본체 (단일 파일 · 사이드바 + 전 기능)
+├── electron-main.js        # 데스크톱 앱(Electron) 메인 프로세스
 ├── README.md               # 이 문서
+├── CHANGELOG.md            # 개발 과정 · 변경 기록
 ├── DEPLOY.md               # AWS 배포 요약
-├── package.json            # 테스트 스크립트 + devDependency(jsdom)
+├── package.json            # 테스트·앱 스크립트 + devDependencies
 ├── test/
 │   ├── load-app.mjs        # jsdom 로더 + tf/모델 경량 스텁
 │   └── smoke.test.mjs      # 스모크/회귀 테스트

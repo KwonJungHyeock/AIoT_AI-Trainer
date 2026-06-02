@@ -1,3 +1,4 @@
 "*.docx"
 *.bak
 node_modules/
+dist/
