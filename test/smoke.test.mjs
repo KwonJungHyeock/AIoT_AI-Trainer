@@ -169,6 +169,16 @@ test('추론 시 도넛 게이지(%)가 갱신된다 (이미지)', async () => {
   assert.match(doc.getElementById('top-donut-pct').textContent, /\d+%/);
 });
 
+test('색상 추적: 프리셋 8색 + 색상 직접 입력이 동작한다', async () => {
+  const { window, doc } = await loadApp();
+  doc.querySelector('.nav-item[data-feature="colortrack"]').click();
+  assert.equal(doc.querySelectorAll('#sub-colortrack .ct-color').length, 8);
+  const pick = doc.getElementById('ct-pick');
+  pick.value = '#00ff00';
+  pick.dispatchEvent(new window.Event('input'));
+  assert.equal(doc.querySelectorAll('.ct-color.active').length, 0); // 직접 입력 시 프리셋 해제
+});
+
 test('영상 필터 밝기 슬라이더가 CSS 필터에 실시간 반영된다', async () => {
   const { window, doc } = await loadApp();
   doc.querySelector('.nav-item[data-feature="filter"]').click();
