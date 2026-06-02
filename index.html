@@ -570,6 +570,15 @@
   }
   .ct-color:hover { transform: translateY(-1px); }
   .ct-color.active { border-color: var(--ink); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+  /* 영상처리 파라미터 슬라이더 */
+  .param { margin-top: 4px; padding: 12px; background: var(--panel-soft); border: 1px solid var(--border); border-radius: 8px; }
+  .param-label { display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 600; color: var(--ink-2); margin-bottom: 8px; }
+  .param-label span { font-family: var(--mono); color: var(--accent-ink); }
+  .param-hint { margin: 8px 0 0; font-size: 11px; color: var(--ink-4); line-height: 1.4; }
+  .slider { -webkit-appearance: none; appearance: none; width: 100%; height: 5px; border-radius: 999px; background: var(--border-strong); outline: none; }
+  .slider::-webkit-slider-thumb { -webkit-appearance: none; width: 17px; height: 17px; border-radius: 50%; background: var(--accent); border: 2px solid #fff; box-shadow: var(--shadow-sm); cursor: pointer; }
+  .slider::-moz-range-thumb { width: 17px; height: 17px; border-radius: 50%; background: var(--accent); border: 2px solid #fff; cursor: pointer; }
   .video-wrap video {
     width: 100%; height: 100%; object-fit: cover;
     transform: scaleX(-1);
@@ -1312,7 +1321,12 @@
         <div class="card-h"><span class="label">MODEL</span><span class="meta">COCO-SSD</span></div>
         <div class="card-b">
           <p class="hint" style="margin:0 0 12px">대규모 데이터(<b>COCO</b>) 90개 클래스로 사전 학습된 모델. 카메라 영상에서 사람·차·동물 등을 실시간으로 박스 표시합니다.</p>
-          <div class="metrics" style="margin-top:8px">
+          <div class="param">
+            <label class="param-label">신뢰도 임계값 <span id="d-thr-val">50%</span></label>
+            <input type="range" id="d-thr" min="10" max="90" value="50" class="slider">
+            <p class="param-hint">값을 올리면 확실한 것만 남고, 내리면 더 많이(부정확해도) 잡습니다.</p>
+          </div>
+          <div class="metrics" style="margin-top:12px">
             <div><span class="k">CLASSES</span><span class="v">90</span></div>
             <div><span class="k">STATUS</span><span class="v" id="d-status">IDLE</span></div>
             <div><span class="k">FPS</span><span class="v" id="d-fps">—</span></div>
@@ -2570,7 +2584,7 @@ function audioRefresh() {
 /* ============================================================
    ▌ 사전학습 추론 — 객체 탐지 (COCO-SSD)
    ============================================================ */
-const detect = { model: null, stream: null, raf: null, lastT: 0 };
+const detect = { model: null, stream: null, raf: null, lastT: 0, threshold: 0.5 };
 const dEls = {
   video: $('d-webcam'), overlay: $('d-overlay'), camOverlay: $('d-cam-overlay'),
   camToggle: $('d-cam-toggle'), list: $('d-list'),
@@ -2579,6 +2593,11 @@ const dEls = {
 
 async function detectInit() {
   dEls.camToggle.addEventListener('click', detectToggle);
+  const thr = document.getElementById('d-thr');
+  if (thr) thr.addEventListener('input', () => {
+    detect.threshold = (+thr.value) / 100;
+    const v = document.getElementById('d-thr-val'); if (v) v.textContent = thr.value + '%';
+  });
 }
 async function detectToggle() {
   if (detect.stream) {
@@ -2612,7 +2631,7 @@ async function detectLoop() {
     const vw = dEls.video.videoWidth, vh = dEls.video.videoHeight;
     dEls.overlay.width = vw; dEls.overlay.height = vh;
     try {
-      const preds = await detect.model.detect(dEls.video);
+      const preds = (await detect.model.detect(dEls.video)).filter((p) => p.score >= detect.threshold);
       const ctx = dEls.overlay.getContext('2d');
       ctx.clearRect(0, 0, vw, vh);
       ctx.font = 'bold 16px JetBrains Mono';
