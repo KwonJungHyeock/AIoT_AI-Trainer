@@ -179,6 +179,16 @@ test('색상 추적: 프리셋 8색 + 색상 직접 입력이 동작한다', asy
   assert.equal(doc.querySelectorAll('.ct-color.active').length, 0); // 직접 입력 시 프리셋 해제
 });
 
+test('클래스 선택 시 입력칸이 유지된다 (터치 수정 회귀)', async () => {
+  const { doc } = await loadApp();
+  const input0 = doc.querySelectorAll('#class-list .class-item')[0].querySelector('.class-name');
+  doc.querySelectorAll('#class-list .class-item')[1].click();
+  doc.querySelectorAll('#class-list .class-item')[0].click();
+  const input0After = doc.querySelectorAll('#class-list .class-item')[0].querySelector('.class-name');
+  assert.equal(input0After, input0, '선택해도 입력칸 요소가 재생성되지 않아야 함(포커스 유지)');
+  assert.equal(doc.querySelectorAll('#class-list .class-item')[0].classList.contains('selected'), true);
+});
+
 test('영상 필터 밝기 슬라이더가 CSS 필터에 실시간 반영된다', async () => {
   const { window, doc } = await loadApp();
   doc.querySelector('.nav-item[data-feature="filter"]').click();

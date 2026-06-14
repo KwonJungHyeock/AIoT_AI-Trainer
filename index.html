@@ -325,9 +325,34 @@
   .fi-tcard p { margin: 0; font-size: 14px; color: var(--ink-2); line-height: 1.55; }
   @media (max-width: 720px) { .fi-theory { grid-template-columns: 1fr; } }
 
+  /* 태블릿: 사이드바를 상단 가로 바로 전환(세로 공간 절약) */
   @media (max-width: 1024px) {
     .app-shell { grid-template-columns: 1fr; }
-    .sidebar { position: static; min-height: 0; border-right: none; border-bottom: 1px solid var(--border); }
+    .sidebar {
+      position: static; min-height: 0; border-right: none;
+      border-bottom: 1px solid var(--border-strong);
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 16px;
+    }
+    .nav-group { margin-bottom: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .nav-group + .nav-group { border-top: none; padding-top: 0; }
+    .nav-group-title { width: 100%; padding: 2px 4px 0; }
+    .nav-item { width: auto; margin-bottom: 0; }
+    .nav-item.active { box-shadow: inset 0 -3px 0 var(--accent); }
+    .content { padding: 16px; }
+  }
+
+  /* 터치 기기: 탭 타깃 키우기 + 입력 확대(iOS 자동 줌 방지 위해 16px) */
+  @media (pointer: coarse) {
+    .btn { padding: 14px 16px; }
+    .nav-item { padding: 12px 12px; }
+    .class-item { padding: 14px; }
+    .class-name { font-size: 16px; }
+    .class-del { width: 34px; height: 34px; font-size: 16px; }
+    .ff-mode { padding: 14px 8px; }
+    .ct-color { width: 50px; height: 50px; }
+    .slider { height: 8px; }
+    .slider::-webkit-slider-thumb { width: 22px; height: 22px; }
+    .slider::-moz-range-thumb { width: 22px; height: 22px; }
   }
 
   /* 서브 탭 → 좌측 사이드바로 대체되어 숨김 */
@@ -1766,7 +1791,12 @@ function removeClass(id) {
   state.trained = false; state.head = null;
   renderClasses(); renderBars(); refresh(); resetTopPred();
 }
-function selectClass(id) { state.selectedId = id; renderClasses(); }
+/* 선택은 전체 재렌더 대신 하이라이트만 변경 — 입력칸(input)이 파괴되지 않아
+   터치/모바일에서 클래스명 수정 중 포커스가 풀리지 않는다. */
+function setSelectedItem(container, id) {
+  container.querySelectorAll('.class-item').forEach((el) => el.classList.toggle('selected', +el.dataset.id === id));
+}
+function selectClass(id) { state.selectedId = id; setSelectedItem(els.classList, id); updateCapTarget(); }
 
 /* 클래스 목록 렌더 공통 로직 — 이미지/동작 탭이 콜백·상수·갤러리 연동만 다르고
    DOM 구조가 동일하므로 cfg 로 주입받아 재사용한다. onThumbs 가 없으면(동작 탭)
@@ -1776,6 +1806,7 @@ function renderClassList(cfg) {
   cfg.classes.forEach(c => {
     const div = document.createElement('div');
     div.className = 'class-item' + (c.id === cfg.selectedId ? ' selected' : '');
+    div.dataset.id = c.id;
     div.onclick = () => cfg.onSelect(c.id);
 
     const row = document.createElement('div');
@@ -2186,7 +2217,7 @@ function poseRemoveClass(id) {
   if (pose.selectedId === id) pose.selectedId = pose.classes[0]?.id || null;
   poseRenderClasses(); poseRefresh();
 }
-function poseSelectClass(id) { pose.selectedId = id; poseRenderClasses(); }
+function poseSelectClass(id) { pose.selectedId = id; setSelectedItem(pEls.classList, id); poseUpdateCapTarget(); }
 
 function poseRenderClasses() {
   renderClassList({
@@ -2465,13 +2496,14 @@ function audioRemoveClass(id) {
   if (audio.selectedId === id) audio.selectedId = audio.classes[0]?.id || null;
   audioRenderClasses(); audioRefresh();
 }
-function audioSelectClass(id) { audio.selectedId = id; audioRenderClasses(); }
+function audioSelectClass(id) { audio.selectedId = id; setSelectedItem(aEls.classList, id); audioUpdateCapTarget(); }
 
 function audioRenderClasses() {
   aEls.classList.innerHTML = '';
   audio.classes.forEach(c => {
     const div = document.createElement('div');
     div.className = 'class-item' + (c.id === audio.selectedId ? ' selected' : '');
+    div.dataset.id = c.id;
     div.onclick = () => audioSelectClass(c.id);
     const row = document.createElement('div');
     row.className = 'class-row';
