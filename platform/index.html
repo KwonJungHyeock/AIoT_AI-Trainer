@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Eduino AI · 체험형 AI 학습 플랫폼</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0d1016; --bg-grid: rgba(255,255,255,.035);
+    --panel: #161b24; --panel-soft: #1c222d;
+    --border: #2a313f; --border-strong: #3a4150;
+    --ink: #eef1f6; --ink-2: #c3ccd9; --ink-3: #8c97a7; --ink-4: #5f6976;
+    --accent: #f15a4f; --accent-soft: rgba(241,90,79,.16); --accent-ink: #ff9a8f;
+    --blue: #4d8dff; --green: #2bb583; --amber: #e0913a;
+    --shadow: 0 2px 8px rgba(0,0,0,.4), 0 8px 26px rgba(0,0,0,.32);
+    --radius: 14px;
+    --sans: 'Pretendard', -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', 'Pretendard', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: var(--sans); color: var(--ink);
+    background:
+      radial-gradient(900px 500px at 80% -10%, rgba(241,90,79,.12), transparent 60%),
+      linear-gradient(var(--bg-grid) 1px, transparent 1px) 0 0 / 26px 26px,
+      linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px) 0 0 / 26px 26px,
+      var(--bg);
+    min-height: 100vh; font-size: 16px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased; letter-spacing: -0.005em;
+  }
+
+  /* 헤더 */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: linear-gradient(180deg, #1c2331, #141a25);
+    border-bottom: 1px solid var(--border-strong); box-shadow: 0 4px 20px rgba(0,0,0,.35);
+  }
+  .topbar::after { content:''; display:block; height:3px;
+    background: linear-gradient(90deg, var(--accent), #ff8a3d 38%, rgba(255,138,61,0) 78%); }
+  .topbar-inner { max-width: 1200px; margin: 0 auto; padding: 16px 24px;
+    display: flex; align-items: center; gap: 13px; }
+  .logo-mark {
+    width: 44px; height: 44px; border-radius: 13px;
+    background: linear-gradient(160deg, #ff6a52, #e8392b);
+    display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 24px;
+    box-shadow: 0 4px 14px rgba(241,90,79,.5), inset 0 1px 0 rgba(255,255,255,.35);
+  }
+  .logo-title { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; }
+  .logo-title span { color: var(--accent); }
+  .logo-tag { font-size: 12.5px; color: var(--ink-3); }
+
+  main { max-width: 1200px; margin: 0 auto; padding: 0 24px 72px; }
+
+  /* 히어로 */
+  .hero { padding: 64px 0 40px; text-align: center; }
+  .hero .eyebrow {
+    display: inline-block; font-family: var(--mono); font-size: 12px; letter-spacing: .1em;
+    color: var(--accent-ink); background: var(--accent-soft); border: 1px solid rgba(241,90,79,.3);
+    border-radius: 999px; padding: 6px 14px; margin-bottom: 18px;
+  }
+  .hero h1 { margin: 0 0 14px; font-size: 40px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; }
+  .hero h1 .accent { color: var(--accent); }
+  .hero p { margin: 0 auto; max-width: 640px; font-size: 16.5px; color: var(--ink-2); }
+  .hero-points { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+  .hero-points span {
+    font-size: 13px; color: var(--ink-2); background: var(--panel); border: 1px solid var(--border);
+    border-radius: 999px; padding: 7px 14px;
+  }
+  .hero-points b { color: var(--accent-ink); font-weight: 700; }
+
+  /* 섹션 제목 */
+  .section-h { display: flex; align-items: center; gap: 10px; margin: 36px 0 16px; }
+  .section-h h2 { margin: 0; font-size: 19px; font-weight: 700; }
+  .section-h::before { content:''; width:4px; height:18px; border-radius:2px; background: var(--accent); }
+  .section-h .muted { font-size: 13px; color: var(--ink-4); font-family: var(--mono); }
+
+  /* 모듈 카드 그리드 */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
+  .card {
+    position: relative; background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px;
+    display: flex; flex-direction: column; gap: 12px; transition: .16s;
+    text-decoration: none; color: inherit;
+  }
+  .card.live:hover { transform: translateY(-3px); border-color: var(--accent); }
+  .card.soon { opacity: .62; }
+  .card-top { display: flex; align-items: center; justify-content: space-between; }
+  .card-ic {
+    width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center;
+    background: var(--panel-soft); border: 1px solid var(--border); color: var(--accent-ink);
+  }
+  .card-ic svg { width: 24px; height: 24px; }
+  .status {
+    font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: .04em;
+    padding: 4px 9px; border-radius: 999px;
+  }
+  .status.on { background: rgba(43,181,131,.16); color: var(--green); border: 1px solid rgba(43,181,131,.4); }
+  .status.off { background: var(--panel-soft); color: var(--ink-4); border: 1px solid var(--border); }
+  .card h3 { margin: 2px 0 0; font-size: 18px; font-weight: 700; }
+  .card .desc { font-size: 13.5px; color: var(--ink-3); line-height: 1.55; flex: 1; }
+  .card .meta { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .03em;
+    padding: 3px 8px; border-radius: 6px; background: var(--panel-soft);
+    color: var(--ink-3); border: 1px solid var(--border);
+  }
+  .chip.audience { color: var(--blue); border-color: rgba(77,141,255,.3); background: rgba(77,141,255,.1); }
+  .card .go {
+    margin-top: 4px; font-family: var(--sans); font-weight: 700; font-size: 14px;
+    color: var(--accent-ink); display: inline-flex; align-items: center; gap: 6px;
+  }
+  .card.soon .go { color: var(--ink-4); }
+
+  footer {
+    border-top: 1px solid var(--border); margin-top: 16px; padding: 24px;
+    text-align: center; color: var(--ink-4); font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
+  }
+  @media (max-width: 560px) { .hero h1 { font-size: 30px; } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="logo-mark">E</div>
+    <div>
+      <div class="logo-title">Eduino <span>AI</span></div>
+      <div class="logo-tag">체험으로 빠르게 배우는 AI 학습 플랫폼</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <span class="eyebrow">EDUINO · AI LEARNING PLATFORM</span>
+    <h1>보고 만지며 배우는 <span class="accent">AI</span></h1>
+    <p>설치 없이 브라우저에서 바로. 카메라·소리·데이터로 직접 학습시키고 결과를 확인하는, 교실용 체험형 AI 학습 모듈을 골라 시작하세요.</p>
+    <div class="hero-points">
+      <span>🖥 <b>설치 0</b> · 브라우저 완결</span>
+      <span>🔒 <b>On-Device</b> · 데이터 외부전송 없음</span>
+      <span>🎮 <b>체험·상호작용</b> 중심</span>
+    </div>
+  </section>
+
+  <div class="section-h">
+    <h2>학습 모듈</h2>
+    <span class="muted">module library</span>
+  </div>
+
+  <div class="grid" id="module-grid"></div>
+</main>
+
+<footer>EDUINO AI · 모듈을 선택해 학습을 시작하세요 · 체험 → 제작 → 응용</footer>
+
+<script>
+/* 모듈 메타데이터 — 항목만 추가하면 카드가 자동 생성된다(확장형). */
+const IC = (p) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const MODULES = [
+  { key:'vision', name:'비전 · 영상처리 AI', live:true, href:'../index.html',
+    icon: IC('<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.5"/>'),
+    desc:'이미지·동작·음성 분류 + 객체탐지·얼굴·뼈대·색상추적·영상효과까지 한 번에.',
+    levels:['초급','중급','심화'], audience:'초등~중등' },
+  { key:'gesture', name:'제스처 · 동작 AI', live:false,
+    icon: IC('<circle cx="12" cy="4" r="2"/><path d="M12 6v6m0 0l-4 6m4-6l4 6M6 9l6 1 6-1"/>'),
+    desc:'손 관절 추적·가위바위보 인식부터, 내 제스처를 학습시켜 제어까지.',
+    levels:['초급','중급','심화'], audience:'초등~중등' },
+  { key:'data', name:'데이터 · 예측 AI (AIoT)', live:false,
+    icon: IC('<path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 4-5"/>'),
+    desc:'표·센서 데이터로 회귀/분류를 학습. 과적합·일반화까지 체험.',
+    levels:['초급','중급','심화'], audience:'중·고~대학' },
+  { key:'concept', name:'머신러닝 개념 실험실', live:false,
+    icon: IC('<circle cx="6" cy="6" r="2"/><circle cx="18" cy="7" r="2"/><circle cx="9" cy="17" r="2"/><path d="M8 7l8 0M8 16l8-8"/>'),
+    desc:'지도 vs 비지도(군집화)·차원축소·평가지표를 직접 비교.',
+    levels:['중급','심화'], audience:'고교~대학' },
+  { key:'text', name:'텍스트 · 언어 AI', live:false,
+    icon: IC('<path d="M4 6h16M4 12h16M4 18h10"/>'),
+    desc:'문장 임베딩으로 비슷한 말 찾기·감정/주제 분류를 체험.',
+    levels:['초급','중급','심화'], audience:'중등~대학' },
+  { key:'life', name:'생활 속 인식 AI', live:false,
+    icon: IC('<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 8h2v2H8zM14 8h2v2h-2zM8 14h2v2H8zM14 14h2v2h-2z"/>'),
+    desc:'QR·바코드 인식, 글자 인식(OCR) 등 실생활 속 AI.',
+    levels:['초급','중급','심화'], audience:'초등~중등' },
+];
+
+const grid = document.getElementById('module-grid');
+grid.innerHTML = MODULES.map((m) => {
+  const tag = m.live ? 'a' : 'div';
+  const href = m.live ? ` href="${m.href}"` : '';
+  const status = m.live
+    ? '<span class="status on">● 체험 가능</span>'
+    : '<span class="status off">준비중</span>';
+  const levels = m.levels.map((l) => `<span class="chip">${l}</span>`).join('');
+  const go = m.live ? '체험하기 →' : '곧 공개';
+  return `<${tag} class="card ${m.live ? 'live' : 'soon'}"${href}>
+    <div class="card-top"><div class="card-ic">${m.icon}</div>${status}</div>
+    <h3>${m.name}</h3>
+    <p class="desc">${m.desc}</p>
+    <div class="meta">${levels}<span class="chip audience">${m.audience}</span></div>
+    <span class="go">${go}</span>
+  </${tag}>`;
+}).join('');
+</script>
+</body>
+</html>
