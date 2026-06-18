@@ -40,6 +40,11 @@
   .status.live { color:var(--primary-ink); border-color:var(--primary-line); background:var(--primary-soft); }
 
   main { max-width:1140px; margin:0 auto; padding:22px; }
+  .cintro { text-align:center; padding:6px 0 16px; }
+  .cintro .eyebrow { display:inline-block; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.06em; color:var(--primary-ink); background:var(--primary-soft); border:1px solid var(--primary-line); border-radius:999px; padding:5px 12px; margin-bottom:10px; }
+  .cintro h1 { margin:0 0 7px; font-size:26px; font-weight:800; letter-spacing:-.02em; }
+  .cintro p { margin:0 auto; max-width:600px; font-size:14px; color:var(--ink-2); line-height:1.6; }
+  .cintro p b { color:var(--primary-ink); }
   .steps { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
   .step { flex:1; min-width:200px; text-align:left; background:#fff; border:1px solid var(--line); border-radius:var(--r); padding:13px 16px; transition:.15s; display:flex; gap:12px; align-items:center; box-shadow:var(--shadow-sm); }
   .step.active { border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-soft), var(--shadow); }
@@ -141,6 +146,12 @@
 </header>
 
 <main>
+  <div class="cintro">
+    <span class="eyebrow">데이터 · 예측 AI 코스</span>
+    <h1>데이터로 보고·예측하고·묶는 AI</h1>
+    <p>표·데이터로 AI의 핵심을 직접 만져 봐요. 두 값의 <b>관계</b>를 그래프로 읽고(초급), <b>예측 모델</b>을 학습시켜 다음 값을 맞히고(중급), 정답 없이 비슷한 것끼리 <b>무리 짓기</b>까지(심화) 해봅니다.</p>
+  </div>
+
   <div class="steps">
     <button class="step active" data-step="explore"><div class="n">🔎</div><div class="t"><b>관계 살펴보기</b><span>두 값이 함께 움직일까?</span></div></button>
     <button class="step" data-step="predict"><div class="n">📈</div><div class="t"><b>예측해보기</b><span>다음 값을 맞히는 AI 만들기</span></div></button>

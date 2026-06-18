@@ -39,6 +39,11 @@
   .status.ready { color:var(--green); border-color:rgba(17,160,111,.4); background:var(--green-soft); }
 
   main { max-width:1140px; margin:0 auto; padding:22px; }
+  .cintro { text-align:center; padding:6px 0 16px; }
+  .cintro .eyebrow { display:inline-block; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.06em; color:var(--primary-ink); background:var(--primary-soft); border:1px solid var(--primary-line); border-radius:999px; padding:5px 12px; margin-bottom:10px; }
+  .cintro h1 { margin:0 0 7px; font-size:26px; font-weight:800; letter-spacing:-.02em; }
+  .cintro p { margin:0 auto; max-width:600px; font-size:14px; color:var(--ink-2); line-height:1.6; }
+  .cintro p b { color:var(--primary-ink); }
   .steps { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
   .step { flex:1; min-width:220px; text-align:left; background:#fff; border:1px solid var(--line); border-radius:var(--r); padding:13px 16px; transition:.15s; display:flex; gap:12px; align-items:center; box-shadow:var(--shadow-sm); }
   .step.active { border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-soft), var(--shadow); }
@@ -124,6 +129,12 @@
 </header>
 
 <main>
+  <div class="cintro">
+    <span class="eyebrow">텍스트 · 언어 AI 코스</span>
+    <h1>글을 숫자로 이해하는 AI</h1>
+    <p>컴퓨터가 글을 어떻게 다루는지 직접 봐요. 문장을 숫자로 바꿔 <b>비슷한 말을 찾고</b>(초급), 예문을 모아 <b>문장 분류 AI</b>를 학습시켜 봅니다(중급).</p>
+  </div>
+
   <div class="steps">
     <button class="step active" data-step="similar"><div class="n">🔗</div><div class="t"><b>비슷한 말 찾기</b><span>글의 닮은 정도를 숫자로</span></div></button>
     <button class="step" data-step="classify"><div class="n">🏷️</div><div class="t"><b>문장 분류 만들기</b><span>예문으로 분류 AI 학습</span></div></button>
