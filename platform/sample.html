@@ -45,7 +45,8 @@
   .steps3 b { color:var(--primary); font-family:var(--mono); }
 
   .layout { display:grid; grid-template-columns:1.1fr .9fr; gap:18px; align-items:start; margin-top:14px; }
-  .card { background:#fff; border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:18px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:18px; min-width:0; }
+  .cls-item { min-width:0; }
   .card h2 { margin:0 0 4px; font-size:16px; font-weight:800; display:flex; align-items:center; gap:8px; }
   .card h2::before { content:''; width:4px; height:16px; border-radius:2px; background:var(--primary); }
   .card .sub { font-size:12.5px; color:var(--ink-3); margin:0 0 14px; }
@@ -83,9 +84,9 @@
   .cls-clear:hover { color:var(--primary); }
   .collect { width:100%; margin-top:9px; border:1px solid var(--line-2); background:#fff; color:var(--ink-2); border-radius:9px; padding:9px; font-size:13px; font-weight:700; }
   .collect.rec { background:linear-gradient(150deg,var(--primary-2),var(--primary)); border-color:transparent; color:#fff; }
-  .thumbs { display:flex; gap:5px; overflow-x:auto; margin-top:9px; padding-bottom:2px; }
+  .thumbs { display:flex; flex-wrap:wrap; gap:5px; margin-top:9px; max-height:132px; overflow-y:auto; }
   .thumbs:empty { display:none; }
-  .thumbs img { width:46px; height:35px; border-radius:6px; object-fit:cover; border:1px solid var(--line); flex:none; }
+  .thumbs img { width:44px; height:33px; border-radius:6px; object-fit:cover; border:1px solid var(--line); flex:none; }
   .samp-bar { height:5px; border-radius:3px; background:var(--bg-soft); overflow:hidden; margin-top:9px; }
   .samp-bar i { display:block; height:100%; background:var(--primary); width:0; transition:.12s; }
 
@@ -218,7 +219,7 @@ function captureOne(i) {
   c.samples.push(feat());
   const url = thumb(); c.thumbs.push(url);
   const strip = document.getElementById('thumbs-' + i);
-  if (strip) { const im = new Image(); im.src = url; strip.appendChild(im); while (strip.children.length > MAXTHUMB) strip.removeChild(strip.firstChild); strip.scrollLeft = strip.scrollWidth; }
+  if (strip) { const im = new Image(); im.src = url; strip.appendChild(im); while (strip.children.length > MAXTHUMB) strip.removeChild(strip.firstChild); strip.scrollTop = strip.scrollHeight; }
   if (c.thumbs.length > MAXTHUMB) c.thumbs.shift();
   updateCounts();
 }
