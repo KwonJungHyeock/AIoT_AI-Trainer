@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>생활 속 인식 AI — Eduino AI</title>
+<meta name="description" content="카메라로 QR·바코드를 읽고, 사진 속 글자를 인식(OCR)하는 체험형 생활 AI 수업 모듈." />
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root {
+    --bg:#f6f7fb; --bg-soft:#eef1f7; --card:#fff; --card-2:#f9fafd;
+    --line:#e9ebf2; --line-2:#dfe2ec;
+    --ink:#14161f; --ink-2:#50566a; --ink-3:#868da3; --ink-4:#aeb4c6;
+    --primary:#f0473a; --primary-ink:#d12e1e; --primary-2:#ff6a52; --primary-soft:#fff1ee; --primary-line:#ffd6cd;
+    --green:#11a06f; --green-soft:#e6f6ef; --blue:#4d8dff; --amber:#d98a1f; --amber-soft:#fcf3e2;
+    --shadow-sm:0 1px 2px rgba(20,22,31,.05), 0 1px 3px rgba(20,22,31,.05);
+    --shadow:0 2px 6px rgba(20,22,31,.05), 0 12px 30px rgba(20,22,31,.07);
+    --r:16px; --sans:'Pretendard',-apple-system,sans-serif; --mono:'JetBrains Mono','Pretendard',ui-monospace,monospace;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:var(--sans); color:var(--ink); font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;
+    background:radial-gradient(1000px 520px at 88% -8%, rgba(240,71,58,.08), transparent 62%), var(--bg); min-height:100vh; }
+  a { color:inherit; }
+  button { font-family:inherit; cursor:pointer; }
+
+  .topbar { position:sticky; top:0; z-index:30; background:rgba(246,247,251,.85); backdrop-filter:blur(14px) saturate(1.4); border-bottom:1px solid var(--line); }
+  .topbar::after { content:''; display:block; height:3px; background:linear-gradient(90deg,var(--primary),#ff8a3d 40%,rgba(255,138,61,0) 80%); }
+  .topbar-inner { max-width:1140px; margin:0 auto; padding:11px 22px; display:flex; align-items:center; gap:13px; }
+  .back { font-size:13px; font-weight:600; color:var(--ink-2); display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border:1px solid var(--line-2); border-radius:10px; background:#fff; box-shadow:var(--shadow-sm); transition:.15s; text-decoration:none; }
+  .back:hover { color:var(--primary-ink); border-color:var(--primary-line); }
+  .logo-mark { width:38px; height:38px; border-radius:11px; background:linear-gradient(150deg,var(--primary-2),var(--primary)); color:#fff; display:grid; place-items:center; font-weight:800; font-size:20px; box-shadow:0 4px 12px rgba(240,71,58,.4), inset 0 1px 0 rgba(255,255,255,.4); }
+  .logo-title { font-size:18px; font-weight:800; letter-spacing:-.02em; }
+  .logo-title span { color:var(--primary); }
+  .logo-tag { font-size:12px; color:var(--ink-3); }
+  .status { margin-left:auto; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.04em; padding:7px 13px; border-radius:999px; border:1px solid var(--line-2); color:var(--ink-3); background:#fff; }
+  .status.busy { color:var(--amber); border-color:rgba(217,138,31,.4); background:var(--amber-soft); }
+  .status.ready { color:var(--green); border-color:rgba(17,160,111,.4); background:var(--green-soft); }
+  .status.live { color:var(--primary-ink); border-color:var(--primary-line); background:var(--primary-soft); }
+
+  main { max-width:1140px; margin:0 auto; padding:22px; }
+  .banner { display:none; background:var(--amber-soft); border:1px solid rgba(217,138,31,.4); color:#8a5a12; border-radius:12px; padding:13px 16px; font-size:13.5px; margin-bottom:18px; }
+  .banner.on { display:block; }
+  .banner b { color:#6b4408; }
+
+  .steps { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+  .step { flex:1; min-width:220px; text-align:left; background:#fff; border:1px solid var(--line); border-radius:var(--r); padding:13px 16px; transition:.15s; display:flex; gap:12px; align-items:center; box-shadow:var(--shadow-sm); }
+  .step.active { border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-soft), var(--shadow); }
+  .step .n { width:32px; height:32px; border-radius:9px; flex:none; display:grid; place-items:center; font-family:var(--mono); font-weight:700; font-size:14px; background:var(--bg-soft); border:1px solid var(--line); color:var(--ink-3); }
+  .step.active .n { background:linear-gradient(150deg,var(--primary-2),var(--primary)); border-color:transparent; color:#fff; }
+  .step .t b { font-size:14.5px; font-weight:700; display:block; }
+  .step .t span { font-size:12px; color:var(--ink-3); }
+
+  .layout { display:grid; grid-template-columns:1.06fr .94fr; gap:18px; align-items:stretch; }
+  .layout > .card:first-child { align-self:start; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:18px; display:flex; flex-direction:column; }
+  .card h2 { margin:0 0 4px; font-size:16px; font-weight:800; display:flex; align-items:center; gap:8px; }
+  .card h2::before { content:''; width:4px; height:16px; border-radius:2px; background:var(--primary); }
+  .card .sub { font-size:12.5px; color:var(--ink-3); margin:0 0 14px; }
+  .cam-state { margin-left:auto; font-family:var(--mono); font-size:10.5px; font-weight:700; color:var(--ink-3); background:var(--bg-soft); border:1px solid var(--line); border-radius:999px; padding:3px 9px; }
+  .cam-state.on { color:var(--primary-ink); background:var(--primary-soft); border-color:var(--primary-line); }
+
+  .stage { position:relative; width:100%; aspect-ratio:4/3; background:#0d1016; border-radius:13px; overflow:hidden; border:1px solid var(--line); }
+  .stage video, .stage canvas { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .stage .ph { position:absolute; inset:0; display:grid; place-items:center; color:#9aa3b2; font-size:13.5px; text-align:center; padding:20px; }
+  .scan-frame { position:absolute; inset:18% 22%; border:2px dashed rgba(255,255,255,.5); border-radius:14px; pointer-events:none; }
+  .cam-ctrl { display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
+  .btn { border:1px solid var(--line-2); background:#fff; color:var(--ink); border-radius:11px; padding:11px 16px; font-size:14px; font-weight:700; transition:.15s; box-shadow:var(--shadow-sm); display:inline-flex; align-items:center; justify-content:center; gap:7px; }
+  .btn:hover { border-color:var(--primary-line); color:var(--primary-ink); }
+  .btn:disabled { opacity:.45; cursor:not-allowed; box-shadow:none; }
+  .btn.primary { background:linear-gradient(150deg,var(--primary-2),var(--primary)); border-color:transparent; color:#fff; box-shadow:0 5px 16px rgba(240,71,58,.32); }
+  .btn.primary:hover { color:#fff; transform:translateY(-1px); }
+  .btn.lg { padding:13px 20px; font-size:15px; }
+  .btn.block { width:100%; }
+
+  /* 스캔 결과 */
+  .scan-latest { border:1px solid var(--line); background:var(--card-2); border-radius:13px; padding:16px; margin-bottom:14px; }
+  .scan-latest .fmt { font-family:var(--mono); font-size:10.5px; font-weight:700; color:var(--primary-ink); background:var(--primary-soft); border:1px solid var(--primary-line); border-radius:999px; padding:3px 9px; display:inline-block; margin-bottom:8px; }
+  .scan-latest .val { font-size:17px; font-weight:700; word-break:break-all; line-height:1.4; }
+  .scan-latest .val a { color:var(--blue); }
+  .scan-latest.idle { color:var(--ink-4); font-size:13.5px; text-align:center; font-weight:500; }
+  .codes-head { display:flex; align-items:center; justify-content:space-between; font-size:13px; font-weight:700; color:var(--ink-2); margin-bottom:8px; }
+  .codes-head .cnt { font-family:var(--mono); font-size:12px; color:var(--ink-3); background:var(--bg-soft); border:1px solid var(--line); border-radius:999px; padding:2px 9px; }
+  .codes { display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto; }
+  .codes .ci { display:flex; gap:10px; align-items:center; padding:9px 11px; border:1px solid var(--line); border-radius:10px; font-size:13px; }
+  .codes .ci .t { font-family:var(--mono); font-size:10px; color:var(--ink-4); flex:none; }
+  .codes .ci .v { word-break:break-all; color:var(--ink-2); }
+  .codes .ci .v a { color:var(--blue); }
+  .codes .empty { color:var(--ink-4); font-size:12.5px; text-align:center; padding:14px; }
+
+  /* OCR */
+  .ocr-progress { margin:0 0 12px; }
+  .ocr-progress[hidden] { display:none; }
+  .ocr-bar { height:8px; border-radius:5px; background:var(--bg-soft); overflow:hidden; }
+  .ocr-bar i { display:block; height:100%; width:0; background:linear-gradient(90deg,var(--primary),#ff8a3d); transition:.2s; }
+  .ocr-progress .lab { font-size:12px; color:var(--ink-3); margin-top:6px; font-family:var(--mono); }
+  .ocr-text { flex:1; min-height:140px; border:1px solid var(--line); background:var(--card-2); border-radius:12px; padding:14px; font-size:14px; line-height:1.7; white-space:pre-wrap; word-break:break-word; color:var(--ink); overflow-y:auto; max-height:300px; }
+  .ocr-text.idle { color:var(--ink-4); display:grid; place-items:center; text-align:center; }
+  .ocr-meta { display:flex; gap:12px; margin-top:10px; font-family:var(--mono); font-size:12px; color:var(--ink-3); }
+  .ocr-meta b { color:var(--ink); }
+  .seg { display:inline-flex; border:1px solid var(--line-2); border-radius:9px; overflow:hidden; }
+  .seg button { border:none; background:#fff; color:var(--ink-2); padding:8px 13px; font-size:13px; font-weight:600; }
+  .seg button.on { background:var(--primary-soft); color:var(--primary-ink); }
+
+  .learn { background:var(--card-2); border:1px solid var(--line); border-radius:12px; padding:13px 15px; margin-top:14px; font-size:12.5px; color:var(--ink-2); line-height:1.65; }
+  .learn b { color:var(--primary-ink); }
+  .fill { flex:1 1 auto; }
+
+  @media (max-width:880px){ .layout{ grid-template-columns:1fr; align-items:start; } }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="back" href="../../platform/index.html">← 플랫폼</a>
+    <div class="logo-mark">E</div>
+    <div>
+      <div class="logo-title">생활 속 인식 <span>AI</span></div>
+      <div class="logo-tag">QR·바코드 + 글자 인식(OCR) · Eduino AI</div>
+    </div>
+    <div class="status" id="status">대기 중</div>
+  </div>
+</header>
+
+<main>
+  <div class="banner" id="banner"></div>
+
+  <div class="steps">
+    <button class="step active" data-step="scan"><div class="n">1</div><div class="t"><b>초급 · QR·바코드</b><span>코드를 비추면 바로 읽기</span></div></button>
+    <button class="step" data-step="ocr"><div class="n">2</div><div class="t"><b>중급 · 글자 인식(OCR)</b><span>사진 속 글자를 텍스트로</span></div></button>
+  </div>
+
+  <!-- 초급: QR·바코드 -->
+  <section id="panel-scan" class="layout">
+    <div class="card">
+      <h2>카메라 스캐너 <span class="cam-state" id="scan-state">대기</span></h2>
+      <p class="sub">QR 코드나 바코드를 가운데 영역에 비추면 자동으로 읽어요.</p>
+      <div class="stage">
+        <video id="v-scan" playsinline muted></video>
+        <canvas id="c-scan"></canvas>
+        <div class="scan-frame" id="scan-frame" style="display:none"></div>
+        <div class="ph" id="ph-scan">📷 [카메라 켜기]를 누르고<br>QR·바코드를 비춰주세요</div>
+      </div>
+      <div class="cam-ctrl">
+        <button class="btn primary lg" id="scan-cam">카메라 켜기</button>
+        <button class="btn lg" id="scan-stop" disabled>중지</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>인식 결과</h2>
+      <p class="sub">읽은 코드가 아래에 쌓입니다. 링크면 눌러서 열 수 있어요.</p>
+      <div class="scan-latest idle" id="scan-latest">아직 읽은 코드가 없어요</div>
+      <div class="codes-head">스캔 기록 <span class="cnt" id="scan-count">0개</span></div>
+      <div class="codes" id="codes"><div class="empty">코드를 비추면 여기에 기록돼요.</div></div>
+      <div class="learn fill"><b>QR·바코드는 어떻게 읽힐까?</b><br>흑백 사각형/막대 패턴은 사실 <b>숫자와 글자를 약속된 규칙으로 그린 그림</b>이에요. 카메라가 패턴을 찾아 밝고 어두운 칸을 0/1로 바꾸고, 오류정정 규칙으로 복원해 원래 정보(주소·숫자)를 읽어냅니다.</div>
+    </div>
+  </section>
+
+  <!-- 중급: OCR -->
+  <section id="panel-ocr" class="layout" hidden>
+    <div class="card">
+      <h2>글자 촬영 <span class="cam-state" id="ocr-state">대기</span></h2>
+      <p class="sub">글자가 또렷하게 보이게 비추고 [촬영 &amp; 인식]을 누르세요.</p>
+      <div class="stage">
+        <video id="v-ocr" playsinline muted></video>
+        <canvas id="c-ocr" style="display:none"></canvas>
+        <div class="ph" id="ph-ocr">📷 [카메라 켜기] 후<br>책·종이의 글자를 비춰주세요</div>
+      </div>
+      <div class="cam-ctrl">
+        <button class="btn primary lg" id="ocr-cam">카메라 켜기</button>
+        <button class="btn lg" id="ocr-shot" disabled>촬영 &amp; 인식</button>
+        <button class="btn lg" id="ocr-retake" disabled>다시</button>
+      </div>
+      <div class="cam-ctrl" style="margin-top:10px">
+        <span style="font-size:13px;color:var(--ink-3);align-self:center;font-weight:600">언어</span>
+        <span class="seg" id="lang-seg">
+          <button data-lang="kor+eng" class="on">한국어+영어</button>
+          <button data-lang="eng">영어</button>
+        </span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>인식된 글자</h2>
+      <p class="sub">AI가 사진 속 글자를 읽어 텍스트로 바꿔줍니다.</p>
+      <div class="ocr-progress" id="ocr-progress" hidden>
+        <div class="ocr-bar"><i id="ocr-fill"></i></div>
+        <div class="lab" id="ocr-plab">준비 중…</div>
+      </div>
+      <div class="ocr-text idle" id="ocr-text">촬영하면 인식된 글자가 여기 표시됩니다.</div>
+      <div class="ocr-meta" id="ocr-meta"></div>
+      <div class="learn fill"><b>OCR(광학 문자 인식)이란?</b><br>이미지 속 글자의 <b>모양(획·곡선)</b>을 분석해 어떤 글자인지 맞히는 기술이에요. 책·간판·명함을 디지털 텍스트로 바꿔 복사·번역·검색할 수 있게 해줍니다. <br>또렷하고 평평하게, 밝은 곳에서 찍을수록 정확해져요.</div>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+function setStatus(t, c) { const s = $('status'); s.textContent = t; s.className = 'status' + (c ? ' ' + c : ''); }
+
+/* ── URL 판별/이스케이프 ── */
+function esc(s) { return s.replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m])); }
+function isUrl(s) { return /^https?:\/\/\S+$/i.test(s.trim()); }
+function valHtml(v) { return isUrl(v) ? `<a href="${esc(v)}" target="_blank" rel="noopener">${esc(v)}</a>` : esc(v); }
+if (typeof module !== 'undefined') { module.exports = { isUrl, esc }; }
+
+/* ── 카메라 ── */
+function mkCam(v, c, ph) {
+  return {
+    stream: null, raf: null, video: v, canvas: c, ph: ph,
+    async start() {
+      this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } });
+      this.video.srcObject = this.stream;
+      await new Promise((res) => { if (this.video.videoWidth) return res(); this.video.onloadedmetadata = () => res(); });
+      await this.video.play(); this.syncSize(); this.ph.style.display = 'none';
+    },
+    syncSize() { const w = this.video.videoWidth, h = this.video.videoHeight; if (w && (this.canvas.width !== w || this.canvas.height !== h)) { this.canvas.width = w; this.canvas.height = h; } },
+    stop() {
+      if (this.raf) cancelAnimationFrame(this.raf);
+      if (this.stream) this.stream.getTracks().forEach(t => t.stop());
+      this.stream = null; this.raf = null;
+      const x = this.canvas.getContext('2d'); x && x.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ph.style.display = 'grid';
+    },
+  };
+}
+
+/* ════════ 초급: QR·바코드 ════════ */
+const scan = mkCam($('v-scan'), $('c-scan'), $('ph-scan'));
+let barcodeDetector = null, lastCode = '', lastTime = 0, history = [];
+
+async function initDetector() {
+  if ('BarcodeDetector' in window) {
+    try { const fmts = await window.BarcodeDetector.getSupportedFormats(); barcodeDetector = new window.BarcodeDetector({ formats: fmts }); }
+    catch (e) { try { barcodeDetector = new window.BarcodeDetector(); } catch (_) {} }
+  }
+}
+function pushCode(value, format) {
+  const now = Date.now();
+  if (value === lastCode && now - lastTime < 1500) { lastTime = now; return; } // 같은 코드 연속 무시
+  lastCode = value; lastTime = now;
+  history.unshift({ value, format, ts: new Date() });
+  if (history.length > 30) history.pop();
+  // 최신 결과
+  const sl = $('scan-latest'); sl.classList.remove('idle');
+  sl.innerHTML = `<span class="fmt">${esc(format || 'code')}</span><div class="val">${valHtml(value)}</div>`;
+  // 기록
+  $('scan-count').textContent = history.length + '개';
+  $('codes').innerHTML = history.map(h => `<div class="ci"><span class="t">${h.ts.toTimeString().slice(0, 8)}</span><span class="v">${valHtml(h.value)}</span></div>`).join('');
+  setStatus('읽음! · ' + history.length, 'ready');
+}
+function drawPoly(ctx, pts, color) {
+  if (!pts || !pts.length) return;
+  ctx.lineWidth = 4; ctx.strokeStyle = color; ctx.beginPath();
+  pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+  ctx.closePath(); ctx.stroke();
+}
+async function scanLoop() {
+  if (!scan.stream) return;
+  scan.syncSize();
+  const ctx = scan.canvas.getContext('2d');
+  ctx.clearRect(0, 0, scan.canvas.width, scan.canvas.height);
+  try {
+    if (barcodeDetector) {
+      const codes = await barcodeDetector.detect(scan.video);
+      if (codes.length) {
+        const b = codes[0];
+        drawPoly(ctx, b.cornerPoints, '#2bb583');
+        pushCode(b.rawValue, b.format);
+      }
+    } else if (window.jsQR) {
+      ctx.drawImage(scan.video, 0, 0, scan.canvas.width, scan.canvas.height);
+      const img = ctx.getImageData(0, 0, scan.canvas.width, scan.canvas.height);
+      ctx.clearRect(0, 0, scan.canvas.width, scan.canvas.height);
+      const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+      if (code) {
+        const L = code.location;
+        drawPoly(ctx, [L.topLeftCorner, L.topRightCorner, L.bottomRightCorner, L.bottomLeftCorner], '#2bb583');
+        pushCode(code.data, 'qr_code');
+      }
+    }
+  } catch (e) {}
+  scan.raf = requestAnimationFrame(scanLoop);
+}
+$('scan-cam').onclick = async () => {
+  try {
+    setStatus('카메라 시작…', 'busy'); await initDetector(); await scan.start();
+    $('scan-frame').style.display = 'block';
+    $('scan-cam').disabled = true; $('scan-stop').disabled = false;
+    $('scan-state').textContent = '스캔 중'; $('scan-state').classList.add('on');
+    setStatus('스캔 중 · LIVE', 'live'); scanLoop();
+  } catch (e) { setStatus('카메라 오류', 'busy'); alert('카메라를 시작할 수 없습니다: ' + e.message); }
+};
+$('scan-stop').onclick = () => { scan.stop(); $('scan-frame').style.display = 'none'; $('scan-cam').disabled = false; $('scan-stop').disabled = true; $('scan-state').textContent = '대기'; $('scan-state').classList.remove('on'); setStatus('대기 중'); };
+
+/* ════════ 중급: OCR ════════ */
+const ocr = mkCam($('v-ocr'), $('c-ocr'), $('ph-ocr'));
+let ocrLang = 'kor+eng', ocrBusy = false;
+
+$('lang-seg').addEventListener('click', (e) => {
+  const l = e.target.dataset.lang; if (!l) return;
+  ocrLang = l;
+  $('lang-seg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.lang === l));
+});
+
+$('ocr-cam').onclick = async () => {
+  try {
+    setStatus('카메라 시작…', 'busy'); await ocr.start();
+    $('c-ocr').style.display = 'none'; ocr.video.style.display = '';
+    $('ocr-cam').disabled = true; $('ocr-shot').disabled = false; $('ocr-retake').disabled = true;
+    $('ocr-state').textContent = '준비됨'; $('ocr-state').classList.add('on');
+    setStatus('촬영 가능 · LIVE', 'live');
+  } catch (e) { setStatus('카메라 오류', 'busy'); alert('카메라를 시작할 수 없습니다: ' + e.message); }
+};
+$('ocr-retake').onclick = () => {
+  if (ocrBusy) return;
+  $('c-ocr').style.display = 'none'; ocr.video.style.display = '';
+  try { ocr.video.play(); } catch (e) {}
+  $('ocr-shot').disabled = false; $('ocr-retake').disabled = true;
+  setStatus('촬영 가능 · LIVE', 'live');
+};
+$('ocr-shot').onclick = async () => {
+  if (!ocr.stream || ocrBusy) return;
+  ocrBusy = true;
+  // 현재 프레임을 캔버스에 고정
+  ocr.syncSize();
+  const ctx = $('c-ocr').getContext('2d');
+  ctx.drawImage(ocr.video, 0, 0, $('c-ocr').width, $('c-ocr').height);
+  $('c-ocr').style.display = ''; ocr.video.style.display = 'none';
+  try { ocr.video.pause(); } catch (e) {}
+  $('ocr-shot').disabled = true; $('ocr-retake').disabled = true;
+  $('ocr-state').textContent = '인식 중'; setStatus('글자 인식 중…', 'busy');
+  // 진행 표시
+  $('ocr-progress').hidden = false; $('ocr-fill').style.width = '0%'; $('ocr-plab').textContent = '모델·언어 데이터 준비 중…';
+  $('ocr-text').classList.remove('idle'); $('ocr-text').textContent = '';
+  try {
+    const res = await Tesseract.recognize($('c-ocr'), ocrLang, {
+      logger: (m) => {
+        if (m.status === 'recognizing text') { const p = Math.round(m.progress * 100); $('ocr-fill').style.width = p + '%'; $('ocr-plab').textContent = '글자 인식 중… ' + p + '%'; }
+        else { $('ocr-plab').textContent = (m.status || '') + (m.progress ? ' ' + Math.round(m.progress * 100) + '%' : ''); }
+      },
+    });
+    const text = (res.data.text || '').trim();
+    $('ocr-text').textContent = text || '(글자를 찾지 못했어요. 더 또렷하게 다시 찍어보세요.)';
+    const conf = Math.round(res.data.confidence || 0);
+    const chars = text.replace(/\s/g, '').length;
+    $('ocr-meta').innerHTML = `<span>신뢰도 <b>${conf}%</b></span><span>글자 수 <b>${chars}</b></span><span>언어 <b>${ocrLang}</b></span>`;
+    setStatus('인식 완료 · READY', 'ready');
+  } catch (e) {
+    $('ocr-text').textContent = '인식 중 오류가 발생했어요: ' + e.message;
+    setStatus('오류', 'busy');
+  }
+  $('ocr-progress').hidden = true; $('ocr-state').textContent = '완료';
+  $('ocr-retake').disabled = false; ocrBusy = false;
+};
+
+/* ── 단계 전환 ── */
+document.querySelectorAll('.step').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.step').forEach(b => b.classList.toggle('active', b === btn));
+    const s = btn.dataset.step;
+    $('panel-scan').hidden = s !== 'scan';
+    $('panel-ocr').hidden = s !== 'ocr';
+    // 반대편 카메라 정리
+    if (s === 'scan') { ocr.stop(); $('ocr-cam').disabled = false; $('ocr-shot').disabled = true; $('ocr-retake').disabled = true; $('ocr-state').textContent = '대기'; $('ocr-state').classList.remove('on'); $('c-ocr').style.display = 'none'; ocr.video.style.display = ''; }
+    else { scan.stop(); $('scan-frame').style.display = 'none'; $('scan-cam').disabled = false; $('scan-stop').disabled = true; $('scan-state').textContent = '대기'; $('scan-state').classList.remove('on'); }
+    setStatus('대기 중');
+  };
+});
+
+setStatus('대기 중');
+if (!window.isSecureContext) { const b = $('banner'); b.classList.add('on'); b.innerHTML = '⚠ 카메라는 <b>localhost</b> 또는 <b>https</b> 에서만 켜집니다. 배포된 https 주소로 접속해 주세요.'; }
+</script>
+</body>
+</html>
