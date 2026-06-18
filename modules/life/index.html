@@ -102,10 +102,22 @@
   .ocr-bar { height:8px; border-radius:5px; background:var(--bg-soft); overflow:hidden; }
   .ocr-bar i { display:block; height:100%; width:0; background:linear-gradient(90deg,var(--primary),#ff8a3d); transition:.2s; }
   .ocr-progress .lab { font-size:12px; color:var(--ink-3); margin-top:6px; font-family:var(--mono); }
-  .ocr-text { flex:1; min-height:140px; border:1px solid var(--line); background:var(--card-2); border-radius:12px; padding:14px; font-size:14px; line-height:1.7; white-space:pre-wrap; word-break:break-word; color:var(--ink); overflow-y:auto; max-height:300px; }
-  .ocr-text.idle { color:var(--ink-4); display:grid; place-items:center; text-align:center; }
-  .ocr-meta { display:flex; gap:12px; margin-top:10px; font-family:var(--mono); font-size:12px; color:var(--ink-3); }
+  textarea.ocr-text { width:100%; min-height:150px; border:1px solid var(--line); background:var(--card-2); border-radius:12px; padding:14px; font-size:14px; line-height:1.7; color:var(--ink); resize:vertical; font-family:var(--sans); }
+  textarea.ocr-text:focus { outline:none; border-color:var(--primary-line); box-shadow:0 0 0 3px var(--primary-soft); background:#fff; }
+  .ocr-meta { display:flex; gap:12px; margin-top:10px; font-family:var(--mono); font-size:12px; color:var(--ink-3); flex-wrap:wrap; }
   .ocr-meta b { color:var(--ink); }
+  .ocr-meta .applied { color:var(--green); }
+  .learn-row { display:flex; align-items:center; gap:10px; margin-top:12px; flex-wrap:wrap; }
+  .learned { font-size:12.5px; font-weight:700; color:var(--ink-2); }
+  .learned b { color:var(--primary-ink); }
+  .btn-x { border:none; background:none; color:var(--ink-4); font-size:12px; font-weight:600; cursor:pointer; text-decoration:underline; }
+  .btn-x:hover { color:var(--primary); }
+  .chips { display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
+  .chip { display:inline-flex; align-items:center; gap:6px; font-size:12px; background:var(--green-soft); border:1px solid rgba(17,160,111,.3); color:#0c7a55; border-radius:999px; padding:4px 10px; }
+  .chip s { color:var(--ink-4); text-decoration:line-through; }
+  .chip b { color:var(--green); }
+  .chip span { cursor:pointer; color:var(--ink-4); font-weight:700; }
+  .chip span:hover { color:var(--primary); }
   .seg { display:inline-flex; border:1px solid var(--line-2); border-radius:9px; overflow:hidden; }
   .seg button { border:none; background:#fff; color:var(--ink-2); padding:8px 13px; font-size:13px; font-weight:600; }
   .seg button.on { background:var(--primary-soft); color:var(--primary-ink); }
@@ -192,14 +204,20 @@
     </div>
     <div class="card">
       <h2>인식된 글자</h2>
-      <p class="sub">AI가 사진 속 글자를 읽어 텍스트로 바꿔줍니다.</p>
+      <p class="sub">결과를 직접 고치고 <b>[교정 학습]</b>을 누르면, AI가 기억해 다음부터 자동으로 고쳐줘요.</p>
       <div class="ocr-progress" id="ocr-progress" hidden>
         <div class="ocr-bar"><i id="ocr-fill"></i></div>
         <div class="lab" id="ocr-plab">준비 중…</div>
       </div>
-      <div class="ocr-text idle" id="ocr-text">촬영하면 인식된 글자가 여기 표시됩니다.</div>
+      <textarea class="ocr-text" id="ocr-out" placeholder="촬영하면 인식된 글자가 여기 표시됩니다. (직접 수정 가능)"></textarea>
       <div class="ocr-meta" id="ocr-meta"></div>
-      <div class="learn fill"><b>OCR(광학 문자 인식)이란?</b><br>이미지 속 글자의 <b>모양(획·곡선)</b>을 분석해 어떤 글자인지 맞히는 기술이에요. 책·간판·명함을 디지털 텍스트로 바꿔 복사·번역·검색할 수 있게 해줍니다. <br>또렷하고 평평하게, 밝은 곳에서 찍을수록 정확해져요.</div>
+      <div class="learn-row">
+        <button class="btn" id="ocr-learn" disabled>✓ 교정 학습</button>
+        <span class="learned" id="ocr-learned">학습된 교정 <b>0</b>개</span>
+        <button class="btn-x" id="ocr-clearlearn" hidden>전체 초기화</button>
+      </div>
+      <div class="chips" id="ocr-chips"></div>
+      <div class="learn fill"><b>교정으로 배우는 OCR</b><br>처음엔 글자를 틀리게 읽을 수 있어요. 사람이 <b>고쳐서 알려주면</b> AI가 그 교정을 기억해 다음부터 같은 실수를 자동으로 바로잡습니다 — 사람의 피드백으로 똑똑해지는 거예요. <br>※ 또렷하고 가깝게, 프레임을 가득 채워 찍을수록 처음 인식부터 정확해져요.</div>
     </div>
   </section>
 </main>
@@ -219,7 +237,7 @@ function mkCam(v, c, ph) {
   return {
     stream: null, raf: null, video: v, canvas: c, ph: ph,
     async start() {
-      this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } });
+      this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } });
       this.video.srcObject = this.stream;
       await new Promise((res) => { if (this.video.videoWidth) return res(); this.video.onloadedmetadata = () => res(); });
       await this.video.play(); this.syncSize(); this.ph.style.display = 'none';
@@ -381,23 +399,73 @@ $('ocr-shot').onclick = async () => {
   $('ocr-state').textContent = '인식 중'; setStatus('글자 인식 중…', 'busy');
   // 진행 표시
   $('ocr-progress').hidden = false; $('ocr-fill').style.width = '0%'; $('ocr-plab').textContent = '모델·언어 데이터 준비 중…';
-  $('ocr-text').classList.remove('idle'); $('ocr-text').textContent = '';
+  $('ocr-out').value = ''; $('ocr-learn').disabled = true;
   try {
     const worker = await getWorker();
     const res = await worker.recognize($('c-ocr'));
-    const text = (res.data.text || '').trim();
-    $('ocr-text').textContent = text || '(글자를 찾지 못했어요. 더 또렷하게 다시 찍어보세요.)';
+    const raw = (res.data.text || '').trim();
+    const { text, count } = applyCorrections(raw);          // 학습된 교정 자동 적용
+    $('ocr-out').value = text || '(글자를 찾지 못했어요. 더 또렷하게 가깝게 다시 찍어보세요.)';
+    lastShown = $('ocr-out').value;
+    $('ocr-learn').disabled = !raw;
     const conf = Math.round(res.data.confidence || 0);
     const chars = text.replace(/\s/g, '').length;
-    $('ocr-meta').innerHTML = `<span>신뢰도 <b>${conf}%</b></span><span>글자 수 <b>${chars}</b></span><span>언어 <b>${ocrLang}</b></span>`;
+    $('ocr-meta').innerHTML = `<span>신뢰도 <b>${conf}%</b></span><span>글자 수 <b>${chars}</b></span><span>언어 <b>${ocrLang}</b></span>` + (count ? `<span class="applied">자동 교정 ${count}건</span>` : '');
     setStatus('인식 완료 · READY', 'ready');
   } catch (e) {
-    $('ocr-text').textContent = '인식 중 오류가 발생했어요: ' + e.message;
+    $('ocr-out').value = '인식 중 오류가 발생했어요: ' + e.message;
     setStatus('오류', 'busy');
   }
   $('ocr-progress').hidden = true; $('ocr-state').textContent = '완료';
   $('ocr-retake').disabled = false; ocrBusy = false;
 };
+
+/* ── 교정으로 배우는 OCR ── */
+let corrections = {}, lastShown = '';
+try { corrections = JSON.parse(localStorage.getItem('eduino-ocr-corrections') || '{}'); } catch (e) { corrections = {}; }
+function saveCorrections() { try { localStorage.setItem('eduino-ocr-corrections', JSON.stringify(corrections)); } catch (e) {} }
+function applyCorrections(text) {
+  let count = 0;
+  for (const w in corrections) {
+    if (!w) continue;
+    const parts = text.split(w);
+    if (parts.length > 1) { count += parts.length - 1; text = parts.join(corrections[w]); }
+  }
+  return { text, count };
+}
+function renderLearned() {
+  const keys = Object.keys(corrections);
+  $('ocr-learned').innerHTML = '학습된 교정 <b>' + keys.length + '</b>개';
+  $('ocr-clearlearn').hidden = keys.length === 0;
+  $('ocr-chips').innerHTML = keys.map(w => `<span class="chip"><s>${esc(w)}</s>→<b>${esc(corrections[w])}</b><span data-del="${esc(w)}" title="삭제">×</span></span>`).join('');
+}
+/* 토큰 단위 정렬로 치환쌍(틀림→고침) 추출 */
+function tokenDiff(aStr, bStr) {
+  const a = aStr.split(/\s+/).filter(Boolean), b = bStr.split(/\s+/).filter(Boolean);
+  const n = a.length, m = b.length;
+  const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+  for (let i = 0; i <= n; i++) dp[i][0] = i; for (let j = 0; j <= m; j++) dp[0][j] = j;
+  for (let i = 1; i <= n; i++) for (let j = 1; j <= m; j++) { const c = a[i - 1] === b[j - 1] ? 0 : 1; dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + c); }
+  const subs = []; let i = n, j = m;
+  while (i > 0 && j > 0) {
+    const c = a[i - 1] === b[j - 1] ? 0 : 1;
+    if (dp[i][j] === dp[i - 1][j - 1] + c) { if (c) subs.push([a[i - 1], b[j - 1]]); i--; j--; }
+    else if (dp[i][j] === dp[i - 1][j] + 1) i--; else j--;
+  }
+  return subs.reverse();
+}
+$('ocr-learn').onclick = () => {
+  const cur = $('ocr-out').value;
+  const subs = tokenDiff(lastShown, cur);
+  let added = 0;
+  subs.forEach(([w, r]) => { if (w && r && w !== r) { corrections[w] = r; added++; } });
+  if (!added) { setStatus('바뀐 내용이 없어요', 'busy'); return; }
+  saveCorrections(); renderLearned(); lastShown = cur;
+  setStatus('교정 ' + added + '개 학습됨 · READY', 'ready');
+};
+$('ocr-clearlearn').onclick = () => { corrections = {}; saveCorrections(); renderLearned(); };
+$('ocr-chips').addEventListener('click', (e) => { const w = e.target.dataset.del; if (w == null) return; delete corrections[w]; saveCorrections(); renderLearned(); });
+renderLearned();
 
 /* ── 단계 전환 ── */
 document.querySelectorAll('.step').forEach(btn => {
