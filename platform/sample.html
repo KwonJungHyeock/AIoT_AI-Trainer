@@ -36,7 +36,8 @@
 
   main { max-width:1280px; margin:0 auto; padding:22px; }
   .intro { text-align:center; padding:8px 0 18px; }
-  .intro h1 { margin:0 0 8px; font-size:27px; font-weight:800; letter-spacing:-.02em; }
+  .intro .eyebrow { display:inline-block; font-family:var(--mono); font-size:11.5px; font-weight:700; letter-spacing:.06em; color:var(--primary-ink); background:var(--primary-soft); border:1px solid var(--primary-line); border-radius:999px; padding:6px 13px; margin-bottom:13px; }
+  .intro h1 { margin:0 0 8px; font-size:33px; font-weight:800; letter-spacing:-.03em; }
   .intro h1 .g { background:linear-gradient(100deg,#ff8a3d,#f0473a 60%); -webkit-background-clip:text; background-clip:text; color:transparent; }
   .intro p { margin:0 auto; max-width:560px; font-size:14.5px; color:var(--ink-2); }
 
@@ -64,8 +65,24 @@
   @media (max-width:980px){ .tm{ grid-template-columns:1fr; } }
   .card { background:#fff; border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:18px; min-width:0; }
   .cls-item { min-width:0; }
-  .card h2 { margin:0 0 4px; font-size:16px; font-weight:800; display:flex; align-items:center; gap:8px; }
+  .card h2 { margin:0 0 4px; font-size:16px; font-weight:800; display:flex; align-items:center; gap:9px; }
   .card h2::before { content:''; width:4px; height:16px; border-radius:2px; background:var(--primary); }
+  .tm .card h2::before { display:none; }
+  .hb { width:25px; height:25px; border-radius:8px; flex:none; display:grid; place-items:center; font-family:var(--mono); font-size:13px; font-weight:800; color:#fff; background:linear-gradient(150deg,var(--primary-2),var(--primary)); box-shadow:0 3px 9px rgba(240,71,58,.35); }
+  /* 카드 등장 모션 */
+  .tm > .card { animation:rise .5s cubic-bezier(.16,1,.3,1) both; }
+  .tm > .card:nth-child(2){ animation-delay:.06s; } .tm > .card:nth-child(3){ animation-delay:.12s; }
+  @keyframes rise { from{ opacity:0; transform:translateY(12px); } }
+  @media (prefers-reduced-motion: reduce){ .tm>.card{ animation:none; } }
+  /* 결과 도넛 */
+  .result { display:flex; align-items:center; gap:14px; padding:8px 0 4px; }
+  .rdonut { position:relative; width:76px; height:76px; flex:none; }
+  .rdonut svg { transform:rotate(-90deg); }
+  .rdonut .rbg { fill:none; stroke:var(--bg-soft); stroke-width:8; }
+  .rdonut .rfg { fill:none; stroke:var(--primary); stroke-width:8; stroke-linecap:round; transition:stroke-dasharray .35s cubic-bezier(.16,1,.3,1), stroke .3s; }
+  .rdonut i { position:absolute; inset:0; display:grid; place-items:center; font-weight:800; font-size:16px; color:var(--primary-ink); }
+  .rlab .big { font-size:20px; font-weight:800; line-height:1.2; }
+  .rlab .conf { font-size:12.5px; color:var(--ink-3); margin-top:2px; }
   .card .sub { font-size:12.5px; color:var(--ink-3); margin:0 0 14px; }
   .cam-state { margin-left:auto; font-family:var(--mono); font-size:10.5px; font-weight:700; color:var(--ink-3); background:var(--bg-soft); border:1px solid var(--line); border-radius:999px; padding:3px 9px; }
   .cam-state.on { color:var(--primary-ink); background:var(--primary-soft); border-color:var(--primary-line); }
@@ -107,9 +124,6 @@
   .samp-bar { height:5px; border-radius:3px; background:var(--bg-soft); overflow:hidden; margin-top:9px; }
   .samp-bar i { display:block; height:100%; background:var(--primary); width:0; transition:.12s; }
 
-  .result { text-align:center; padding:8px 0 4px; }
-  .result .big { font-size:24px; font-weight:800; }
-  .result .conf { font-size:12.5px; color:var(--ink-3); margin-top:3px; }
   .bars { display:flex; flex-direction:column; gap:9px; margin-top:12px; }
   .bar .top { display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:4px; font-weight:700; }
   .bar .track { height:9px; border-radius:5px; background:var(--bg-soft); overflow:hidden; }
@@ -139,6 +153,7 @@
 <main>
   <div class="banner" id="banner"></div>
   <div class="intro">
+    <span class="eyebrow">무료 체험 · 미니 이미지 학습</span>
     <h1>1분 만에 <span class="g">나만의 AI를 가르쳐</span> 보기</h1>
     <p>카메라로 두 가지를 보여주며 가르치면 AI가 둘을 구분해요. 클래스 이름은 <b>원하는 대로</b> 바꿀 수 있어요 — 예: 사과/바나나, 웃는 얼굴/무표정, ✋/✊. 이게 “AI 학습”의 가장 작은 한 조각이에요.</p>
     <div class="steps3"><span><b>①</b> 데이터 모으기</span><span><b>②</b> 학습</span><span><b>③</b> 미리보기·맞히기</span></div>
@@ -148,14 +163,14 @@
   <div class="tm">
     <!-- 좌 -->
     <div class="card">
-      <h2>① 데이터셋</h2>
+      <h2><span class="hb">1</span>데이터셋</h2>
       <p class="sub">이름을 눌러 바꾸고, 우측 카메라에 비추며 [데이터 수집]. <b>탭=1장 · 길게=연속</b></p>
       <div class="cls" id="cls"></div>
     </div>
 
     <!-- 가운데 -->
     <div class="card center-col">
-      <h2>② 학습</h2>
+      <h2><span class="hb">2</span>학습</h2>
       <p class="sub">모은 데이터로 AI가 패턴을 배워요.</p>
       <button class="btn primary block lg" id="train" disabled>학습하기</button>
       <div class="train-status" id="train-status">왼쪽에서 두 가지를 각각 3장 이상 모아주세요</div>
@@ -173,7 +188,7 @@
 
     <!-- 우 -->
     <div class="card">
-      <h2>③ 미리보기 <span class="cam-state" id="cam-state">대기</span></h2>
+      <h2><span class="hb">3</span>미리보기 <span class="cam-state" id="cam-state">대기</span></h2>
       <div class="stage">
         <video id="v" playsinline muted></video>
         <div class="rec-dot" id="rec"><i></i> 수집 중</div>
@@ -185,8 +200,8 @@
       </div>
       <div class="fx" id="fx"><span class="fx-lab">영상효과</span><button data-fx="none" class="on">원본</button><button data-fx="gray">흑백</button><button data-fx="invert">색반전</button></div>
       <div class="result">
-        <div class="big" id="r-name">아직 학습 전</div>
-        <div class="conf" id="r-sub">데이터를 모아 학습해 보세요</div>
+        <div class="rdonut"><svg width="76" height="76" viewBox="0 0 76 76"><circle class="rbg" cx="38" cy="38" r="32"/><circle class="rfg" id="r-arc" cx="38" cy="38" r="32" stroke-dasharray="0 201"/></svg><i id="r-pct">0%</i></div>
+        <div class="rlab"><div class="big" id="r-name">아직 학습 전</div><div class="conf" id="r-sub">데이터를 모아 학습해 보세요</div></div>
       </div>
       <div class="bars" id="bars"></div>
       <button class="btn block lg" id="guess" disabled style="margin-top:12px">맞혀보기 시작</button>
@@ -327,17 +342,22 @@ $('train').onclick = () => {
   if (curveTimer) clearInterval(curveTimer);
   let step = 1; curveTimer = setInterval(() => { drawCurve(accs.slice(0, step)); step++; if (step > accs.length) clearInterval(curveTimer); }, 35);
 };
+const RDC = 201.06;
+function setRDonut(frac, color) { $('r-arc').setAttribute('stroke-dasharray', (frac * RDC).toFixed(1) + ' ' + RDC); if (color) $('r-arc').style.stroke = color; $('r-pct').textContent = Math.round(frac * 100) + '%'; }
 function classify() {
   const x = feat(), ds = centroids.map(c => dist(x, c));
-  // 거리를 확률처럼: 가까울수록 큼
   const inv = ds.map(d => 1 / (d + 1e-3)); const sum = inv.reduce((a, b) => a + b, 0);
   const probs = inv.map(p => p / sum);
   let top = probs[0] >= probs[1] ? 0 : 1;
   classes.forEach((c, i) => { const pct = Math.round(probs[i] * 100); const f = $('bf' + i), p = $('pc' + i); if (f) f.style.width = pct + '%'; if (p) p.textContent = pct + '%'; });
   $('r-name').textContent = classes[top].name; $('r-name').style.color = COLORS[top];
   $('r-sub').textContent = '확신도 ' + Math.round(probs[top] * 100) + '%';
+  setRDonut(probs[top], COLORS[top]);
 }
-$('guess').onclick = () => { if (!trained) return; guessing = !guessing; $('guess').textContent = guessing ? '맞혀보기 중지' : '맞혀보기 시작'; };
+$('guess').onclick = () => {
+  if (!trained) return; guessing = !guessing; $('guess').textContent = guessing ? '맞혀보기 중지' : '맞혀보기 시작';
+  if (!guessing) { $('r-name').textContent = '일시정지'; $('r-name').style.color = ''; $('r-sub').textContent = '[맞혀보기 시작]을 누르면 다시 인식해요'; setRDonut(0, 'var(--primary)'); }
+};
 
 const FILTERS = { none: '', gray: 'grayscale(1) contrast(1.05)', invert: 'invert(1)' };
 $('fx').addEventListener('click', (e) => { const f = e.target.dataset.fx; if (!f) return; v.style.filter = FILTERS[f]; $('fx').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.fx === f)); });
