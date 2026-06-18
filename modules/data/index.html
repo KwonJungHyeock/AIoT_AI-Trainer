@@ -90,8 +90,12 @@
   .metrics .m span { font-size:11px; color:var(--ink-3); display:block; }
   .metrics .m b { font-family:var(--mono); font-size:16px; font-weight:700; }
   .pred-out { background:linear-gradient(180deg,var(--primary-soft),#fff); border:1px solid var(--primary-line); border-radius:12px; padding:14px; text-align:center; margin-top:6px; }
+  .pred-out .po-lab { font-size:12px; color:var(--ink-3); font-weight:700; margin-bottom:4px; }
+  .pred-out .po-lab b { color:var(--ink); }
   .pred-out .big { font-size:23px; font-weight:800; color:var(--primary-ink); }
   .pred-out .big small { font-size:13px; color:var(--ink-3); font-weight:600; }
+  .pred-out .po-note { font-size:11.5px; color:var(--ink-4); margin-top:5px; }
+  .pred-out .po-note b { color:var(--primary-ink); }
 
   .groups { display:flex; flex-direction:column; gap:9px; margin:4px 0 6px; }
   .group { display:flex; align-items:center; gap:10px; background:var(--card-2); border:1px solid var(--line); border-radius:11px; padding:11px 13px; }
@@ -174,10 +178,10 @@
   <section id="panel-predict" class="layout" hidden>
     <div class="card">
       <h2>내 데이터로 AI 가르치기</h2>
-      <p class="sub">그래프를 눌러 점을 찍거나 [예시 채우기]를 누르세요. AI가 이 점들을 보고 ‘예측하는 선’을 스스로 찾아갑니다.</p>
+      <p class="sub">가로축 <b>X는 입력(원인)</b>, 세로축 <b>Y는 그때의 결과</b>예요. 예: X=공부 시간 → Y=시험 점수. 점을 찍으면 AI가 이 관계를 보고 ‘예측선’을 찾아갑니다.</p>
       <div class="chart-wrap"><canvas class="chart" id="c-predict" width="600" height="430"></canvas></div>
-      <div class="axis-x">입력 X →</div>
-      <div class="tip">💡 그래프를 클릭해 점을 찍어보세요</div>
+      <div class="axis-x">→ 가로축: 입력 X · ↑ 세로축: 결과 Y</div>
+      <div class="tip">💡 그래프를 클릭해 (입력, 결과) 점을 찍어보세요</div>
       <div class="ctrl">
         <button class="btn" id="pr-sample">예시 채우기</button>
         <button class="btn" id="pr-clear">모두 지우기</button>
@@ -202,8 +206,12 @@
         <div class="m"><span>점 개수</span><b id="m-n">0</b></div>
       </div>
       <div class="eqn" id="pr-eqn" hidden>AI가 찾은 예측식 → <b id="pr-eqn-t"></b></div>
-      <div class="row"><span>예측할 값 X</span><input type="range" id="pr-x" min="0" max="10" step="0.1" value="5" disabled><span class="val" id="pr-xval">5.0</span></div>
-      <div class="pred-out"><div class="big" id="pr-yhat">먼저 학습시켜 주세요</div></div>
+      <div class="row"><span>입력값 X 넣어보기</span><input type="range" id="pr-x" min="0" max="10" step="0.1" value="5" disabled><span class="val" id="pr-xval">5.0</span></div>
+      <div class="pred-out">
+        <div class="po-lab">AI가 예측한 <b>결과값 Y</b></div>
+        <div class="big" id="pr-yhat">먼저 학습시켜 주세요</div>
+        <div class="po-note">입력 X일 때 나올 거라고 AI가 예상한 값이에요. <b>정확도가 아니에요!</b></div>
+      </div>
       <div class="learn fill"><b>AI는 어떻게 ‘예측’을 배울까요?</b><br>처음엔 아무 선이나 그어 놓고, 점들과 얼마나 <b>틀렸는지(오차)</b>를 봐요. 그리고 오차가 줄도록 선을 조금씩 옮기는 걸 <b>수십 번 반복</b>합니다. 이게 AI의 ‘학습’이에요.
         <span class="ex">예) 기온(X)을 넣으면 아이스크림 판매량(Y)을 미리 짐작해요. ‘곡선’을 고르면 휘어진 관계도 표현할 수 있어요.</span>
         <span class="ex">학습이 끝나면 X 슬라이더를 움직여 새로운 값의 Y를 예측해 보세요.</span>
