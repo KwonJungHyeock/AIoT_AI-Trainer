@@ -54,10 +54,16 @@
   .banner.on { display:block; }
   .banner b { color:#6b4408; }
 
+  /* 코스 인트로 */
+  .cintro { text-align:center; padding:6px 0 16px; }
+  .cintro .eyebrow { display:inline-block; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.06em; color:var(--primary-ink); background:var(--primary-soft); border:1px solid var(--primary-line); border-radius:999px; padding:5px 12px; margin-bottom:10px; }
+  .cintro h1 { margin:0 0 7px; font-size:26px; font-weight:800; letter-spacing:-.02em; }
+  .cintro p { margin:0 auto; max-width:600px; font-size:14px; color:var(--ink-2); line-height:1.6; }
+  .cintro p b { color:var(--primary-ink); }
+
   /* 단계 탭 */
   .steps { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
-  .step { flex:1; min-width:220px; text-align:left; background:#fff; border:1px solid var(--line); border-radius:var(--r);
-    padding:13px 16px; transition:.15s; display:flex; gap:12px; align-items:center; box-shadow:var(--shadow-sm); }
+  .step { flex:1; min-width:220px; text-align:left; background:#fff; border:1px solid var(--line); border-radius:var(--r); padding:13px 16px; transition:.15s; display:flex; gap:12px; align-items:center; box-shadow:var(--shadow-sm); }
   .step:hover { border-color:var(--line-2); }
   .step.active { border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-soft), var(--shadow); }
   .step .n { width:32px; height:32px; border-radius:9px; flex:none; display:grid; place-items:center;
@@ -251,6 +257,12 @@
 
 <main>
   <div class="banner" id="banner"></div>
+
+  <div class="cintro">
+    <span class="eyebrow">제스처 · 동작 AI 코스</span>
+    <h1>손동작으로 배우는 AI</h1>
+    <p>카메라가 손의 <b>관절 21개</b>를 실시간으로 추적해요. 먼저 가위바위보를 인식해 원리를 보고(초급), 그다음 <b>내 제스처를 직접 가르쳐</b> 나만의 분류 AI를 만들어 봅니다(중급).</p>
+  </div>
 
   <div class="steps">
     <button class="step active" data-step="play">
