@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>데이터 · 예측 AI (AIoT) — Eduino AI</title>
+<meta name="description" content="표·데이터로 관계를 관찰하고, 회귀 모델을 직접 학습시켜 예측하는 체험형 데이터 AI 수업 모듈." />
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root {
+    --bg:#f6f7fb; --bg-soft:#eef1f7; --card:#fff; --card-2:#f9fafd;
+    --line:#e9ebf2; --line-2:#dfe2ec;
+    --ink:#14161f; --ink-2:#50566a; --ink-3:#868da3; --ink-4:#aeb4c6;
+    --primary:#f0473a; --primary-ink:#d12e1e; --primary-2:#ff6a52; --primary-soft:#fff1ee; --primary-line:#ffd6cd;
+    --green:#11a06f; --green-soft:#e6f6ef; --blue:#4d8dff; --blue-soft:#eaf1ff; --amber:#d98a1f; --amber-soft:#fcf3e2;
+    --shadow-sm:0 1px 2px rgba(20,22,31,.05), 0 1px 3px rgba(20,22,31,.05);
+    --shadow:0 2px 6px rgba(20,22,31,.05), 0 12px 30px rgba(20,22,31,.07);
+    --r:16px; --sans:'Pretendard',-apple-system,sans-serif; --mono:'JetBrains Mono','Pretendard',ui-monospace,monospace;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:var(--sans); color:var(--ink); font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;
+    background:radial-gradient(1000px 520px at 88% -8%, rgba(240,71,58,.08), transparent 62%), var(--bg); min-height:100vh; }
+  a { color:inherit; text-decoration:none; }
+  button { font-family:inherit; cursor:pointer; }
+
+  .topbar { position:sticky; top:0; z-index:30; background:rgba(246,247,251,.85); backdrop-filter:blur(14px) saturate(1.4); border-bottom:1px solid var(--line); }
+  .topbar::after { content:''; display:block; height:3px; background:linear-gradient(90deg,var(--primary),#ff8a3d 40%,rgba(255,138,61,0) 80%); }
+  .topbar-inner { max-width:1140px; margin:0 auto; padding:11px 22px; display:flex; align-items:center; gap:13px; }
+  .back { font-size:13px; font-weight:600; color:var(--ink-2); display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border:1px solid var(--line-2); border-radius:10px; background:#fff; box-shadow:var(--shadow-sm); transition:.15s; }
+  .back:hover { color:var(--primary-ink); border-color:var(--primary-line); }
+  .logo-mark { width:38px; height:38px; border-radius:11px; background:linear-gradient(150deg,var(--primary-2),var(--primary)); color:#fff; display:grid; place-items:center; font-weight:800; font-size:20px; box-shadow:0 4px 12px rgba(240,71,58,.4), inset 0 1px 0 rgba(255,255,255,.4); }
+  .logo-title { font-size:18px; font-weight:800; letter-spacing:-.02em; }
+  .logo-title span { color:var(--primary); }
+  .logo-tag { font-size:12px; color:var(--ink-3); }
+  .status { margin-left:auto; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.04em; padding:7px 13px; border-radius:999px; border:1px solid var(--line-2); color:var(--ink-3); background:#fff; }
+  .status.busy { color:var(--amber); border-color:rgba(217,138,31,.4); background:var(--amber-soft); }
+  .status.ready { color:var(--green); border-color:rgba(17,160,111,.4); background:var(--green-soft); }
+  .status.live { color:var(--primary-ink); border-color:var(--primary-line); background:var(--primary-soft); }
+
+  main { max-width:1140px; margin:0 auto; padding:22px; }
+  .steps { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+  .step { flex:1; min-width:220px; text-align:left; background:#fff; border:1px solid var(--line); border-radius:var(--r); padding:13px 16px; transition:.15s; display:flex; gap:12px; align-items:center; box-shadow:var(--shadow-sm); }
+  .step.active { border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-soft), var(--shadow); }
+  .step .n { width:32px; height:32px; border-radius:9px; flex:none; display:grid; place-items:center; font-family:var(--mono); font-weight:700; font-size:14px; background:var(--bg-soft); border:1px solid var(--line); color:var(--ink-3); }
+  .step.active .n { background:linear-gradient(150deg,var(--primary-2),var(--primary)); border-color:transparent; color:#fff; }
+  .step .t b { font-size:14.5px; font-weight:700; display:block; }
+  .step .t span { font-size:12px; color:var(--ink-3); }
+
+  .layout { display:grid; grid-template-columns:1.12fr .88fr; gap:18px; align-items:stretch; }
+  .layout[hidden] { display:none; }
+  .layout > .card:first-child { align-self:start; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:18px; display:flex; flex-direction:column; }
+  .card h2 { margin:0 0 4px; font-size:16px; font-weight:800; display:flex; align-items:center; gap:8px; }
+  .card h2::before { content:''; width:4px; height:16px; border-radius:2px; background:var(--primary); }
+  .card .sub { font-size:12.5px; color:var(--ink-3); margin:0 0 14px; }
+
+  .chart-wrap { position:relative; width:100%; border:1px solid var(--line); border-radius:13px; background:var(--card-2); overflow:hidden; }
+  canvas.chart { width:100%; height:auto; display:block; cursor:crosshair; touch-action:none; }
+  .axis-x { text-align:center; font-size:12px; color:var(--ink-3); margin-top:6px; }
+  .axis-y { position:absolute; left:-4px; top:50%; transform:rotate(-90deg) translateX(50%); transform-origin:left; font-size:12px; color:var(--ink-3); }
+
+  .ctrl { display:flex; gap:9px; margin-top:12px; flex-wrap:wrap; }
+  .btn { border:1px solid var(--line-2); background:#fff; color:var(--ink); border-radius:11px; padding:10px 15px; font-size:13.5px; font-weight:700; transition:.15s; box-shadow:var(--shadow-sm); display:inline-flex; align-items:center; justify-content:center; gap:7px; }
+  .btn:hover { border-color:var(--primary-line); color:var(--primary-ink); }
+  .btn:disabled { opacity:.45; cursor:not-allowed; box-shadow:none; }
+  .btn.primary { background:linear-gradient(150deg,var(--primary-2),var(--primary)); border-color:transparent; color:#fff; box-shadow:0 5px 16px rgba(240,71,58,.32); }
+  .btn.primary:hover { color:#fff; transform:translateY(-1px); }
+  .btn.block { width:100%; }
+
+  .seg { display:inline-flex; border:1px solid var(--line-2); border-radius:10px; overflow:hidden; }
+  .seg button { border:none; background:#fff; color:var(--ink-2); padding:9px 14px; font-size:13px; font-weight:600; }
+  .seg button.on { background:var(--primary-soft); color:var(--primary-ink); }
+
+  .dsbtns { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+  .dsbtns button { border:1px solid var(--line-2); background:#fff; color:var(--ink-2); border-radius:999px; padding:7px 13px; font-size:12.5px; font-weight:600; }
+  .dsbtns button.on { background:var(--blue-soft); color:#2c63c4; border-color:rgba(77,141,255,.4); }
+
+  .stat { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:4px 0 12px; }
+  .stat .s { background:var(--card-2); border:1px solid var(--line); border-radius:11px; padding:12px; text-align:center; }
+  .stat .s span { font-size:11.5px; color:var(--ink-3); display:block; }
+  .stat .s b { font-family:var(--mono); font-size:19px; font-weight:700; }
+  .stat .s b.pos { color:var(--green); } .stat .s b.neg { color:var(--primary); }
+
+  .row { display:flex; align-items:center; gap:11px; margin:14px 0 6px; font-size:13.5px; color:var(--ink-2); font-weight:600; }
+  .row input[type=range] { flex:1; accent-color:var(--primary); }
+  .row .val { font-family:var(--mono); font-size:13px; color:var(--ink); min-width:34px; text-align:right; }
+  .metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:12px 0; }
+  .metrics .m { background:var(--card-2); border:1px solid var(--line); border-radius:11px; padding:10px; text-align:center; }
+  .metrics .m span { font-size:11px; color:var(--ink-3); display:block; }
+  .metrics .m b { font-family:var(--mono); font-size:16px; font-weight:700; }
+  .pred-out { background:linear-gradient(180deg,var(--primary-soft),#fff); border:1px solid var(--primary-line); border-radius:12px; padding:14px; text-align:center; margin-top:6px; }
+  .pred-out .big { font-size:24px; font-weight:800; color:var(--primary-ink); }
+  .pred-out .big small { font-size:13px; color:var(--ink-3); font-weight:600; }
+
+  .learn { background:var(--card-2); border:1px solid var(--line); border-radius:12px; padding:13px 15px; margin-top:14px; font-size:12.5px; color:var(--ink-2); line-height:1.65; }
+  .learn b { color:var(--primary-ink); }
+  .fill { flex:1 1 auto; }
+  .hint { font-size:12.5px; color:var(--ink-3); margin-top:8px; }
+
+  @media (max-width:880px){ .layout{ grid-template-columns:1fr; align-items:start; } }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="back" href="../../platform/index.html">← 플랫폼</a>
+    <div class="logo-mark">E</div>
+    <div>
+      <div class="logo-title">데이터 · 예측 <span>AI</span></div>
+      <div class="logo-tag">데이터로 예측하는 AI (AIoT) · Eduino AI</div>
+    </div>
+    <div class="status" id="status">준비됨</div>
+  </div>
+</header>
+
+<main>
+  <div class="steps">
+    <button class="step active" data-step="explore"><div class="n">1</div><div class="t"><b>초급 · 관계 관찰</b><span>데이터의 관계를 그래프로</span></div></button>
+    <button class="step" data-step="predict"><div class="n">2</div><div class="t"><b>중급 · 예측 모델</b><span>회귀를 학습시켜 예측</span></div></button>
+  </div>
+
+  <!-- 초급 -->
+  <section id="panel-explore" class="layout">
+    <div class="card">
+      <h2>데이터 산점도</h2>
+      <p class="sub">예시 데이터를 골라 관계를 보세요. 그래프를 클릭하면 점을 추가할 수 있어요.</p>
+      <div class="dsbtns" id="ds-btns"></div>
+      <div class="chart-wrap"><canvas class="chart" id="c-explore" width="600" height="430"></canvas></div>
+      <div class="axis-x" id="ax-explore">X</div>
+      <div class="ctrl">
+        <button class="btn" id="ex-trend">추세선 보기</button>
+        <button class="btn" id="ex-reset">예시로 초기화</button>
+        <button class="btn" id="ex-clear">모두 지우기</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>관계 읽기</h2>
+      <p class="sub">점들이 한 방향으로 모일수록 관계가 강해요.</p>
+      <div class="stat">
+        <div class="s"><span>상관계수 r</span><b id="ex-r">—</b></div>
+        <div class="s"><span>관계</span><b id="ex-rel">—</b></div>
+      </div>
+      <div class="learn fill"><b>상관관계란?</b><br>두 데이터가 함께 움직이는 정도예요. <b>r이 +1에 가까우면</b> 한쪽이 커질 때 다른 쪽도 커지고(양의 관계), <b>−1에 가까우면</b> 반대로 움직여요(음의 관계). 0에 가까우면 관계가 거의 없어요.<br><br>[추세선 보기]를 누르면 점들의 흐름을 가장 잘 나타내는 직선이 그려져요. 이게 바로 예측의 출발점이에요!</div>
+    </div>
+  </section>
+
+  <!-- 중급 -->
+  <section id="panel-predict" class="layout" hidden>
+    <div class="card">
+      <h2>내 데이터로 학습</h2>
+      <p class="sub">그래프를 클릭해 점을 찍거나 [예시 채우기]를 누른 뒤 학습하세요.</p>
+      <div class="chart-wrap"><canvas class="chart" id="c-predict" width="600" height="430"></canvas></div>
+      <div class="axis-x">입력 X →</div>
+      <div class="ctrl">
+        <button class="btn" id="pr-sample">예시 채우기</button>
+        <button class="btn" id="pr-clear">모두 지우기</button>
+        <span class="seg" id="model-seg" style="margin-left:auto">
+          <button data-model="linear" class="on">직선</button>
+          <button data-model="curve">곡선</button>
+        </span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>학습 &amp; 예측</h2>
+      <p class="sub">경사하강법으로 점들에 가장 잘 맞는 선을 찾아갑니다.</p>
+      <button class="btn primary block" id="pr-train" disabled>학습 시작</button>
+      <div class="metrics">
+        <div class="m"><span>에폭</span><b id="m-epoch">—</b></div>
+        <div class="m"><span>오차(MSE)</span><b id="m-loss" style="color:var(--primary)">—</b></div>
+        <div class="m"><span>데이터</span><b id="m-n">0</b></div>
+      </div>
+      <div class="row"><span>예측할 X</span><input type="range" id="pr-x" min="0" max="10" step="0.1" value="5" disabled><span class="val" id="pr-xval">5.0</span></div>
+      <div class="pred-out"><div class="big" id="pr-yhat">—</div></div>
+      <div class="learn fill"><b>회귀와 경사하강법</b><br>회귀는 데이터에 가장 잘 맞는 <b>선(예측식)</b>을 찾는 일이에요. AI는 처음엔 아무 선이나 그어 놓고, 점들과의 <b>오차(MSE)</b>를 조금씩 줄이는 방향으로 선을 옮깁니다. 이 반복이 <b>경사하강법(학습)</b>이에요.<br><br>‘곡선’을 고르면 휘어진 관계도 표현할 수 있어요. 학습이 끝나면 X 슬라이더로 새로운 값의 Y를 예측해 보세요.</div>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+function setStatus(t, c) { const s = $('status'); s.textContent = t; s.className = 'status' + (c ? ' ' + c : ''); }
+const CW = 600, CH = 430, PAD = 42, DOM = 10; // 데이터 영역 0..10
+
+/* 좌표 변환 */
+function toPx(x, y) { return [PAD + (x / DOM) * (CW - 2 * PAD), CH - PAD - (y / DOM) * (CH - 2 * PAD)]; }
+function toData(px, py) { return [(px - PAD) / (CW - 2 * PAD) * DOM, (CH - PAD - py) / (CH - 2 * PAD) * DOM]; }
+function clamp(v) { return Math.max(0, Math.min(DOM, v)); }
+
+/* 차트 그리기 */
+function drawAxes(ctx) {
+  ctx.clearRect(0, 0, CW, CH);
+  ctx.strokeStyle = '#e9ebf2'; ctx.lineWidth = 1;
+  for (let i = 0; i <= DOM; i++) {
+    const [gx] = toPx(i, 0), [, gy] = toPx(0, i);
+    ctx.beginPath(); ctx.moveTo(gx, PAD); ctx.lineTo(gx, CH - PAD); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(PAD, gy); ctx.lineTo(CW - PAD, gy); ctx.stroke();
+  }
+  ctx.strokeStyle = '#c9cedb'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(PAD, PAD); ctx.lineTo(PAD, CH - PAD); ctx.lineTo(CW - PAD, CH - PAD); ctx.stroke();
+}
+function drawPoints(ctx, pts, color) {
+  ctx.fillStyle = color;
+  pts.forEach(p => { const [x, y] = toPx(p.x, p.y); ctx.beginPath(); ctx.arc(x, y, 5.5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke(); });
+}
+function drawFn(ctx, fn, color, dash) {
+  ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.setLineDash(dash || []);
+  ctx.beginPath();
+  let started = false;
+  for (let x = 0; x <= DOM; x += 0.1) {
+    const y = fn(x); if (!isFinite(y)) continue;
+    const [px, py] = toPx(x, Math.max(-2, Math.min(DOM + 2, y)));
+    started ? ctx.lineTo(px, py) : ctx.moveTo(px, py); started = true;
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+}
+
+/* 통계 */
+function linreg(pts) {
+  const n = pts.length; if (n < 2) return null;
+  let sx = 0, sy = 0, sxy = 0, sxx = 0, syy = 0;
+  pts.forEach(p => { sx += p.x; sy += p.y; sxy += p.x * p.y; sxx += p.x * p.x; syy += p.y * p.y; });
+  const mx = sx / n, my = sy / n;
+  const cov = sxy / n - mx * my, vx = sxx / n - mx * mx, vy = syy / n - my * my;
+  if (vx < 1e-9) return null;
+  const m = cov / vx, b = my - m * mx;
+  const r = (vx < 1e-9 || vy < 1e-9) ? 0 : cov / Math.sqrt(vx * vy);
+  return { m, b, r };
+}
+
+/* ════════ 초급: 관계 관찰 ════════ */
+const PRESETS = {
+  study: { name: '공부시간 ↔ 점수', x: '공부 시간', gen: () => sample((x) => x + 0.5, 1.3) },
+  ice: { name: '기온 ↔ 아이스크림', x: '기온', gen: () => sample((x) => 0.9 * x + 0.8, 1.4) },
+  game: { name: '게임시간 ↔ 성적', x: '게임 시간', gen: () => sample((x) => 10 - x, 1.3) },
+};
+function sample(f, noise) {
+  const a = [];
+  for (let i = 0; i < 12; i++) { const x = clamp(0.7 + Math.random() * 8.6); const y = clamp(f(x) + (Math.random() - 0.5) * 2 * noise); a.push({ x: +x.toFixed(2), y: +y.toFixed(2) }); }
+  return a;
+}
+let exPts = [], exTrend = false, curPreset = 'study';
+const exCtx = $('c-explore').getContext('2d');
+$('ds-btns').innerHTML = Object.entries(PRESETS).map(([k, v]) => `<button data-ds="${k}" class="${k === 'study' ? 'on' : ''}">${v.name}</button>`).join('');
+function loadPreset(k) { curPreset = k; exPts = PRESETS[k].gen(); exTrend = false; $('ax-explore').textContent = PRESETS[k].x + ' →'; document.querySelectorAll('#ds-btns button').forEach(b => b.classList.toggle('on', b.dataset.ds === k)); renderExplore(); }
+function renderExplore() {
+  drawAxes(exCtx);
+  if (exTrend) { const r = linreg(exPts); if (r) drawFn(exCtx, (x) => r.m * x + r.b, '#f0473a'); }
+  drawPoints(exCtx, exPts, '#4d8dff');
+  const r = linreg(exPts);
+  $('ex-r').textContent = r ? r.r.toFixed(2) : '—';
+  let rel = '—', cls = '';
+  if (r) { if (r.r > 0.3) { rel = '양의 관계 ↗'; cls = 'pos'; } else if (r.r < -0.3) { rel = '음의 관계 ↘'; cls = 'neg'; } else { rel = '거의 없음'; } }
+  const relEl = $('ex-rel'); relEl.textContent = rel; relEl.className = cls;
+}
+$('ds-btns').addEventListener('click', (e) => { const k = e.target.dataset.ds; if (k) loadPreset(k); });
+$('ex-trend').onclick = () => { exTrend = !exTrend; $('ex-trend').textContent = exTrend ? '추세선 숨기기' : '추세선 보기'; renderExplore(); };
+$('ex-reset').onclick = () => loadPreset(curPreset);
+$('ex-clear').onclick = () => { exPts = []; renderExplore(); };
+$('c-explore').addEventListener('pointerdown', (e) => {
+  const rect = e.target.getBoundingClientRect();
+  const px = (e.clientX - rect.left) / rect.width * CW, py = (e.clientY - rect.top) / rect.height * CH;
+  const [x, y] = toData(px, py); if (x < 0 || x > DOM || y < 0 || y > DOM) return;
+  exPts.push({ x: +x.toFixed(2), y: +y.toFixed(2) }); renderExplore();
+});
+
+/* ════════ 중급: 예측 모델 ════════ */
+let prPts = [], modelType = 'linear', training = false, raf = null;
+let W1 = null, W2 = null, B = null, trained = false;
+const prCtx = $('c-predict').getContext('2d');
+function predFn(x) { // 학습된 파라미터로 예측 (표시 좌표계 0..10)
+  if (!trained) return null;
+  const xn = x / DOM;
+  const yn = modelType === 'curve' ? (W2 * xn * xn + W1 * xn + B) : (W1 * xn + B);
+  return yn * DOM;
+}
+function renderPredict() {
+  drawAxes(prCtx);
+  if (trained) drawFn(prCtx, (x) => predFn(x), '#f0473a');
+  drawPoints(prCtx, prPts, '#4d8dff');
+  // 예측 마커
+  if (trained) {
+    const x = +$('pr-x').value, y = predFn(x);
+    if (isFinite(y)) {
+      const [px, py] = toPx(x, Math.max(0, Math.min(DOM, y)));
+      prCtx.strokeStyle = '#11a06f'; prCtx.lineWidth = 1.5; prCtx.setLineDash([5, 4]);
+      prCtx.beginPath(); prCtx.moveTo(px, CH - PAD); prCtx.lineTo(px, py); prCtx.lineTo(PAD, py); prCtx.stroke(); prCtx.setLineDash([]);
+      prCtx.fillStyle = '#11a06f'; prCtx.beginPath(); prCtx.arc(px, py, 6.5, 0, Math.PI * 2); prCtx.fill();
+      prCtx.strokeStyle = '#fff'; prCtx.lineWidth = 2; prCtx.stroke();
+    }
+  }
+  $('m-n').textContent = prPts.length;
+  $('pr-train').disabled = prPts.length < 2 || training;
+}
+function updatePred() {
+  const x = +$('pr-x').value; $('pr-xval').textContent = x.toFixed(1);
+  const y = trained ? predFn(x) : null;
+  $('pr-yhat').innerHTML = (y == null) ? '—' : `예측 Y = ${y.toFixed(2)} <small>(X=${x.toFixed(1)})</small>`;
+  renderPredict();
+}
+$('model-seg').addEventListener('click', (e) => { const m = e.target.dataset.model; if (!m) return; modelType = m; $('model-seg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.model === m)); trained = false; $('pr-x').disabled = true; updatePred(); });
+$('pr-x').addEventListener('input', updatePred);
+$('pr-sample').onclick = () => { prPts = sample((x) => 0.7 * x + 1.5, 1.1); trained = false; $('pr-x').disabled = true; updatePred(); };
+$('pr-clear').onclick = () => { prPts = []; trained = false; training = false; if (raf) cancelAnimationFrame(raf); $('pr-x').disabled = true; $('m-epoch').textContent = '—'; $('m-loss').textContent = '—'; updatePred(); };
+$('c-predict').addEventListener('pointerdown', (e) => {
+  if (training) return;
+  const rect = e.target.getBoundingClientRect();
+  const px = (e.clientX - rect.left) / rect.width * CW, py = (e.clientY - rect.top) / rect.height * CH;
+  const [x, y] = toData(px, py); if (x < 0 || x > DOM || y < 0 || y > DOM) return;
+  prPts.push({ x: +x.toFixed(2), y: +y.toFixed(2) }); trained = false; $('pr-x').disabled = true; updatePred();
+});
+
+$('pr-train').onclick = () => {
+  if (prPts.length < 2 || training) return;
+  training = true; setStatus('학습 중…', 'busy'); $('pr-train').disabled = true; $('pr-x').disabled = true;
+  const xs = tf.tensor1d(prPts.map(p => p.x / DOM));
+  const ys = tf.tensor1d(prPts.map(p => p.y / DOM));
+  const w1 = tf.variable(tf.scalar(Math.random() * 0.4)), b = tf.variable(tf.scalar(0.3));
+  const w2 = tf.variable(tf.scalar(0));
+  const opt = tf.train.adam(0.08);
+  const curve = modelType === 'curve';
+  const pred = (xt) => curve ? w2.mul(xt.square()).add(w1.mul(xt)).add(b) : w1.mul(xt).add(b);
+  const TOTAL = 240; let ep = 0;
+  function step() {
+    let lossV = 0;
+    for (let k = 0; k < 4 && ep < TOTAL; k++, ep++) {
+      const l = opt.minimize(() => tf.losses.meanSquaredError(ys, pred(xs)), true);
+      lossV = l.dataSync()[0]; l.dispose();
+    }
+    W1 = w1.dataSync()[0]; W2 = w2.dataSync()[0]; B = b.dataSync()[0]; trained = true;
+    $('m-epoch').textContent = ep + ' / ' + TOTAL;
+    $('m-loss').textContent = (lossV * DOM * DOM).toFixed(3); // 표시 스케일 오차
+    renderPredict();
+    if (ep < TOTAL) { raf = requestAnimationFrame(step); }
+    else {
+      xs.dispose(); ys.dispose(); w1.dispose(); w2.dispose(); b.dispose(); opt.dispose && opt.dispose();
+      training = false; $('pr-x').disabled = false; $('pr-train').disabled = false;
+      setStatus('학습 완료 · READY', 'ready'); updatePred();
+    }
+  }
+  step();
+};
+
+/* ── 단계 전환 ── */
+document.querySelectorAll('.step').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.step').forEach(b => b.classList.toggle('active', b === btn));
+    const s = btn.dataset.step;
+    $('panel-explore').hidden = s !== 'explore';
+    $('panel-predict').hidden = s !== 'predict';
+    if (s === 'predict') updatePred(); else renderExplore();
+  };
+});
+
+/* 초기화 */
+loadPreset('study');
+updatePred();
+setStatus('준비됨');
+</script>
+</body>
+</html>
