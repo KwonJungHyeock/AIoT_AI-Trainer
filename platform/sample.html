@@ -190,25 +190,35 @@ if (typeof module !== 'undefined') { module.exports = { dist }; }
 
 function renderCls() {
   $('cls').innerHTML = classes.map((c, i) => `
-    <div class="cls-item ${c.rec ? 'rec' : ''}" data-i="${i}">
+    <div class="cls-item" data-i="${i}">
       <div class="cls-head"><span class="swatch" style="background:${COLORS[i]}"></span>
         <input class="cls-name" value="${c.name.replace(/"/g, '&quot;')}" data-i="${i}">
-        <span class="cls-count">${c.samples.length}장</span></div>
-      <button class="collect ${c.rec ? 'rec' : ''}" data-rec="${i}">${c.rec ? '● 그만 가르치기' : '가르치기 (누르고 비추기)'}</button>
-      <div class="samp-bar"><i style="width:${Math.min(100, c.samples.length * 5)}%"></i></div>
+        <span class="cls-count" data-count="${i}">${c.samples.length}장</span></div>
+      <button class="collect" data-collect="${i}">📸 데이터 수집하기</button>
     </div>`).join('');
-  $('train').disabled = !(classes[0].samples.length >= 5 && classes[1].samples.length >= 5);
+  updateCounts();
 }
+function updateCounts() {
+  classes.forEach((c, k) => { const el = document.querySelector(`[data-count="${k}"]`); if (el) el.textContent = c.samples.length + '장'; });
+  $('train').disabled = !(classes[0].samples.length >= 3 && classes[1].samples.length >= 3);
+}
+function captureOne(i) { if (!stream) return; const c = classes[i]; if (c.samples.length < 300) { c.samples.push(feat()); updateCounts(); } }
+function setHoldVisual(i) {
+  document.querySelectorAll('[data-collect]').forEach(b => {
+    const on = +b.dataset.collect === i;
+    b.classList.toggle('rec', on); b.textContent = on ? '● 수집 중… (놓으면 멈춤)' : '📸 데이터 수집하기';
+    b.closest('.cls-item').classList.toggle('rec', on);
+  });
+  $('rec').classList.toggle('on', i != null);
+  $('cam-state').textContent = i != null ? '수집 중' : (stream ? '준비됨' : '대기');
+  $('cam-state').classList.toggle('on', i != null);
+}
+function startHold(i) { if (!stream) return; recId = i; lastCap = performance.now(); captureOne(i); setHoldVisual(i); }
+function endHold() { if (recId == null) return; recId = null; setHoldVisual(null); }
 $('cls').addEventListener('input', (e) => { const i = +e.target.dataset.i; if (e.target.classList.contains('cls-name')) classes[i].name = e.target.value; });
-$('cls').addEventListener('click', (e) => {
-  const i = e.target.dataset.rec; if (i == null) return;
-  const idx = +i; classes.forEach((c, k) => c.rec = (k === idx ? !c.rec : false));
-  recId = classes[idx].rec ? idx : null;
-  $('rec').classList.toggle('on', recId != null);
-  $('cam-state').textContent = recId != null ? '가르치는 중' : (stream ? '준비됨' : '대기');
-  $('cam-state').classList.toggle('on', recId != null);
-  renderCls();
-});
+$('cls').addEventListener('pointerdown', (e) => { const b = e.target.closest('[data-collect]'); if (!b) return; e.preventDefault(); startHold(+b.dataset.collect); });
+window.addEventListener('pointerup', endHold);
+window.addEventListener('pointercancel', endHold);
 
 async function start() {
   stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
@@ -218,7 +228,7 @@ async function start() {
 }
 function loop() {
   if (!stream) return;
-  if (recId != null) { const now = performance.now(); if (now - lastCap > 90) { lastCap = now; const c = classes[recId]; if (c.samples.length < 40) { c.samples.push(feat()); renderCls(); } } }
+  if (recId != null) { const now = performance.now(); if (now - lastCap > 90) { lastCap = now; captureOne(recId); } }
   if (guessing && trained) classify();
   raf = requestAnimationFrame(loop);
 }
@@ -228,9 +238,9 @@ $('cam').onclick = async () => {
 };
 $('stop').onclick = () => {
   if (raf) cancelAnimationFrame(raf); if (stream) stream.getTracks().forEach(t => t.stop());
-  stream = null; raf = null; guessing = false; recId = null; classes.forEach(c => c.rec = false);
-  $('ph').style.display = 'grid'; $('rec').classList.remove('on'); $('cam').disabled = false; $('stop').disabled = true;
-  $('cam-state').textContent = '대기'; $('cam-state').classList.remove('on'); $('guess').textContent = '맞혀보기 시작'; renderCls();
+  stream = null; raf = null; guessing = false; recId = null;
+  $('ph').style.display = 'grid'; $('cam').disabled = false; $('stop').disabled = true;
+  $('guess').textContent = '맞혀보기 시작'; setHoldVisual(null);
 };
 $('train').onclick = () => {
   if (!(classes[0].samples.length >= 5 && classes[1].samples.length >= 5)) return;
