@@ -45,6 +45,9 @@
   .steps3 b { color:var(--primary); font-family:var(--mono); }
 
   .layout { display:grid; grid-template-columns:1.1fr .9fr; gap:18px; align-items:start; margin-top:14px; }
+  .builder { margin-top:18px; }
+  .builder .cls { display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:start; }
+  @media (max-width:820px){ .builder .cls{ grid-template-columns:1fr; } }
   .card { background:#fff; border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:18px; min-width:0; }
   .cls-item { min-width:0; }
   .card h2 { margin:0 0 4px; font-size:16px; font-weight:800; display:flex; align-items:center; gap:8px; }
@@ -127,12 +130,13 @@
     <div class="steps3"><span><b>1</b> 카메라 켜기</span><span><b>2</b> 두 가지 가르치기</span><span><b>3</b> 학습 → 맞히기</span></div>
   </div>
 
+  <!-- 위: 카메라 | 실시간 결과 (나란히) -->
   <div class="layout">
-    <div class="card">
+    <div class="card cam-card">
       <h2>카메라 <span class="cam-state" id="cam-state">대기</span></h2>
       <div class="stage">
         <video id="v" playsinline muted></video>
-        <div class="rec-dot" id="rec"><i></i> 가르치는 중</div>
+        <div class="rec-dot" id="rec"><i></i> 수집 중</div>
         <div class="ph" id="ph">📷 [카메라 켜기]를 누르고<br>물체나 손을 비춰주세요</div>
       </div>
       <div class="cam-ctrl">
@@ -145,22 +149,28 @@
         <button data-fx="gray">흑백</button>
         <button data-fx="invert">색반전</button>
       </div>
-      <p class="fx-note">📷 영상의 <b>픽셀 값을 바꾸는</b> 것이 영상처리예요. <b>흑백</b>=색을 빼고 밝기만 남기기, <b>색반전</b>=밝고 어두움을 뒤집기. AI도 이렇게 영상을 숫자로 바꿔 분석합니다. <span style="color:var(--ink-4)">(효과는 보기용 — AI는 원본을 학습해요)</span></p>
+      <p class="fx-note">📷 영상의 <b>픽셀 값을 바꾸는</b> 것이 영상처리예요. <b>흑백</b>=색을 빼고 밝기만, <b>색반전</b>=명암 뒤집기. AI도 영상을 숫자로 바꿔 분석합니다. <span style="color:var(--ink-4)">(효과는 보기용 — AI는 원본을 학습해요)</span></p>
     </div>
 
     <div class="card">
-      <h2>가르치고 맞히기</h2>
-      <p class="sub">이름을 눌러 자유롭게 바꾸고, 각 항목을 비추며 [가르치기]로 10장 이상 모은 뒤 [학습하기].</p>
-      <div class="cls" id="cls"></div>
-      <button class="btn primary block lg" id="train" disabled style="margin-top:12px">학습하기</button>
-      <div class="result" style="margin-top:14px">
+      <h2>실시간 결과</h2>
+      <p class="sub">학습 후 [맞혀보기]를 누르면 카메라 화면 옆에서 바로 결과를 확인해요.</p>
+      <div class="result">
         <div class="big" id="r-name">아직 학습 전</div>
-        <div class="conf" id="r-sub">두 가지를 가르치고 학습해 보세요</div>
+        <div class="conf" id="r-sub">아래에서 두 가지를 가르치고 학습해 보세요</div>
       </div>
       <div class="bars" id="bars"></div>
-      <button class="btn block" id="guess" disabled style="margin-top:12px">맞혀보기 시작</button>
+      <button class="btn block lg" id="guess" disabled style="margin-top:14px">맞혀보기 시작</button>
       <div class="hint">※ 가벼운 맛보기예요. 색·밝기 변화에 민감할 수 있어요.</div>
     </div>
+  </div>
+
+  <!-- 아래: 데이터셋 만들기 -->
+  <div class="card builder">
+    <h2>데이터셋 만들기</h2>
+    <p class="sub">이름을 눌러 자유롭게 바꾸고, 각 항목을 비추며 [데이터 수집하기]로 모은 뒤 [학습하기]. (탭=1장 · 길게=연속)</p>
+    <div class="cls" id="cls"></div>
+    <button class="btn primary block lg" id="train" disabled style="margin-top:14px">학습하기</button>
   </div>
 
   <div class="upsell">
