@@ -59,6 +59,7 @@
   .chip { font-size:12px; font-weight:700; border-radius:999px; padding:5px 12px; border:1px solid var(--line-2); background:#fff; color:var(--ink-2); }
   .chip.aud { color:#2c63c4; background:var(--blue-soft); border-color:rgba(77,141,255,.3); }
   .chip.lv { color:var(--primary-ink); background:var(--primary-soft); border-color:var(--primary-line); }
+  .chip.lock { color:var(--ink-2); background:var(--bg-soft); border-color:var(--line-2); }
   .chero-cta { display:flex; gap:11px; flex-wrap:wrap; margin-top:22px; }
 
   section.blk { padding-top:36px; }
@@ -110,7 +111,7 @@
   <div class="topbar-inner">
     <a class="back" href="index.html#modules">← 코스 목록</a>
     <a class="brand" href="index.html"><div class="logo-mark">E</div><div class="logo-title">Eduino <span>AI</span></div></a>
-    <a class="btn btn-primary nav-cta" id="nav-cta" href="#">체험 시작 →</a>
+    <a class="btn btn-primary nav-cta" id="nav-cta" href="index.html#plans">도입 문의 →</a>
   </div>
 </header>
 
@@ -124,8 +125,8 @@
         <p class="tagline" id="c-tag"></p>
         <div class="chips" id="c-chips"></div>
         <div class="chero-cta">
-          <a class="btn btn-primary btn-lg" id="c-start" href="#">체험 시작 →</a>
-          <a class="btn btn-ghost btn-lg" href="index.html#modules">다른 코스 보기</a>
+          <a class="btn btn-primary btn-lg" id="c-start" href="index.html#plans">구매·도입 문의 →</a>
+          <a class="btn btn-ghost btn-lg" href="sample.html">무료 샘플 먼저 체험</a>
         </div>
       </div>
     </div>
@@ -259,9 +260,7 @@ document.getElementById('c-name').textContent = c.name;
 document.getElementById('cr-name').textContent = c.name;
 document.getElementById('c-tag').textContent = c.tagline;
 document.getElementById('c-chips').innerHTML =
-  `<span class="chip aud">대상 ${c.audience}</span><span class="chip lv">초급</span><span class="chip lv">중급</span><span class="chip lv">심화</span>`;
-document.getElementById('c-start').href = c.href;
-document.getElementById('nav-cta').href = c.href;
+  `<span class="chip aud">대상 ${c.audience}</span><span class="chip lv">초급</span><span class="chip lv">중급</span><span class="chip lv">심화</span><span class="chip lock">🔒 구매 후 이용</span>`;
 document.getElementById('c-learn').innerHTML = c.learn.map(t => `<div class="learn-item">${CK}<span>${t}</span></div>`).join('');
 document.getElementById('c-curr').innerHTML = c.curriculum.map((u, i) => `<div class="cu t${i+1}"><span class="badge">${u.t}</span><h3>${u.title}</h3><p>${u.desc}</p></div>`).join('');
 document.getElementById('c-needs').innerHTML = c.needs.map(n => `<div class="n"><span class="ic">${n[0]}</span><span><b>${n[1]}</b> · ${n[2]}</span></div>`).join('');
