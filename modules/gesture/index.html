@@ -100,14 +100,17 @@
   .flow .farrow { color:var(--ink-4); flex:none; padding:0 2px; }
   @media (max-width:720px){ .flow{ flex-direction:column; align-items:stretch; padding:6px; } .flow .farrow{ display:none; } .flow .fstep .ft span{ display:none; } }
 
-  /* 작업 영역: 고정 카메라 + 단계 패널 */
-  .work { display:grid; grid-template-columns:1.04fr .96fr; gap:18px; align-items:start; }
-  .camera-card { position:sticky; top:84px; }
+  /* 작업 영역: 카메라 + 단계 패널 (높이 정렬) */
+  .work { display:grid; grid-template-columns:1.04fr .96fr; gap:18px; align-items:stretch; }
+  .camera-card { align-self:start; display:flex; flex-direction:column; }
   .cam-state { margin-left:auto; font-family:var(--mono); font-size:10.5px; font-weight:700; color:var(--ink-3); background:var(--bg-soft); border:1px solid var(--line); border-radius:999px; padding:3px 9px; }
   .cam-state.on { color:var(--primary-ink); background:var(--primary-soft); border-color:var(--primary-line); }
-  .phost { min-width:0; }
+  .phost { min-width:0; height:100%; }
+  .wstep { height:100%; }
   .wstep[hidden] { display:none; }
-  @media (max-width:880px){ .work{ grid-template-columns:1fr; } .camera-card{ position:static; } }
+  .wstep > .card { height:100%; display:flex; flex-direction:column; }
+  .fill { flex:1 1 auto; }
+  @media (max-width:880px){ .work{ grid-template-columns:1fr; align-items:start; } .wstep>.card{ height:auto; } }
 
   /* 레이아웃(초급) */
   .layout { display:grid; grid-template-columns:1.12fr .88fr; gap:18px; align-items:start; }
@@ -302,7 +305,7 @@
       <span class="farrow">→</span>
       <button class="fstep" data-w="2"><span class="fn">2</span><span class="ft"><b>학습하기</b><span>AI가 손 모양 학습</span></span></button>
       <span class="farrow">→</span>
-      <button class="fstep" data-w="3"><span class="fn">3</span><span class="ft"><b>사용해보기</b><span>실시간으로 인식</span></span></button>
+      <button class="fstep" data-w="3"><span class="fn">3</span><span class="ft"><b>추론하기</b><span>학습한 AI로 실시간 인식</span></span></button>
     </div>
 
     <div class="work">
@@ -332,8 +335,7 @@
             <button class="add-cls" id="add-cls">+ 제스처 추가</button>
             <div class="hint" id="train-hint">제스처 2종 이상 + 각 8개 이상 샘플이 필요합니다.</div>
             <button class="btn primary block lg" id="go-train" disabled style="margin-top:14px">학습하기 →</button>
-            <details class="guide mini"><summary><span class="tagk">도움말</span> 일반 분류와 뭐가 다른가요?</summary>
-              <div class="body"><div class="note">사진 픽셀 전체가 아니라 <b>손 관절 21개의 위치</b>만 학습해서, 가볍고 빠르며 배경·옷·조명에 덜 흔들려요.</div></div></details>
+            <div class="learn fill"><b>좋은 데이터 모으는 법</b><br>· 손 각도(정면·기울임)와 카메라와의 거리를 바꿔가며 모아요.<br>· 제스처마다 <b>30개 이상</b>, 헷갈리는 건 더 많이.<br>· 손 관절 21개 위치만 쓰므로 <b>배경·옷·조명은 신경 쓰지 않아도</b> 됩니다.</div>
           </div>
         </div>
 
@@ -356,14 +358,14 @@
               <polyline id="curve-loss" fill="none" stroke="#f0473a" stroke-width="2.2" stroke-linejoin="round"/>
             </svg>
             <div class="curve-legend"><span><i style="background:#f0473a"></i>손실 (loss)</span><span><i style="background:#11a06f"></i>정확도 (accuracy)</span></div>
-            <div class="conf" id="conf"><div class="empty">학습을 완료하면 혼동행렬(예측 결과 표)이 나타납니다.</div></div>
+            <div class="conf fill" id="conf"><div class="empty">학습을 완료하면 혼동행렬(예측 결과 표)이 나타납니다.</div></div>
           </div>
         </div>
 
         <!-- 단계 3: 추론 -->
         <div class="wstep" data-w="3" hidden>
           <div class="card">
-            <h2>③ 사용해보기</h2>
+            <h2>③ 추론하기</h2>
             <p class="sub">손을 바꿔가며 비춰보세요. 가장 확신하는 제스처가 표시됩니다.</p>
             <div class="rtop">
               <div class="donut">
@@ -375,6 +377,7 @@
             <div class="bars" id="bars"><div class="empty">학습하면 제스처별 예측 막대가 여기 표시됩니다.</div></div>
             <button class="btn primary block lg" id="btn-infer" disabled style="margin-top:14px">추론 시작</button>
             <button class="btn block" id="go-collect" style="margin-top:10px">← 데이터 더 모으기</button>
+            <div class="learn fill"><b>추론(inference)이란?</b><br>학습을 마친 AI가 새로 들어온 손 모양을 보고 <b>“어떤 제스처인지” 실시간으로 예측</b>하는 단계예요. 막대가 가장 높은 것이 AI의 답입니다.<br><br>잘 안 맞으면 <b>① 단계로 돌아가 데이터를 더 모아</b> 보세요. 각도·거리를 다양하게 넣을수록 똑똑해집니다.</div>
           </div>
         </div>
       </div>
