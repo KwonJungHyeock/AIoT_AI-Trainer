@@ -162,13 +162,47 @@
   .metrics b { color:var(--ink); }
   .hint { font-size:12.5px; color:var(--ink-3); margin-top:8px; }
 
-  .bars { display:flex; flex-direction:column; gap:10px; margin-top:6px; }
+  .bars { display:flex; flex-direction:column; gap:10px; margin-top:6px; min-height:40px; }
+  .bars .empty { color:var(--ink-4); font-size:12.5px; text-align:center; padding:16px 8px; }
   .pbar .pb-top { display:flex; justify-content:space-between; font-size:13px; margin-bottom:5px; }
   .pbar .pb-name { font-weight:700; } .pbar .pb-pct { font-family:var(--mono); color:var(--ink-3); }
   .pbar .pb-track { height:10px; border-radius:6px; background:var(--bg-soft); overflow:hidden; }
   .pbar .pb-fill { height:100%; width:0; border-radius:6px; transition:.12s; }
 
-  @media (max-width:880px){ .layout{ grid-template-columns:1fr; } }
+  /* 실시간 결과 패널 */
+  .rtop { display:flex; align-items:center; gap:16px; padding:4px 0 14px; border-bottom:1px solid var(--line); margin-bottom:12px; }
+  .rlab b { font-size:21px; font-weight:800; display:block; line-height:1.2; }
+  .rlab span { font-size:12.5px; color:var(--ink-3); }
+
+  /* 학습 모니터: 지표 카드 */
+  .metrics.big { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
+  .metrics.big .met { background:var(--card-2); border:1px solid var(--line); border-radius:11px; padding:11px 12px; text-align:center; }
+  .metrics.big .met span { font-size:11.5px; color:var(--ink-3); display:block; }
+  .metrics.big .met b { font-family:var(--mono); font-size:18px; font-weight:700; color:var(--ink); }
+  .metrics.big .met b.acc { color:var(--green); } .metrics.big .met b.loss { color:var(--primary); }
+
+  /* 학습 곡선 */
+  .curve { width:100%; height:128px; background:var(--card-2); border:1px solid var(--line); border-radius:12px; display:block; }
+  .curve .grid { stroke:var(--line-2); stroke-width:1; stroke-dasharray:4 4; }
+  .curve-legend { display:flex; gap:16px; font-size:11.5px; color:var(--ink-3); margin-top:9px; }
+  .curve-legend i { display:inline-block; width:12px; height:3px; border-radius:2px; vertical-align:middle; margin-right:5px; }
+
+  /* 혼동행렬 */
+  .conf { margin-top:16px; overflow-x:auto; }
+  .conf .empty { color:var(--ink-4); font-size:12.5px; text-align:center; padding:14px 8px; }
+  .conf table { width:100%; border-collapse:collapse; font-size:12px; }
+  .conf caption { caption-side:top; text-align:left; font-size:12px; color:var(--ink-3); margin-bottom:8px; }
+  .conf th, .conf td { border:1px solid var(--line); padding:7px 9px; text-align:center; }
+  .conf th { background:var(--card-2); color:var(--ink-2); font-weight:700; }
+  .conf td.rowh { background:var(--card-2); font-weight:700; color:var(--ink-2); }
+  .conf td.diag { background:var(--green-soft); color:var(--green); font-weight:800; }
+  .conf td.miss { color:var(--primary); font-weight:700; }
+
+  /* 데이터셋 컴팩트 */
+  .cls-item { padding:11px 12px; }
+  .cls-actions { margin-top:8px; }
+
+  @media (max-width:880px){ .layout{ grid-template-columns:1fr; } .metrics.big{ grid-template-columns:repeat(3,1fr); } }
 </style>
 </head>
 <body>
@@ -251,15 +285,16 @@
       </div>
     </details>
 
+    <!-- 상단: 카메라 + 실시간 결과 (한 화면에) -->
     <div class="layout">
       <div class="card">
-        <h2>제스처 수집</h2>
-        <p class="sub">손을 비추고 오른쪽에서 [샘플 모으기]를 누르면 자동으로 모입니다.</p>
+        <h2>카메라</h2>
+        <p class="sub">손을 비추고 아래에서 데이터를 모은 뒤 학습 → 추론하세요.</p>
         <div class="stage">
           <video id="v-train" playsinline muted></video>
           <canvas id="c-train"></canvas>
           <div class="rec-dot" id="rec-dot"><i></i> 수집 중</div>
-          <div class="ph" id="ph-train">📷 [카메라 켜기] 후<br>오른쪽에서 제스처별로 수집하세요</div>
+          <div class="ph" id="ph-train">📷 [카메라 켜기]를 누르고<br>손을 화면에 비춰주세요</div>
         </div>
         <div class="cam-ctrl">
           <button class="btn primary lg" id="train-cam">카메라 켜기</button>
@@ -268,19 +303,48 @@
       </div>
 
       <div class="card">
-        <h2>내 제스처 데이터셋</h2>
-        <p class="sub">클래스를 만들고 샘플을 모은 뒤 [학습 시작]을 누르세요.</p>
+        <h2>실시간 결과</h2>
+        <p class="sub">학습 후 [추론 시작]을 누르면 예측이 실시간으로 표시됩니다.</p>
+        <div class="rtop">
+          <div class="donut">
+            <svg width="92" height="92" viewBox="0 0 92 92"><circle class="ring-bg" cx="46" cy="46" r="40"/><circle class="ring-fg" id="r-arc" cx="46" cy="46" r="40" stroke-dasharray="0 251.3"/></svg>
+            <div class="pct" id="r-pct">0%</div>
+          </div>
+          <div class="rlab"><b id="r-label">대기 중</b><span id="r-sub">데이터를 모아 학습해 보세요</span></div>
+        </div>
+        <div class="bars" id="bars"><div class="empty">학습하면 제스처별 예측 막대가 여기 표시됩니다.</div></div>
+        <button class="btn primary block lg" id="btn-infer" disabled style="margin-top:14px">추론 시작</button>
+      </div>
+    </div>
+
+    <!-- 하단: 데이터셋 + 학습(그래프·표) -->
+    <div class="layout" style="margin-top:18px">
+      <div class="card">
+        <h2>데이터셋 수집</h2>
+        <p class="sub">제스처별 [샘플 모으기]를 눌러 30개 이상 모아요.</p>
         <div class="cls" id="cls-list"></div>
         <button class="add-cls" id="add-cls">+ 제스처 추가</button>
-
         <div class="row"><span>학습 반복</span><input type="range" id="epochs" min="10" max="80" value="40" step="5"><span class="val" id="epochs-val">40</span></div>
         <button class="btn primary block lg" id="btn-train" disabled>학습 시작</button>
         <div class="train-bar"><i id="train-fill"></i></div>
-        <div class="metrics"><span>에폭 <b id="m-epoch">— / —</b></span><span>정확도 <b id="m-acc">—</b></span><span>손실 <b id="m-loss">—</b></span></div>
         <div class="hint" id="train-hint">제스처 2종 이상 + 각 8개 이상 샘플이 필요합니다.</div>
+      </div>
 
-        <button class="btn block lg" id="btn-infer" disabled style="margin-top:14px">추론 시작</button>
-        <div class="bars" id="bars" style="margin-top:14px"></div>
+      <div class="card">
+        <h2>학습 모니터</h2>
+        <p class="sub">전이학습이 진행되며 손실은 내려가고 정확도는 올라갑니다.</p>
+        <div class="metrics big">
+          <div class="met"><span>에폭</span><b id="m-epoch">— / —</b></div>
+          <div class="met"><span>정확도</span><b id="m-acc" class="acc">—</b></div>
+          <div class="met"><span>손실</span><b id="m-loss" class="loss">—</b></div>
+        </div>
+        <svg class="curve" id="curve-svg" viewBox="0 0 300 120" preserveAspectRatio="none">
+          <line class="grid" x1="10" y1="60" x2="290" y2="60"/>
+          <polyline id="curve-acc" fill="none" stroke="#11a06f" stroke-width="2.2" stroke-linejoin="round"/>
+          <polyline id="curve-loss" fill="none" stroke="#f0473a" stroke-width="2.2" stroke-linejoin="round"/>
+        </svg>
+        <div class="curve-legend"><span><i style="background:#f0473a"></i>손실 (loss)</span><span><i style="background:#11a06f"></i>정확도 (accuracy)</span></div>
+        <div class="conf" id="conf"><div class="empty">학습을 완료하면 혼동행렬(예측 결과 표)이 나타납니다.</div></div>
       </div>
     </div>
   </section>
@@ -328,6 +392,8 @@ async function loadModel() {
   try { await tf.setBackend('webgl'); } catch (e) {}
   await tf.ready();
   model = await handpose.load();
+  // 워밍업: 더미 추론 1회로 WebGL 커널 미리 컴파일 → 첫 프레임 렉 제거
+  try { const c = document.createElement('canvas'); c.width = 256; c.height = 256; await model.estimateHands(c, false); } catch (e) {}
   return model;
 }
 
@@ -405,6 +471,38 @@ $('play-stop').onclick = () => { play.stop(); $('play-cam').disabled = false; $(
 const train = mkCam($('v-train'), $('c-train'), $('ph-train'));
 let head = null, inferring = false, classes = [], nextId = 1, recording = null, lastCollect = 0;
 
+/* 실시간 결과 패널 */
+function donutSet(arc, pctEl, frac, color) { arc.setAttribute('stroke-dasharray', (frac * DONUT_C).toFixed(1) + ' ' + DONUT_C); if (color) arc.style.stroke = color; pctEl.textContent = Math.round(frac * 100) + '%'; }
+function showIdle() { donutSet($('r-arc'), $('r-pct'), 0, 'var(--primary)'); $('r-label').textContent = '대기 중'; $('r-label').style.color = ''; $('r-sub').textContent = head ? '[추론 시작]을 누르세요' : '데이터를 모아 학습해 보세요'; }
+function showCollecting(c) { donutSet($('r-arc'), $('r-pct'), Math.min(1, c.samples.length / 40), c.color); $('r-label').textContent = '수집 중 · ' + c.name; $('r-label').style.color = c.color; $('r-sub').textContent = c.samples.length + '개 모음 (권장 30+)'; }
+function showInfer(name, color, conf) { donutSet($('r-arc'), $('r-pct'), conf, color); $('r-label').textContent = name; $('r-label').style.color = color; $('r-sub').textContent = '확신도 ' + Math.round(conf * 100) + '%'; }
+
+/* 학습 곡선 (SVG polyline) */
+const cHist = { loss: [], acc: [] };
+function resetCurve() { cHist.loss = []; cHist.acc = []; $('curve-loss').setAttribute('points', ''); $('curve-acc').setAttribute('points', ''); }
+function pushCurve(total, loss, acc) {
+  cHist.loss.push(loss); cHist.acc.push(acc != null ? acc : 0);
+  const W = 300, H = 120, pad = 10, maxLoss = Math.max(0.001, ...cHist.loss);
+  const xx = (i) => total <= 1 ? W / 2 : (pad + (i / (total - 1)) * (W - 2 * pad));
+  const lp = cHist.loss.map((v, i) => xx(i).toFixed(1) + ',' + (pad + (1 - v / maxLoss) * (H - 2 * pad)).toFixed(1)).join(' ');
+  const ap = cHist.acc.map((v, i) => xx(i).toFixed(1) + ',' + (pad + (1 - Math.max(0, Math.min(1, v))) * (H - 2 * pad)).toFixed(1)).join(' ');
+  $('curve-loss').setAttribute('points', lp); $('curve-acc').setAttribute('points', ap);
+}
+
+/* 혼동행렬 (학습 데이터 기준) */
+function buildConfusion(xs, ys, names) {
+  const n = names.length;
+  const pred = tf.tidy(() => head.predict(xs).argMax(1).dataSync());
+  const truth = tf.tidy(() => ys.argMax(1).dataSync());
+  const m = Array.from({ length: n }, () => new Array(n).fill(0));
+  for (let i = 0; i < pred.length; i++) m[truth[i]][pred[i]]++;
+  let correct = 0; for (let i = 0; i < n; i++) correct += m[i][i];
+  let html = '<table><caption>혼동행렬 — 학습 데이터 기준 · 전체 정확도 ' + Math.round(correct / pred.length * 100) + '%</caption>';
+  html += '<tr><th>실제 ＼ 예측</th>' + names.map(c => `<th>${c.name}</th>`).join('') + '</tr>';
+  for (let i = 0; i < n; i++) html += '<tr><td class="rowh">' + names[i].name + '</td>' + m[i].map((v, j) => `<td class="${i === j ? 'diag' : (v > 0 ? 'miss' : '')}">${v}</td>`).join('') + '</tr>';
+  $('conf').innerHTML = html + '</table>';
+}
+
 function addClass(name) { const color = PALETTE[classes.length % PALETTE.length]; classes.push({ id: nextId++, name: name || ('제스처 ' + classes.length), color, samples: [] }); renderClasses(); }
 function renderClasses() {
   $('cls-list').innerHTML = classes.map((c) => `
@@ -441,8 +539,8 @@ function setRecording(id) {
     b.closest('.cls-item').classList.toggle('rec', on);
   });
   $('rec-dot').classList.toggle('on', recording != null);
-  if (recording != null) { setStatus('수집 중 · REC', 'live'); $('train-hint').textContent = '손 각도·거리를 바꿔가며 모아보세요. 다시 누르면 멈춰요.'; }
-  else { setStatus(train.stream ? '수집 가능 · LIVE' : '대기 중', train.stream ? 'live' : ''); updateTrainEnabled(); }
+  if (recording != null) { setStatus('수집 중 · REC', 'live'); $('train-hint').textContent = '손 각도·거리를 바꿔가며 모아보세요. 다시 누르면 멈춰요.'; const c = classes.find(x => x.id === recording); if (c) showCollecting(c); }
+  else { setStatus(train.stream ? '수집 가능 · LIVE' : '대기 중', train.stream ? 'live' : ''); updateTrainEnabled(); showIdle(); }
 }
 
 $('cls-list').addEventListener('input', (e) => { const id = +e.target.dataset.id; if (!id) return; const c = classes.find(x => x.id === id); if (c) c.name = e.target.value; });
@@ -463,7 +561,8 @@ async function trainLoop() {
     drawHand(train.canvas.getContext('2d'), kp, col);
     if (recording != null) {
       const now = performance.now();
-      if (now - lastCollect > 60) { lastCollect = now; const c = classes.find(x => x.id === recording); if (c && c.samples.length < 200) { c.samples.push(handFeature(kp)); updateCount(c); } }
+      const c = classes.find(x => x.id === recording);
+      if (c && now - lastCollect > 60) { lastCollect = now; if (c.samples.length < 200) { c.samples.push(handFeature(kp)); updateCount(c); } showCollecting(c); }
     }
   }
   if (inferring && head) await runInfer(kp);
@@ -474,7 +573,7 @@ $('train-cam').onclick = async () => {
     $('train-cam').disabled = true; $('train-stop').disabled = false; setStatus('수집 가능 · LIVE', 'live'); trainLoop();
   } catch (e) { setStatus('카메라 오류', 'busy'); alert('카메라를 시작할 수 없습니다: ' + e.message); }
 };
-$('train-stop').onclick = () => { recording = null; renderClasses(); $('rec-dot').classList.remove('on'); train.stop(); inferring = false; $('btn-infer').textContent = '추론 시작'; $('train-cam').disabled = false; $('train-stop').disabled = true; setStatus('대기 중'); };
+$('train-stop').onclick = () => { recording = null; renderClasses(); $('rec-dot').classList.remove('on'); train.stop(); inferring = false; $('btn-infer').textContent = '추론 시작'; $('train-cam').disabled = false; $('train-stop').disabled = true; setStatus('대기 중'); showIdle(); };
 
 $('btn-train').onclick = async () => {
   const usable = classes.filter(c => c.samples.length >= 8);
@@ -497,13 +596,17 @@ $('btn-train').onclick = async () => {
   head._classes = usable.map(c => ({ name: c.name, color: c.color }));
 
   const epochs = +$('epochs').value;
+  resetCurve();
   await head.fit(xs, ys, { epochs, shuffle: true, batchSize: Math.min(16, xsArr.length), callbacks: { onEpochEnd: (ep, logs) => {
     $('train-fill').style.width = Math.round(((ep + 1) / epochs) * 100) + '%';
     $('m-epoch').textContent = (ep + 1) + ' / ' + epochs; $('m-loss').textContent = logs.loss.toFixed(3);
     const acc = logs.acc ?? logs.accuracy; $('m-acc').textContent = acc != null ? Math.round(acc * 100) + '%' : '—';
+    pushCurve(epochs, logs.loss, acc);
   } } });
+  buildConfusion(xs, ys, head._classes);
   xs.dispose(); ys.dispose();
   buildBars(head._classes);
+  showIdle();
   $('btn-train').disabled = false; $('btn-infer').disabled = false;
   $('train-hint').textContent = '학습 완료! [추론 시작]을 눌러 확인하세요.';
   setStatus('학습 완료 · READY', 'ready');
@@ -514,9 +617,12 @@ function buildBars(names) {
 async function runInfer(kp) {
   const names = head._classes;
   let probs = kp ? tf.tidy(() => head.predict(tf.tensor2d([handFeature(kp)])).dataSync()) : new Array(names.length).fill(0);
+  let topI = 0; for (let i = 1; i < probs.length; i++) if (probs[i] > probs[topI]) topI = i;
   names.forEach((c, i) => { const pct = Math.round((probs[i] || 0) * 100); const f = $('pb-fill-' + i), p = $('pb-pct-' + i); if (f) f.style.width = pct + '%'; if (p) p.textContent = pct + '%'; });
+  if (kp) showInfer(names[topI].name, names[topI].color, probs[topI] || 0);
+  else { $('r-label').textContent = '손이 안 보여요'; $('r-label').style.color = ''; $('r-sub').textContent = '손을 화면 안에 비춰주세요'; donutSet($('r-arc'), $('r-pct'), 0, 'var(--primary)'); }
 }
-$('btn-infer').onclick = () => { if (!head) return; inferring = !inferring; $('btn-infer').textContent = inferring ? '추론 중지' : '추론 시작'; setStatus(inferring ? '추론 중 · LIVE' : '학습 완료 · READY', inferring ? 'live' : 'ready'); };
+$('btn-infer').onclick = () => { if (!head) return; inferring = !inferring; $('btn-infer').textContent = inferring ? '추론 중지' : '추론 시작'; if (!inferring) showIdle(); setStatus(inferring ? '추론 중 · LIVE' : '학습 완료 · READY', inferring ? 'live' : 'ready'); };
 
 /* ── 단계 전환 ── */
 document.querySelectorAll('.step').forEach(btn => {
@@ -532,7 +638,7 @@ document.querySelectorAll('.step').forEach(btn => {
 });
 
 addClass('주먹'); addClass('손바닥');
-setStatus('대기 중');
+setStatus('대기 중'); showIdle();
 if (!window.isSecureContext) { const b = $('banner'); b.classList.add('on'); b.innerHTML = '⚠ 카메라는 <b>localhost</b> 또는 <b>https</b> 에서만 켜집니다. 배포된 https 주소로 접속해 주세요.'; }
 </script>
 </body>
