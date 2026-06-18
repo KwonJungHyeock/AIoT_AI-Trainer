@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>머신러닝 개념 실험실 — Eduino AI</title>
+<meta name="description" content="결정 경계와 과적합, 지도학습 vs 비지도학습을 직접 그려보며 익히는 ML 개념 실험실." />
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root {
+    --bg:#f6f7fb; --bg-soft:#eef1f7; --card:#fff; --card-2:#f9fafd;
+    --line:#e9ebf2; --line-2:#dfe2ec;
+    --ink:#14161f; --ink-2:#50566a; --ink-3:#868da3; --ink-4:#aeb4c6;
+    --primary:#f0473a; --primary-ink:#d12e1e; --primary-2:#ff6a52; --primary-soft:#fff1ee; --primary-line:#ffd6cd;
+    --green:#11a06f; --green-soft:#e6f6ef; --blue:#4d8dff; --blue-soft:#eaf1ff; --amber:#d98a1f; --amber-soft:#fcf3e2;
+    --shadow-sm:0 1px 2px rgba(20,22,31,.05), 0 1px 3px rgba(20,22,31,.05);
+    --shadow:0 2px 6px rgba(20,22,31,.05), 0 12px 30px rgba(20,22,31,.07);
+    --r:16px; --sans:'Pretendard',-apple-system,sans-serif; --mono:'JetBrains Mono','Pretendard',ui-monospace,monospace;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:var(--sans); color:var(--ink); font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;
+    background:radial-gradient(1000px 520px at 88% -8%, rgba(240,71,58,.08), transparent 62%), var(--bg); min-height:100vh; }
+  a { color:inherit; text-decoration:none; } button { font-family:inherit; cursor:pointer; }
+
+  .topbar { position:sticky; top:0; z-index:30; background:rgba(246,247,251,.85); backdrop-filter:blur(14px) saturate(1.4); border-bottom:1px solid var(--line); }
+  .topbar::after { content:''; display:block; height:3px; background:linear-gradient(90deg,var(--primary),#ff8a3d 40%,rgba(255,138,61,0) 80%); }
+  .topbar-inner { max-width:1140px; margin:0 auto; padding:11px 22px; display:flex; align-items:center; gap:13px; }
+  .back { font-size:13px; font-weight:600; color:var(--ink-2); display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border:1px solid var(--line-2); border-radius:10px; background:#fff; box-shadow:var(--shadow-sm); transition:.15s; }
+  .back:hover { color:var(--primary-ink); border-color:var(--primary-line); }
+  .logo-mark { width:38px; height:38px; border-radius:11px; background:linear-gradient(150deg,var(--primary-2),var(--primary)); color:#fff; display:grid; place-items:center; font-weight:800; font-size:20px; box-shadow:0 4px 12px rgba(240,71,58,.4), inset 0 1px 0 rgba(255,255,255,.4); }
+  .logo-title { font-size:18px; font-weight:800; letter-spacing:-.02em; } .logo-title span { color:var(--primary); }
+  .logo-tag { font-size:12px; color:var(--ink-3); }
+  .status { margin-left:auto; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.04em; padding:7px 13px; border-radius:999px; border:1px solid var(--line-2); color:var(--ink-3); background:#fff; }
+  .status.busy { color:var(--amber); border-color:rgba(217,138,31,.4); background:var(--amber-soft); }
+  .status.ready { color:var(--green); border-color:rgba(17,160,111,.4); background:var(--green-soft); }
+
+  main { max-width:1140px; margin:0 auto; padding:22px; }
+  .steps { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+  .step { flex:1; min-width:220px; text-align:left; background:#fff; border:1px solid var(--line); border-radius:var(--r); padding:13px 16px; transition:.15s; display:flex; gap:12px; align-items:center; box-shadow:var(--shadow-sm); }
+  .step.active { border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-soft), var(--shadow); }
+  .step .n { width:34px; height:34px; border-radius:10px; flex:none; display:grid; place-items:center; font-size:18px; background:var(--bg-soft); border:1px solid var(--line); }
+  .step.active .n { background:var(--primary-soft); border-color:var(--primary-line); }
+  .step .t b { font-size:14.5px; font-weight:700; display:block; } .step .t span { font-size:12px; color:var(--ink-3); }
+
+  .layout { display:grid; grid-template-columns:1.08fr .92fr; gap:18px; align-items:stretch; }
+  .layout[hidden] { display:none; }
+  .layout > .card:first-child { align-self:start; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:18px; display:flex; flex-direction:column; }
+  .card h2 { margin:0 0 4px; font-size:16px; font-weight:800; display:flex; align-items:center; gap:8px; }
+  .card h2::before { content:''; width:4px; height:16px; border-radius:2px; background:var(--primary); }
+  .card .sub { font-size:13px; color:var(--ink-3); margin:0 0 14px; line-height:1.55; }
+
+  .chart-wrap { position:relative; width:100%; border:1px solid var(--line); border-radius:13px; background:var(--card-2); overflow:hidden; }
+  canvas.chart { width:100%; height:auto; display:block; cursor:crosshair; touch-action:none; }
+  .tip { font-size:12px; color:var(--ink-4); margin-top:6px; text-align:center; }
+
+  .ctrl { display:flex; gap:9px; margin-top:12px; flex-wrap:wrap; align-items:center; }
+  .btn { border:1px solid var(--line-2); background:#fff; color:var(--ink); border-radius:11px; padding:10px 15px; font-size:13.5px; font-weight:700; transition:.15s; box-shadow:var(--shadow-sm); display:inline-flex; align-items:center; justify-content:center; gap:7px; }
+  .btn:hover { border-color:var(--primary-line); color:var(--primary-ink); }
+  .btn:disabled { opacity:.45; cursor:not-allowed; box-shadow:none; }
+  .btn.primary { background:linear-gradient(150deg,var(--primary-2),var(--primary)); border-color:transparent; color:#fff; box-shadow:0 5px 16px rgba(240,71,58,.32); }
+  .btn.primary:hover { color:#fff; transform:translateY(-1px); } .btn.block { width:100%; }
+
+  .classpick { display:flex; gap:8px; margin-bottom:10px; }
+  .classpick button { flex:1; border:1px solid var(--line-2); background:#fff; border-radius:10px; padding:9px; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:7px; color:var(--ink-2); }
+  .classpick button.on { box-shadow:0 0 0 2px currentColor inset; }
+  .classpick .d { width:13px; height:13px; border-radius:50%; }
+
+  .seg { display:inline-flex; border:1px solid var(--line-2); border-radius:10px; overflow:hidden; }
+  .seg button { border:none; background:#fff; color:var(--ink-2); padding:9px 14px; font-size:13px; font-weight:600; }
+  .seg button.on { background:var(--primary-soft); color:var(--primary-ink); }
+  .seg-label { font-size:13px; color:var(--ink-3); font-weight:600; }
+  .row { display:flex; align-items:center; gap:11px; margin:14px 0 4px; font-size:13.5px; color:var(--ink-2); font-weight:600; }
+  .row input[type=range] { flex:1; accent-color:var(--primary); }
+  .row .val { font-family:var(--mono); font-size:12.5px; color:var(--ink); min-width:54px; text-align:right; }
+
+  .proc { display:flex; gap:6px; margin-bottom:12px; }
+  .proc .p { flex:1; font-size:11px; font-weight:700; color:var(--ink-4); background:var(--card-2); border:1px solid var(--line); border-radius:9px; padding:7px 4px; text-align:center; }
+  .proc .p b { display:block; font-size:13px; font-family:var(--mono); margin-bottom:2px; }
+  .proc .p.on { color:var(--primary-ink); background:var(--primary-soft); border-color:var(--primary-line); }
+  .proc .p.done { color:var(--green); background:var(--green-soft); border-color:rgba(17,160,111,.3); }
+  .proc .p.done b::before { content:'✓ '; }
+  .say { background:#fff; border:1px dashed var(--primary-line); border-radius:11px; padding:11px 13px; font-size:13px; color:var(--ink-2); margin:0 0 12px; display:flex; gap:9px; align-items:flex-start; min-height:46px; line-height:1.5; }
+  .say .ic { flex:none; font-size:16px; } .say b { color:var(--primary-ink); }
+  .metrics { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:12px 0; }
+  .metrics .m { background:var(--card-2); border:1px solid var(--line); border-radius:11px; padding:11px; text-align:center; }
+  .metrics .m span { font-size:11.5px; color:var(--ink-3); display:block; } .metrics .m b { font-family:var(--mono); font-size:18px; font-weight:700; }
+  .metrics .m b.acc { color:var(--green); }
+
+  .compare { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .compare .c { border:1px solid var(--line); border-radius:12px; padding:13px; background:var(--card-2); }
+  .compare .c h3 { margin:0 0 6px; font-size:14px; } .compare .c.sup h3 { color:var(--primary-ink); } .compare .c.unsup h3 { color:#2c63c4; }
+  .compare .c p { margin:0; font-size:12px; color:var(--ink-2); line-height:1.6; }
+
+  .learn { background:var(--card-2); border:1px solid var(--line); border-radius:12px; padding:13px 15px; margin-top:14px; font-size:12.5px; color:var(--ink-2); line-height:1.7; }
+  .learn b { color:var(--primary-ink); } .learn .ex { display:block; margin-top:7px; color:var(--ink-3); }
+  .fill { flex:1 1 auto; }
+  @media (max-width:880px){ .layout{ grid-template-columns:1fr; align-items:start; } }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="back" href="../../platform/index.html">← 플랫폼</a>
+    <div class="logo-mark">E</div>
+    <div>
+      <div class="logo-title">머신러닝 개념 <span>실험실</span></div>
+      <div class="logo-tag">경계·과적합·지도/비지도 직접 실험 · Eduino AI</div>
+    </div>
+    <div class="status" id="status">준비됨</div>
+  </div>
+</header>
+
+<main>
+  <div class="steps">
+    <button class="step active" data-step="boundary"><div class="n">🗺️</div><div class="t"><b>분류 경계 그리기</b><span>지도학습 + 과적합 체험</span></div></button>
+    <button class="step" data-step="compare"><div class="n">⚖️</div><div class="t"><b>지도 vs 비지도</b><span>정답이 있을 때와 없을 때</span></div></button>
+  </div>
+
+  <!-- 1. 분류 경계 -->
+  <section id="panel-boundary" class="layout">
+    <div class="card">
+      <h2>정답(색) 칠해서 데이터 만들기</h2>
+      <p class="sub">먼저 색(=정답)을 고르고 그래프를 클릭해 점을 찍어요. AI는 이 ‘정답이 붙은’ 점들을 보고 색을 나누는 <b>경계</b>를 배웁니다 — 이게 <b>지도학습</b>이에요.</p>
+      <div class="classpick" id="classpick"></div>
+      <div class="chart-wrap"><canvas class="chart" id="c-bd" width="600" height="430"></canvas></div>
+      <div class="tip">💡 색을 고르고 그래프를 클릭해 점을 찍어요</div>
+      <div class="ctrl">
+        <button class="btn" id="bd-sample">예시 채우기</button>
+        <button class="btn" id="bd-clear">모두 지우기</button>
+      </div>
+      <div class="row"><span>모델 복잡도</span><input type="range" id="bd-cx" min="1" max="3" step="1" value="2"><span class="val" id="bd-cxv">보통</span></div>
+    </div>
+    <div class="card">
+      <h2>경계 학습 &amp; 과적합</h2>
+      <p class="sub">학습하면 배경이 색으로 나뉘어요(=결정 경계). 복잡도를 올리면 경계가 점에 딱 달라붙어요.</p>
+      <div class="proc" id="bd-proc"><div class="p"><b>1</b>정답 칠하기</div><div class="p"><b>2</b>경계 학습</div><div class="p"><b>3</b>결과 보기</div></div>
+      <div class="say"><span class="ic">🤖</span><span id="bd-say">두 가지 색 점을 각각 몇 개씩 찍어 주세요.</span></div>
+      <button class="btn primary block" id="bd-train" disabled>경계 학습하기</button>
+      <div class="metrics">
+        <div class="m"><span>학습 횟수</span><b id="bd-epoch">—</b></div>
+        <div class="m"><span>맞힌 비율(정확도)</span><b id="bd-acc" class="acc">—</b></div>
+      </div>
+      <div class="learn fill"><b>‘결정 경계’와 ‘과적합’이란?</b><br><b>결정 경계</b>는 AI가 ‘여기부터는 빨강, 저기부터는 파랑’이라고 나눈 선이에요.<br>복잡도가 <b>낮으면</b> 경계가 단순하고 매끈해서 새 데이터에도 잘 맞아요(<b>일반화</b>). <b>너무 높으면</b> 점 하나하나에 억지로 맞춰 경계가 울퉁불퉁해지는데, 이게 <b>과적합</b>이에요 — 학습 데이터는 잘 맞혀도 새 데이터엔 약해요.
+        <span class="ex">복잡도를 1→3으로 바꿔가며 경계 모양과 정확도가 어떻게 변하는지 보세요.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 지도 vs 비지도 -->
+  <section id="panel-compare" class="layout" hidden>
+    <div class="card">
+      <h2>같은 점, 두 가지 방법</h2>
+      <p class="sub">똑같은 점들을 ① <b>정답(색)을 알려주고</b> 배우는 방법과 ② <b>정답 없이</b> 비슷한 것끼리 묶는 방법으로 비교해 봐요.</p>
+      <div class="chart-wrap"><canvas class="chart" id="c-cmp" width="600" height="430"></canvas></div>
+      <div class="tip" id="cmp-tip">정답이 정해진 점들이에요</div>
+      <div class="ctrl">
+        <button class="btn" id="cmp-sample">점 다시 만들기</button>
+        <span class="seg-label" style="margin-left:auto">보기</span>
+        <span class="seg" id="cmp-seg">
+          <button data-m="sup" class="on">정답 있음(지도)</button>
+          <button data-m="unsup">정답 없음(비지도)</button>
+        </span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>무엇이 다를까?</h2>
+      <p class="sub">버튼을 바꿔가며 왼쪽 그래프가 어떻게 달라지는지 보세요.</p>
+      <div class="compare">
+        <div class="c sup"><h3>🎯 지도학습</h3><p>정답표(라벨)가 <b>있어요</b>. 사람이 ‘이건 빨강, 저건 파랑’이라 알려주면 AI가 <b>경계를 배워</b> 새 점도 분류해요.<br><br>예) 스팸/정상 메일 분류, 사진 속 동물 이름 맞히기</p></div>
+        <div class="c unsup"><h3>🧩 비지도학습</h3><p>정답표가 <b>없어요</b>. AI가 <b>비슷한 것끼리 스스로 묶어요</b>(군집화). 무리에 ‘이름’은 사람이 나중에 붙여요.<br><br>예) 고객을 취향별로 자동 분류, 비슷한 뉴스 묶기</p></div>
+      </div>
+      <div class="learn fill"><b>한 줄 정리</b><br><b>지도학습</b> = 정답을 보고 배운다 → ‘분류·예측’. <b>비지도학습</b> = 정답 없이 구조를 발견한다 → ‘군집·요약’.
+        <span class="ex">[정답 없음(비지도)]을 누르면 색(정답)을 무시하고 위치만 보고 다시 묶어요. 원래 정답과 비슷하게 묶일 때도, 다르게 묶일 때도 있어요!</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+function setStatus(t, c) { const s = $('status'); s.textContent = t; s.className = 'status' + (c ? ' ' + c : ''); }
+const CW = 600, CH = 430, PAD = 28, DOM = 10;
+const CCLR = ['#f0473a', '#4d8dff', '#11a06f'];
+const CNAME = ['빨강', '파랑', '초록'];
+function toPx(x, y) { return [PAD + (x / DOM) * (CW - 2 * PAD), CH - PAD - (y / DOM) * (CH - 2 * PAD)]; }
+function toData(px, py) { return [(px - PAD) / (CW - 2 * PAD) * DOM, (CH - PAD - py) / (CH - 2 * PAD) * DOM]; }
+function clamp(v) { return Math.max(0, Math.min(DOM, v)); }
+function evtData(e) { const r = e.target.getBoundingClientRect(); return toData((e.clientX - r.left) / r.width * CW, (e.clientY - r.top) / r.height * CH); }
+function frame(ctx) { ctx.strokeStyle = '#c9cedb'; ctx.lineWidth = 1.5; ctx.strokeRect(PAD, PAD, CW - 2 * PAD, CH - 2 * PAD); }
+function dot(ctx, x, y, r, fill) { const [px, py] = toPx(x, y); ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.8; ctx.stroke(); }
+function blob(cx, cy, n, cls, spread) { const a = []; for (let i = 0; i < n; i++) a.push({ x: +clamp(cx + (Math.random() - 0.5) * (spread || 3)).toFixed(2), y: +clamp(cy + (Math.random() - 0.5) * (spread || 3)).toFixed(2), c: cls }); return a; }
+function procState(el, s) { el.className = 'p' + (s ? ' ' + s : ''); }
+
+/* ════ 1. 분류 경계 (지도학습 + 과적합) ════ */
+let bdPts = [], selClass = 0, bdModel = null, bdUsed = [], bdGrid = null, bdTrained = false, bdTraining = false;
+const bdCtx = $('c-bd').getContext('2d');
+const CXLABEL = { 1: '낮음 (단순)', 2: '보통', 3: '높음 (복잡)' };
+$('classpick').innerHTML = CCLR.map((c, i) => `<button data-c="${i}" class="${i === 0 ? 'on' : ''}" style="color:${c}"><span class="d" style="background:${c}"></span>${CNAME[i]}</button>`).join('');
+function renderBd() {
+  bdCtx.clearRect(0, 0, CW, CH);
+  if (bdTrained && bdGrid) {
+    const gw = bdGrid.gw, gh = bdGrid.gh, cwp = (CW - 2 * PAD) / gw, chp = (CH - 2 * PAD) / gh;
+    for (let j = 0; j < gh; j++) for (let i = 0; i < gw; i++) {
+      const cls = bdUsed[bdGrid.pred[j * gw + i]];
+      bdCtx.fillStyle = CCLR[cls] + '2e';
+      bdCtx.fillRect(PAD + i * cwp, PAD + j * chp, cwp + 1, chp + 1);
+    }
+  }
+  frame(bdCtx);
+  bdPts.forEach(p => dot(bdCtx, p.x, p.y, 5.5, CCLR[p.c]));
+  const counts = {}; bdPts.forEach(p => counts[p.c] = (counts[p.c] || 0) + 1);
+  const ready = Object.values(counts).filter(n => n >= 2).length >= 2;
+  $('bd-train').disabled = !ready || bdTraining;
+  updateBdProc(ready);
+}
+function updateBdProc(ready) {
+  const ps = [...$('bd-proc').children];
+  const active = bdTraining ? 1 : bdTrained ? 2 : ready ? 1 : 0;
+  ps.forEach((el, i) => procState(el, i < active ? 'done' : i === active ? 'on' : ''));
+}
+$('classpick').addEventListener('click', (e) => { const c = e.target.closest('[data-c]'); if (!c) return; selClass = +c.dataset.c; $('classpick').querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.c === selClass)); });
+$('c-bd').addEventListener('pointerdown', (e) => { if (bdTraining) return; const [x, y] = evtData(e); if (x < 0 || x > DOM || y < 0 || y > DOM) return; bdPts.push({ x: +x.toFixed(2), y: +y.toFixed(2), c: selClass }); bdTrained = false; $('bd-say').textContent = '좋아요! 다른 색도 찍은 뒤 [경계 학습하기]를 눌러요.'; renderBd(); });
+$('bd-sample').onclick = () => { bdPts = [...blob(3, 7, 8, 0), ...blob(7, 3.5, 8, 1)]; bdTrained = false; $('bd-say').textContent = '예시를 채웠어요. [경계 학습하기]를 눌러보세요.'; renderBd(); };
+$('bd-clear').onclick = () => { bdPts = []; bdTrained = false; $('bd-epoch').textContent = '—'; $('bd-acc').textContent = '—'; $('bd-say').textContent = '두 가지 색 점을 각각 몇 개씩 찍어 주세요.'; renderBd(); };
+$('bd-cx').oninput = (e) => { $('bd-cxv').textContent = CXLABEL[e.target.value]; };
+$('bd-train').onclick = async () => {
+  const counts = {}; bdPts.forEach(p => counts[p.c] = (counts[p.c] || 0) + 1);
+  bdUsed = Object.keys(counts).filter(c => counts[c] >= 2).map(Number).sort();
+  if (bdUsed.length < 2) return;
+  const pos = {}; bdUsed.forEach((c, i) => pos[c] = i);
+  const data = bdPts.filter(p => bdUsed.includes(p.c));
+  bdTraining = true; bdTrained = false; setStatus('경계 학습 중…', 'busy'); $('bd-train').disabled = true;
+  $('bd-say').innerHTML = 'AI가 색을 나누는 <b>경계</b>를 조금씩 다듬는 중이에요…'; updateBdProc(true);
+  const xs = tf.tensor2d(data.map(p => [p.x / DOM, p.y / DOM]));
+  const ys = tf.tensor2d(data.map(p => { const o = new Array(bdUsed.length).fill(0); o[pos[p.c]] = 1; return o; }));
+  if (bdModel) bdModel.dispose();
+  const cx = +$('bd-cx').value, units = cx === 1 ? 4 : cx === 2 ? 12 : 40;
+  bdModel = tf.sequential();
+  bdModel.add(tf.layers.dense({ inputShape: [2], units, activation: 'relu' }));
+  if (cx === 3) bdModel.add(tf.layers.dense({ units: 40, activation: 'relu' }));
+  bdModel.add(tf.layers.dense({ units: bdUsed.length, activation: 'softmax' }));
+  bdModel.compile({ optimizer: tf.train.adam(0.06), loss: 'categoricalCrossentropy', metrics: ['accuracy'] });
+  const epochs = cx === 3 ? 160 : 100;
+  await bdModel.fit(xs, ys, { epochs, shuffle: true, batchSize: Math.min(16, data.length), callbacks: { onEpochEnd: (ep, logs) => { if (ep % 5 === 0 || ep === epochs - 1) { $('bd-epoch').textContent = (ep + 1) + ' / ' + epochs; const a = logs.acc ?? logs.accuracy; $('bd-acc').textContent = a != null ? Math.round(a * 100) + '%' : '—'; } } } });
+  // 결정 경계 그리드 예측
+  const gw = 60, gh = 43, cells = [];
+  for (let j = 0; j < gh; j++) for (let i = 0; i < gw; i++) { const x = (i + 0.5) / gw, y = 1 - (j + 0.5) / gh; cells.push([x, y]); }
+  const pred = tf.tidy(() => bdModel.predict(tf.tensor2d(cells)).argMax(1).dataSync());
+  bdGrid = { gw, gh, pred };
+  const accT = tf.tidy(() => { const p = bdModel.predict(xs).argMax(1).dataSync(); const t = ys.argMax(1).dataSync(); let ok = 0; for (let i = 0; i < p.length; i++) if (p[i] === t[i]) ok++; return ok / p.length; });
+  $('bd-acc').textContent = Math.round(accT * 100) + '%';
+  xs.dispose(); ys.dispose();
+  bdTrained = true; bdTraining = false; renderBd();
+  const cxName = CXLABEL[$('bd-cx').value];
+  $('bd-say').innerHTML = `✓ 완성! 복잡도 <b>${cxName}</b>로 경계를 그렸어요. 복잡도를 바꿔 다시 학습하면 경계 모양이 달라져요.`;
+  setStatus('학습 완료 · READY', 'ready');
+};
+
+/* ════ 2. 지도 vs 비지도 ════ */
+let cmpPts = [], cmpMode = 'sup', cmpAssign = [], cmpCents = [];
+const cmpCtx = $('c-cmp').getContext('2d');
+function makeCmp() { cmpPts = [...blob(3.2, 7, 10, 0, 3.2), ...blob(7, 3.6, 10, 1, 3.2)]; cmpMode = 'sup'; $('cmp-seg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === 'sup')); renderCmp(); }
+function kmeans2(pts, K, cents, assign) {
+  let changed = 0;
+  pts.forEach((p, i) => { let b = 0, bd = Infinity; cents.forEach((c, k) => { const d = (p.x - c.x) ** 2 + (p.y - c.y) ** 2; if (d < bd) { bd = d; b = k; } }); if (assign[i] !== b) { assign[i] = b; changed++; } });
+  const s = cents.map(() => ({ x: 0, y: 0, n: 0 })); pts.forEach((p, i) => { const t = s[assign[i]]; t.x += p.x; t.y += p.y; t.n++; });
+  cents.forEach((c, k) => { if (s[k].n) { c.x = s[k].x / s[k].n; c.y = s[k].y / s[k].n; } });
+  return changed;
+}
+function runUnsup() {
+  const idx = [0, cmpPts.length - 1]; cmpCents = idx.map(i => ({ x: cmpPts[i].x, y: cmpPts[i].y })); cmpAssign = new Array(cmpPts.length).fill(-1);
+  for (let it = 0; it < 12; it++) if (kmeans2(cmpPts, 2, cmpCents, cmpAssign) === 0) break;
+}
+function drawStar(ctx, x, y, color) {
+  const [px, py] = toPx(x, y), R = 11, r = 4.6; ctx.beginPath();
+  for (let i = 0; i < 10; i++) { const ang = -Math.PI / 2 + i * Math.PI / 5, rad = i % 2 ? r : R; const sx = px + Math.cos(ang) * rad, sy = py + Math.sin(ang) * rad; i ? ctx.lineTo(sx, sy) : ctx.moveTo(sx, sy); }
+  ctx.closePath(); ctx.fillStyle = color; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.stroke();
+}
+function renderCmp() {
+  cmpCtx.clearRect(0, 0, CW, CH); frame(cmpCtx);
+  if (cmpMode === 'sup') { cmpPts.forEach(p => dot(cmpCtx, p.x, p.y, 5.5, CCLR[p.c])); }
+  else { cmpPts.forEach((p, i) => dot(cmpCtx, p.x, p.y, 5.5, CCLR[cmpAssign[i]] || '#8c97a7')); cmpCents.forEach((c, k) => drawStar(cmpCtx, c.x, c.y, CCLR[k])); }
+  $('cmp-tip').textContent = cmpMode === 'sup' ? '🎯 정답(색)이 정해진 점들이에요' : '🧩 정답을 무시하고 위치만 보고 다시 묶었어요 (★=무리 중심)';
+}
+$('cmp-sample').onclick = makeCmp;
+$('cmp-seg').addEventListener('click', (e) => { const m = e.target.dataset.m; if (!m) return; cmpMode = m; $('cmp-seg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === m)); if (m === 'unsup') runUnsup(); renderCmp(); setStatus(m === 'sup' ? '지도학습 보기' : '비지도학습 보기', 'ready'); });
+
+/* ── 단계 전환 ── */
+document.querySelectorAll('.step').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.step').forEach(b => b.classList.toggle('active', b === btn));
+    const s = btn.dataset.step;
+    $('panel-boundary').hidden = s !== 'boundary'; $('panel-compare').hidden = s !== 'compare';
+    if (s === 'boundary') renderBd(); else renderCmp();
+    setStatus('준비됨');
+  };
+});
+
+/* 초기화 */
+bdPts = [...blob(3, 7, 8, 0), ...blob(7, 3.5, 8, 1)]; renderBd();
+makeCmp();
+if (typeof module !== 'undefined') { module.exports = { kmeans2, blob }; }
+setStatus('준비됨');
+</script>
+</body>
+</html>
