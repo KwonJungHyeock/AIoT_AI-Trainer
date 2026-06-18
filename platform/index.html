@@ -597,7 +597,7 @@ const MODULES = [
     lv:{초급:'QR·바코드 찾기',중급:'글자 인식(OCR)',심화:'명함·문서 정보 추출'}, aud:'초등~중등' },
 ];
 document.getElementById('catalog').innerHTML = MODULES.map(m=>{
-  const tag=m.live?'a':'div', href=m.live?` href="${m.href}"`:'';
+  const tag=m.live?'a':'div', href=m.live?` href="course.html?c=${m.key}"`:'';
   const status=m.live?'<span class="tag on">● 체험 가능</span>':'<span class="tag off">준비중</span>';
   const cls=['b1','b2','b3'];
   const lv=Object.entries(m.lv).map(([k,v],i)=>`<div class="r ${cls[i]}"><b>${k}</b><span>${v}</span></div>`).join('');
@@ -605,7 +605,7 @@ document.getElementById('catalog').innerHTML = MODULES.map(m=>{
     <div class="mod-top"><div class="mod-ic">${m.icon}</div>${status}</div>
     <h3>${m.name}</h3><p class="d">${m.desc}</p>
     <div class="lv">${lv}</div>
-    <div class="foot"><span class="aud">${m.aud}</span><span class="go">${m.live?'체험하기 →':'곧 공개'}</span></div>
+    <div class="foot"><span class="aud">${m.aud}</span><span class="go">${m.live?'자세히 보기 →':'곧 공개'}</span></div>
   </${tag}>`;
 }).join('');
 
