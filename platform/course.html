@@ -152,12 +152,6 @@
     </div>
   </div></section>
 
-  <div class="cta-banner">
-    <h2 id="cta-h">지금 바로 체험해 보세요</h2>
-    <p>설치도, 가입도 필요 없어요. 브라우저에서 바로 시작합니다.</p>
-    <a class="btn btn-primary btn-lg" id="cta-start" href="#">체험 시작 →</a>
-  </div>
-
   <section class="blk"><div class="sh"><h2>다른 코스</h2></div>
     <div class="other" id="c-other"></div>
   </section>
@@ -268,8 +262,6 @@ document.getElementById('c-chips').innerHTML =
   `<span class="chip aud">대상 ${c.audience}</span><span class="chip lv">초급</span><span class="chip lv">중급</span><span class="chip lv">심화</span>`;
 document.getElementById('c-start').href = c.href;
 document.getElementById('nav-cta').href = c.href;
-document.getElementById('cta-start').href = c.href;
-document.getElementById('cta-h').textContent = c.name + ', 지금 체험해 보세요';
 document.getElementById('c-learn').innerHTML = c.learn.map(t => `<div class="learn-item">${CK}<span>${t}</span></div>`).join('');
 document.getElementById('c-curr').innerHTML = c.curriculum.map((u, i) => `<div class="cu t${i+1}"><span class="badge">${u.t}</span><h3>${u.title}</h3><p>${u.desc}</p></div>`).join('');
 document.getElementById('c-needs').innerHTML = c.needs.map(n => `<div class="n"><span class="ic">${n[0]}</span><span><b>${n[1]}</b> · ${n[2]}</span></div>`).join('');
