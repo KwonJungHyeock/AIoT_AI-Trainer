@@ -107,12 +107,16 @@
   .ocr-meta { display:flex; gap:12px; margin-top:10px; font-family:var(--mono); font-size:12px; color:var(--ink-3); flex-wrap:wrap; }
   .ocr-meta b { color:var(--ink); }
   .ocr-meta .applied { color:var(--green); }
-  .learn-row { display:flex; align-items:center; gap:10px; margin-top:12px; flex-wrap:wrap; }
-  .learned { font-size:12.5px; font-weight:700; color:var(--ink-2); }
-  .learned b { color:var(--primary-ink); }
-  .btn-x { border:none; background:none; color:var(--ink-4); font-size:12px; font-weight:600; cursor:pointer; text-decoration:underline; }
+  .learn-row { display:flex; align-items:center; gap:11px; margin-top:12px; flex-wrap:wrap; }
+  .learn-hint { font-size:12.5px; font-weight:600; color:var(--ink-3); }
+  .learn-hint.changed { color:var(--primary-ink); }
+  .learn-hint.ok { color:var(--green); }
+  .learned-head { display:flex; align-items:center; gap:10px; margin-top:14px; font-size:13px; font-weight:700; color:var(--ink-2); }
+  .learned-head b { color:var(--primary-ink); }
+  .btn-x { border:none; background:none; color:var(--ink-4); font-size:12px; font-weight:600; cursor:pointer; text-decoration:underline; margin-left:auto; }
   .btn-x:hover { color:var(--primary); }
-  .chips { display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
+  .chips { display:flex; flex-wrap:wrap; gap:7px; margin-top:9px; }
+  .chip-empty { font-size:12px; color:var(--ink-4); }
   .chip { display:inline-flex; align-items:center; gap:6px; font-size:12px; background:var(--green-soft); border:1px solid rgba(17,160,111,.3); color:#0c7a55; border-radius:999px; padding:4px 10px; }
   .chip s { color:var(--ink-4); text-decoration:line-through; }
   .chip b { color:var(--green); }
@@ -212,11 +216,11 @@
       <textarea class="ocr-text" id="ocr-out" placeholder="촬영하면 인식된 글자가 여기 표시됩니다. (직접 수정 가능)"></textarea>
       <div class="ocr-meta" id="ocr-meta"></div>
       <div class="learn-row">
-        <button class="btn" id="ocr-learn" disabled>✓ 교정 학습</button>
-        <span class="learned" id="ocr-learned">학습된 교정 <b>0</b>개</span>
-        <button class="btn-x" id="ocr-clearlearn" hidden>전체 초기화</button>
+        <button class="btn" id="ocr-learn" disabled>✓ 이 교정 학습하기</button>
+        <span class="learn-hint" id="ocr-learn-hint">결과를 고치면 학습할 수 있어요</span>
       </div>
-      <div class="chips" id="ocr-chips"></div>
+      <div class="learned-head">AI가 배운 교정 <b id="ocr-count">0</b>개 <button class="btn-x" id="ocr-clearlearn" hidden>전체 초기화</button></div>
+      <div class="chips" id="ocr-chips"><div class="chip-empty">아직 배운 교정이 없어요. 결과를 고치고 [교정 학습]을 눌러보세요.</div></div>
       <div class="learn fill"><b>교정으로 배우는 OCR</b><br>처음엔 글자를 틀리게 읽을 수 있어요. 사람이 <b>고쳐서 알려주면</b> AI가 그 교정을 기억해 다음부터 같은 실수를 자동으로 바로잡습니다 — 사람의 피드백으로 똑똑해지는 거예요. <br>※ 또렷하고 가깝게, 프레임을 가득 채워 찍을수록 처음 인식부터 정확해져요.</div>
     </div>
   </section>
@@ -407,7 +411,7 @@ $('ocr-shot').onclick = async () => {
     const { text, count } = applyCorrections(raw);          // 학습된 교정 자동 적용
     $('ocr-out').value = text || '(글자를 찾지 못했어요. 더 또렷하게 가깝게 다시 찍어보세요.)';
     lastShown = $('ocr-out').value;
-    $('ocr-learn').disabled = !raw;
+    updateLearnState();
     const conf = Math.round(res.data.confidence || 0);
     const chars = text.replace(/\s/g, '').length;
     $('ocr-meta').innerHTML = `<span>신뢰도 <b>${conf}%</b></span><span>글자 수 <b>${chars}</b></span><span>언어 <b>${ocrLang}</b></span>` + (count ? `<span class="applied">자동 교정 ${count}건</span>` : '');
@@ -435,10 +439,21 @@ function applyCorrections(text) {
 }
 function renderLearned() {
   const keys = Object.keys(corrections);
-  $('ocr-learned').innerHTML = '학습된 교정 <b>' + keys.length + '</b>개';
+  $('ocr-count').textContent = keys.length;
   $('ocr-clearlearn').hidden = keys.length === 0;
-  $('ocr-chips').innerHTML = keys.map(w => `<span class="chip"><s>${esc(w)}</s>→<b>${esc(corrections[w])}</b><span data-del="${esc(w)}" title="삭제">×</span></span>`).join('');
+  $('ocr-chips').innerHTML = keys.length
+    ? keys.map(w => `<span class="chip"><s>${esc(w)}</s>→<b>${esc(corrections[w])}</b><span data-del="${esc(w)}" title="삭제">×</span></span>`).join('')
+    : '<div class="chip-empty">아직 배운 교정이 없어요. 결과를 고치고 [교정 학습]을 눌러보세요.</div>';
 }
+/* 텍스트 수정 여부에 따라 학습 버튼/안내 상태 갱신 */
+function updateLearnState() {
+  const changed = $('ocr-out').value.trim() && $('ocr-out').value !== lastShown;
+  $('ocr-learn').disabled = !changed;
+  const h = $('ocr-learn-hint');
+  if (changed) { h.textContent = '● 수정함 — 학습할 수 있어요'; h.className = 'learn-hint changed'; }
+  else { h.textContent = lastShown ? '결과를 고치면 학습할 수 있어요' : '먼저 글자를 인식하세요'; h.className = 'learn-hint'; }
+}
+$('ocr-out').addEventListener('input', updateLearnState);
 /* 토큰 단위 정렬로 치환쌍(틀림→고침) 추출 */
 function tokenDiff(aStr, bStr) {
   const a = aStr.split(/\s+/).filter(Boolean), b = bStr.split(/\s+/).filter(Boolean);
@@ -459,9 +474,12 @@ $('ocr-learn').onclick = () => {
   const subs = tokenDiff(lastShown, cur);
   let added = 0;
   subs.forEach(([w, r]) => { if (w && r && w !== r) { corrections[w] = r; added++; } });
-  if (!added) { setStatus('바뀐 내용이 없어요', 'busy'); return; }
   saveCorrections(); renderLearned(); lastShown = cur;
-  setStatus('교정 ' + added + '개 학습됨 · READY', 'ready');
+  $('ocr-learn').disabled = true;
+  const h = $('ocr-learn-hint');
+  h.className = 'learn-hint ok';
+  h.textContent = added ? `✓ 교정 ${added}개를 배웠어요! 다음 인식부터 자동 적용돼요.` : '✓ 반영했어요 (새로 배운 치환은 없음)';
+  setStatus(added ? '교정 ' + added + '개 학습됨 · READY' : 'READY', 'ready');
 };
 $('ocr-clearlearn').onclick = () => { corrections = {}; saveCorrections(); renderLearned(); };
 $('ocr-chips').addEventListener('click', (e) => { const w = e.target.dataset.del; if (w == null) return; delete corrections[w]; saveCorrections(); renderLearned(); });

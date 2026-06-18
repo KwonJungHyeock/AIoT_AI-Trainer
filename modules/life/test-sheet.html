@@ -60,11 +60,17 @@ const QRS = [
 const qg = document.getElementById('qr-grid');
 QRS.forEach((q) => {
   const d = document.createElement('div'); d.className = 'item';
-  const c = document.createElement('canvas');
-  d.appendChild(c);
+  // 1순위: 이미지 API(즉시 렌더) · 실패 시 JS 라이브러리로 대체
+  const img = document.createElement('img');
+  img.width = 180; img.height = 180; img.alt = q.cap;
+  img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&data=' + encodeURIComponent(q.text);
+  img.onerror = () => { // 폴백: qrcode 라이브러리
+    const c = document.createElement('canvas'); img.replaceWith(c);
+    if (window.QRCode) QRCode.toCanvas(c, q.text, { width: 180, margin: 1 }, () => {});
+  };
+  d.appendChild(img);
   d.insertAdjacentHTML('beforeend', `<div class="cap">${q.cap}</div><div class="desc">${q.desc}</div>`);
   qg.appendChild(d);
-  QRCode.toCanvas(c, q.text, { width: 170, margin: 1 }, () => {});
 });
 
 const BCS = [
