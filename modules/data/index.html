@@ -100,6 +100,19 @@
   .group .gcount { margin-left:auto; font-family:var(--mono); font-size:13px; color:var(--ink-3); }
   .group.empty { color:var(--ink-4); font-size:12.5px; justify-content:center; }
 
+  .proc { display:flex; gap:6px; margin-bottom:12px; }
+  .proc .p { flex:1; font-size:11px; font-weight:700; color:var(--ink-4); background:var(--card-2); border:1px solid var(--line); border-radius:9px; padding:7px 4px; text-align:center; transition:.15s; }
+  .proc .p b { display:block; font-size:13px; font-family:var(--mono); margin-bottom:2px; }
+  .proc .p.on { color:var(--primary-ink); background:var(--primary-soft); border-color:var(--primary-line); }
+  .proc .p.done { color:var(--green); background:var(--green-soft); border-color:rgba(17,160,111,.3); }
+  .proc .p.done b::before { content:'✓ '; }
+  .say { background:#fff; border:1px dashed var(--primary-line); border-radius:11px; padding:11px 13px; font-size:13px; color:var(--ink-2); margin:0 0 12px; display:flex; gap:9px; align-items:flex-start; min-height:46px; line-height:1.5; }
+  .say .ic { flex:none; font-size:16px; }
+  .say b { color:var(--primary-ink); }
+  .eqn { font-family:var(--mono); font-size:14px; background:var(--card-2); border:1px solid var(--line); border-radius:10px; padding:11px 12px; text-align:center; color:var(--ink); margin-top:10px; }
+  .eqn[hidden] { display:none; }
+  .eqn b { color:var(--primary-ink); }
+
   .learn { background:var(--card-2); border:1px solid var(--line); border-radius:12px; padding:13px 15px; margin-top:14px; font-size:12.5px; color:var(--ink-2); line-height:1.7; }
   .learn b { color:var(--primary-ink); }
   .learn .ex { display:block; margin-top:7px; color:var(--ink-3); }
@@ -178,12 +191,17 @@
     <div class="card">
       <h2>AI 학습 &amp; 예측</h2>
       <p class="sub">[AI 학습시키기]를 누르면 선이 점들에 맞춰 조금씩 움직여요. 그게 ‘학습’이에요.</p>
+      <div class="proc" id="pr-proc">
+        <div class="p"><b>1</b>점 찍기</div><div class="p"><b>2</b>선 모양</div><div class="p"><b>3</b>학습</div><div class="p"><b>4</b>예측</div>
+      </div>
+      <div class="say"><span class="ic">🤖</span><span id="pr-say">그래프에 점을 2개 이상 찍어 주세요.</span></div>
       <button class="btn primary block" id="pr-train" disabled>AI 학습시키기</button>
       <div class="metrics">
         <div class="m"><span>학습 횟수</span><b id="m-epoch">—</b></div>
         <div class="m"><span>틀린 정도</span><b id="m-loss" style="color:var(--primary)">—</b></div>
         <div class="m"><span>점 개수</span><b id="m-n">0</b></div>
       </div>
+      <div class="eqn" id="pr-eqn" hidden>AI가 찾은 예측식 → <b id="pr-eqn-t"></b></div>
       <div class="row"><span>예측할 값 X</span><input type="range" id="pr-x" min="0" max="10" step="0.1" value="5" disabled><span class="val" id="pr-xval">5.0</span></div>
       <div class="pred-out"><div class="big" id="pr-yhat">먼저 학습시켜 주세요</div></div>
       <div class="learn fill"><b>AI는 어떻게 ‘예측’을 배울까요?</b><br>처음엔 아무 선이나 그어 놓고, 점들과 얼마나 <b>틀렸는지(오차)</b>를 봐요. 그리고 오차가 줄도록 선을 조금씩 옮기는 걸 <b>수십 번 반복</b>합니다. 이게 AI의 ‘학습’이에요.
@@ -213,7 +231,16 @@
     <div class="card">
       <h2>무리 짓기 결과</h2>
       <p class="sub">정답을 알려주지 않아도 AI가 가까운 것끼리 스스로 묶어요. ★는 각 무리의 중심이에요.</p>
+      <div class="proc" id="cl-proc">
+        <div class="p"><b>1</b>점 만들기</div><div class="p"><b>2</b>무리 수</div><div class="p"><b>3</b>AI로 묶기</div>
+      </div>
+      <div class="say"><span class="ic">🤖</span><span id="cl-say">왼쪽에서 점을 흩뿌려 주세요.</span></div>
+      <div class="metrics" style="grid-template-columns:repeat(2,1fr)">
+        <div class="m"><span>반복 횟수</span><b id="cl-it">—</b></div>
+        <div class="m"><span>이번에 바뀐 점</span><b id="cl-changed">—</b></div>
+      </div>
       <div class="groups" id="cl-groups"><div class="group empty">아직 묶지 않았어요. 왼쪽에서 점을 만들고 [AI로 무리 짓기]를 눌러보세요.</div></div>
+      <button class="btn block" id="cl-redo" disabled style="margin-top:10px">🔁 다른 시작으로 다시 묶기</button>
       <div class="learn fill"><b>‘무리 짓기(군집화)’란?</b><br>정답표 없이 데이터만 보고 <b>비슷한 것끼리 자동으로 묶는</b> 방법이에요. ‘정답 없이 스스로 배운다’고 해서 <b>비지도 학습</b>이라고 불러요.
         <span class="ex">방법: ① 무리 중심(★)을 아무 데나 놓고 ② 각 점을 가장 가까운 ★의 색으로 칠하고 ③ ★를 그 색 점들의 한가운데로 옮겨요. ②③을 반복하면 무리가 또렷해져요. (K-means)</span>
         <span class="ex">예) 학생들의 키·몸무게만 보고 비슷한 체형끼리, 손님들의 구매 기록으로 취향이 비슷한 그룹끼리 자동 분류해요.</span>
@@ -316,7 +343,27 @@ function renderPredict() {
   }
   $('m-n').textContent = prPts.length; $('pr-train').disabled = prPts.length < 2 || training;
 }
-function updatePred() { const x = +$('pr-x').value; $('pr-xval').textContent = x.toFixed(1); const y = trained ? predFn(x) : null; $('pr-yhat').innerHTML = (y == null) ? '먼저 학습시켜 주세요' : `예측 Y = ${y.toFixed(2)} <small>(X=${x.toFixed(1)})</small>`; renderPredict(); }
+function updatePred() { const x = +$('pr-x').value; $('pr-xval').textContent = x.toFixed(1); const y = trained ? predFn(x) : null; $('pr-yhat').innerHTML = (y == null) ? '먼저 학습시켜 주세요' : `예측 Y = ${y.toFixed(2)} <small>(X=${x.toFixed(1)})</small>`; renderPredict(); updatePredProc(); updateEqn(); predSayAuto(); }
+function procState(el, s) { el.className = 'p' + (s ? ' ' + s : ''); }
+function updatePredProc() {
+  const ps = [...$('pr-proc').children], has = prPts.length >= 2;
+  const active = !has ? 0 : training ? 2 : trained ? 3 : 2;
+  ps.forEach((el, i) => procState(el, i < active ? 'done' : i === active ? 'on' : ''));
+}
+function updateEqn() {
+  const e = $('pr-eqn'); if (!trained) { e.hidden = true; return; } e.hidden = false;
+  const b10 = B * 10;
+  $('pr-eqn-t').textContent = (modelType === 'curve')
+    ? `Y = ${(W2 / 10).toFixed(3)} × X² + ${W1.toFixed(2)} × X + ${b10.toFixed(2)}`
+    : `Y = ${W1.toFixed(2)} × X + ${b10.toFixed(2)}`;
+}
+function predSayAuto() {
+  if (training) return;
+  const has = prPts.length >= 2;
+  $('pr-say').innerHTML = !has ? '그래프에 점을 <b>2개 이상</b> 찍어 주세요.'
+    : !trained ? '준비됐어요! <b>[AI 학습시키기]</b>를 눌러보세요.'
+    : '완성! <b>X 슬라이더</b>를 움직여 새 값을 예측해 보세요.';
+}
 $('model-seg').addEventListener('click', (e) => { const m = e.target.dataset.model; if (!m) return; modelType = m; $('model-seg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.model === m)); trained = false; $('pr-x').disabled = true; updatePred(); });
 $('pr-x').addEventListener('input', updatePred);
 $('pr-sample').onclick = () => { prPts = sample((x) => 0.7 * x + 1.5, 1.1); trained = false; $('pr-x').disabled = true; updatePred(); };
@@ -325,6 +372,7 @@ $('c-predict').addEventListener('pointerdown', (e) => { if (training) return; co
 $('pr-train').onclick = () => {
   if (prPts.length < 2 || training) return;
   training = true; setStatus('AI 학습 중…', 'busy'); $('pr-train').disabled = true; $('pr-x').disabled = true;
+  $('pr-say').innerHTML = 'AI가 선을 이리저리 옮기며 <b>틀린 정도</b>를 줄이는 중이에요…'; updatePredProc();
   const xs = tf.tensor1d(prPts.map(p => p.x / DOM)), ys = tf.tensor1d(prPts.map(p => p.y / DOM));
   const w1 = tf.variable(tf.scalar(Math.random() * 0.4)), b = tf.variable(tf.scalar(0.3)), w2 = tf.variable(tf.scalar(0));
   const opt = tf.train.adam(0.08), curve = modelType === 'curve';
@@ -334,7 +382,7 @@ $('pr-train').onclick = () => {
     let lossV = 0;
     for (let k = 0; k < 4 && ep < TOTAL; k++, ep++) { const l = opt.minimize(() => tf.losses.meanSquaredError(ys, pred(xs)), true); lossV = l.dataSync()[0]; l.dispose(); }
     W1 = w1.dataSync()[0]; W2 = w2.dataSync()[0]; B = b.dataSync()[0]; trained = true;
-    $('m-epoch').textContent = ep + ' / ' + TOTAL; $('m-loss').textContent = (lossV * DOM * DOM).toFixed(2); renderPredict();
+    $('m-epoch').textContent = ep + ' / ' + TOTAL; $('m-loss').textContent = (lossV * DOM * DOM).toFixed(2); renderPredict(); updateEqn(); updatePredProc();
     if (ep < TOTAL) raf = requestAnimationFrame(stepFn);
     else { xs.dispose(); ys.dispose(); w1.dispose(); w2.dispose(); b.dispose(); training = false; $('pr-x').disabled = false; $('pr-train').disabled = false; setStatus('학습 완료 · READY', 'ready'); updatePred(); }
   }
@@ -343,9 +391,9 @@ $('pr-train').onclick = () => {
 
 /* ════ 3. 무리 짓기 (K-means) ════ */
 function kmeans(pts, K, centroids, assign) {
-  // 한 번의 반복: 배정 → 중심 이동. 변화 여부 반환
-  let changed = false;
-  pts.forEach((p, i) => { let best = 0, bd = Infinity; centroids.forEach((c, k) => { const d = (p.x - c.x) ** 2 + (p.y - c.y) ** 2; if (d < bd) { bd = d; best = k; } }); if (assign[i] !== best) { assign[i] = best; changed = true; } });
+  // 한 번의 반복: 배정 → 중심 이동. 무리가 바뀐 점 개수 반환
+  let changed = 0;
+  pts.forEach((p, i) => { let best = 0, bd = Infinity; centroids.forEach((c, k) => { const d = (p.x - c.x) ** 2 + (p.y - c.y) ** 2; if (d < bd) { bd = d; best = k; } }); if (assign[i] !== best) { assign[i] = best; changed++; } });
   const sum = centroids.map(() => ({ x: 0, y: 0, n: 0 }));
   pts.forEach((p, i) => { const s = sum[assign[i]]; s.x += p.x; s.y += p.y; s.n++; });
   centroids.forEach((c, k) => { if (sum[k].n) { c.x = sum[k].x / sum[k].n; c.y = sum[k].y / sum[k].n; } });
@@ -363,34 +411,50 @@ function renderCluster() {
   drawAxes(clCtx);
   drawPoints(clCtx, clPts, '#8c97a7', clustered ? clAssign : null);
   if (clustered) clCents.forEach((c, k) => drawStar(clCtx, c.x, c.y, CLR[k % CLR.length]));
-  $('cl-run').disabled = clPts.length < clK;
-  renderGroups();
+  $('cl-run').disabled = clPts.length < clK || !!clTimer;
+  renderGroups(); updateClProc();
 }
 function renderGroups() {
   if (!clustered) { $('cl-groups').innerHTML = '<div class="group empty">아직 묶지 않았어요. 왼쪽에서 점을 만들고 [AI로 무리 짓기]를 눌러보세요.</div>'; return; }
   const counts = clCents.map(() => 0); clAssign.forEach(a => counts[a]++);
   $('cl-groups').innerHTML = counts.map((n, k) => `<div class="group"><span class="dot" style="background:${CLR[k % CLR.length]}"></span><span class="gname">${k + 1}번 무리</span><span class="gcount">${n}개</span></div>`).join('');
 }
+function updateClProc() {
+  const ps = [...$('cl-proc').children];
+  const active = clPts.length < clK ? 0 : (clTimer || clustered) ? 2 : 1;
+  ps.forEach((el, i) => procState(el, i < active ? 'done' : i === active ? 'on' : ''));
+}
+function clSay(msg) { $('cl-say').innerHTML = msg; }
 function stopCluster() { if (clTimer) { clearInterval(clTimer); clTimer = null; } }
-$('k-seg').addEventListener('click', (e) => { const k = +e.target.dataset.k; if (!k) return; clK = k; $('k-seg').querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.k === k)); clustered = false; stopCluster(); renderCluster(); });
-$('cl-sample').onclick = () => { clPts = makeBlobs(); clustered = false; stopCluster(); renderCluster(); };
-$('cl-clear').onclick = () => { clPts = []; clustered = false; stopCluster(); renderCluster(); };
-$('c-cluster').addEventListener('pointerdown', (e) => { if (clTimer) return; const [x, y] = evtData(e); if (x < 0 || x > DOM || y < 0 || y > DOM) return; clPts.push({ x: +x.toFixed(2), y: +y.toFixed(2) }); clustered = false; renderCluster(); });
-$('cl-run').onclick = () => {
+function resetClUI() { $('cl-it').textContent = '—'; $('cl-changed').textContent = '—'; $('cl-redo').disabled = true; }
+$('k-seg').addEventListener('click', (e) => { const k = +e.target.dataset.k; if (!k) return; clK = k; $('k-seg').querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.k === k)); clustered = false; stopCluster(); resetClUI(); clSay('무리 수를 ' + k + '개로 정했어요. 점을 만들고 [AI로 무리 짓기]를 눌러보세요.'); renderCluster(); });
+$('cl-sample').onclick = () => { clPts = makeBlobs(); clustered = false; stopCluster(); resetClUI(); clSay('점을 흩뿌렸어요. 이제 <b>[AI로 무리 짓기]</b>를 눌러보세요.'); renderCluster(); };
+$('cl-clear').onclick = () => { clPts = []; clustered = false; stopCluster(); resetClUI(); clSay('왼쪽에서 점을 흩뿌려 주세요.'); renderCluster(); };
+$('c-cluster').addEventListener('pointerdown', (e) => { if (clTimer) return; const [x, y] = evtData(e); if (x < 0 || x > DOM || y < 0 || y > DOM) return; clPts.push({ x: +x.toFixed(2), y: +y.toFixed(2) }); clustered = false; clSay('점 ' + clPts.length + '개. 충분히 흩뿌린 뒤 [AI로 무리 짓기]를 눌러요.'); renderCluster(); });
+function runCluster() {
   if (clPts.length < clK) return;
   stopCluster();
-  // 중심 초기화: 서로 다른 점에서 시작
   const idx = []; while (idx.length < clK) { const r = Math.floor(Math.random() * clPts.length); if (!idx.includes(r)) idx.push(r); }
   clCents = idx.map(i => ({ x: clPts[i].x, y: clPts[i].y }));
   clAssign = new Array(clPts.length).fill(-1); clustered = true;
-  setStatus('무리 짓는 중…', 'busy'); $('cl-run').disabled = true;
+  setStatus('무리 짓는 중…', 'busy'); $('cl-run').disabled = true; $('cl-redo').disabled = true;
   let it = 0;
   clTimer = setInterval(() => {
     const changed = kmeans(clPts, clK, clCents, clAssign);
-    it++; renderCluster(); setStatus('무리 짓는 중… (' + it + '번째)', 'busy');
-    if (!changed || it >= 12) { stopCluster(); setStatus('무리 짓기 완료 · READY', 'ready'); $('cl-run').disabled = false; }
-  }, 450);
-};
+    it++; renderCluster();
+    $('cl-it').textContent = it; $('cl-changed').textContent = changed + '개';
+    if (it === 1) clSay('① 무리 중심 <b>★</b>을 무작위로 놓고, 각 점을 <b>가장 가까운 ★ 색</b>으로 칠했어요.');
+    else clSay('②③ ★를 무리 한가운데로 옮기고 다시 칠하는 중… 이번엔 <b>' + changed + '개</b>가 무리를 바꿨어요.');
+    setStatus('무리 짓는 중… (' + it + '번째)', 'busy');
+    if (changed === 0 || it >= 12) {
+      stopCluster(); clustered = true; renderCluster();
+      clSay('✓ 더 이상 안 바뀌어요 — <b>무리가 완성</b>됐어요! 무리 수를 바꾸거나 [다시 묶기]로 다른 시작도 해보세요.');
+      setStatus('무리 짓기 완료 · READY', 'ready'); $('cl-run').disabled = false; $('cl-redo').disabled = false;
+    }
+  }, 480);
+}
+$('cl-run').onclick = runCluster;
+$('cl-redo').onclick = runCluster;
 
 /* ── 단계 전환 ── */
 document.querySelectorAll('.step').forEach(btn => {
