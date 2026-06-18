@@ -79,8 +79,13 @@
   .cls-name { flex:1; background:transparent; border:none; color:var(--ink); font-size:14.5px; font-weight:700; padding:4px 2px; min-width:0; }
   .cls-name:focus { outline:none; background:#fff; box-shadow:0 0 0 1px var(--line-2); border-radius:6px; }
   .cls-count { font-family:var(--mono); font-size:12px; color:var(--ink-3); }
+  .cls-clear { border:none; background:none; color:var(--ink-4); font-size:11.5px; font-weight:600; text-decoration:underline; cursor:pointer; padding:2px 4px; }
+  .cls-clear:hover { color:var(--primary); }
   .collect { width:100%; margin-top:9px; border:1px solid var(--line-2); background:#fff; color:var(--ink-2); border-radius:9px; padding:9px; font-size:13px; font-weight:700; }
   .collect.rec { background:linear-gradient(150deg,var(--primary-2),var(--primary)); border-color:transparent; color:#fff; }
+  .thumbs { display:flex; gap:5px; overflow-x:auto; margin-top:9px; padding-bottom:2px; }
+  .thumbs:empty { display:none; }
+  .thumbs img { width:46px; height:35px; border-radius:6px; object-fit:cover; border:1px solid var(--line); flex:none; }
   .samp-bar { height:5px; border-radius:3px; background:var(--bg-soft); overflow:hidden; margin-top:9px; }
   .samp-bar i { display:block; height:100%; background:var(--primary); width:0; transition:.12s; }
 
@@ -171,11 +176,15 @@
 const $ = (id) => document.getElementById(id);
 const FW = 32, FH = 24;
 const COLORS = ['#f0473a', '#4d8dff'];
-let classes = [{ name: '클래스 1', samples: [], rec: false }, { name: '클래스 2', samples: [], rec: false }];
+let classes = [{ name: '클래스 1', samples: [], thumbs: [] }, { name: '클래스 2', samples: [], thumbs: [] }];
 let centroids = null, trained = false, guessing = false, recId = null, lastCap = 0, raf = null;
 let stream = null;
 const v = $('v'), pc = document.createElement('canvas'); pc.width = FW; pc.height = FH;
 const pctx = pc.getContext('2d', { willReadFrequently: true });
+const tc = document.createElement('canvas'); tc.width = 64; tc.height = 48;
+const tctx = tc.getContext('2d');
+function thumb() { tctx.save(); tctx.scale(-1, 1); tctx.drawImage(v, -64, 0, 64, 48); tctx.restore(); return tc.toDataURL('image/jpeg', 0.6); }
+const MAXTHUMB = 40;
 
 function feat() {
   pctx.drawImage(v, 0, 0, FW, FH);
@@ -193,8 +202,10 @@ function renderCls() {
     <div class="cls-item" data-i="${i}">
       <div class="cls-head"><span class="swatch" style="background:${COLORS[i]}"></span>
         <input class="cls-name" value="${c.name.replace(/"/g, '&quot;')}" data-i="${i}">
-        <span class="cls-count" data-count="${i}">${c.samples.length}장</span></div>
+        <span class="cls-count" data-count="${i}">${c.samples.length}장</span>
+        <button class="cls-clear" data-clear="${i}" title="비우기">비우기</button></div>
       <button class="collect" data-collect="${i}">📸 데이터 수집하기</button>
+      <div class="thumbs" id="thumbs-${i}">${c.thumbs.map(u => `<img src="${u}" alt="">`).join('')}</div>
     </div>`).join('');
   updateCounts();
 }
@@ -202,7 +213,15 @@ function updateCounts() {
   classes.forEach((c, k) => { const el = document.querySelector(`[data-count="${k}"]`); if (el) el.textContent = c.samples.length + '장'; });
   $('train').disabled = !(classes[0].samples.length >= 3 && classes[1].samples.length >= 3);
 }
-function captureOne(i) { if (!stream) return; const c = classes[i]; if (c.samples.length < 300) { c.samples.push(feat()); updateCounts(); } }
+function captureOne(i) {
+  if (!stream) return; const c = classes[i]; if (c.samples.length >= 300) return;
+  c.samples.push(feat());
+  const url = thumb(); c.thumbs.push(url);
+  const strip = document.getElementById('thumbs-' + i);
+  if (strip) { const im = new Image(); im.src = url; strip.appendChild(im); while (strip.children.length > MAXTHUMB) strip.removeChild(strip.firstChild); strip.scrollLeft = strip.scrollWidth; }
+  if (c.thumbs.length > MAXTHUMB) c.thumbs.shift();
+  updateCounts();
+}
 function setHoldVisual(i) {
   document.querySelectorAll('[data-collect]').forEach(b => {
     const on = +b.dataset.collect === i;
@@ -217,6 +236,7 @@ function startHold(i) { if (!stream) return; recId = i; lastCap = performance.no
 function endHold() { if (recId == null) return; recId = null; setHoldVisual(null); }
 $('cls').addEventListener('input', (e) => { const i = +e.target.dataset.i; if (e.target.classList.contains('cls-name')) classes[i].name = e.target.value; });
 $('cls').addEventListener('pointerdown', (e) => { const b = e.target.closest('[data-collect]'); if (!b) return; e.preventDefault(); startHold(+b.dataset.collect); });
+$('cls').addEventListener('click', (e) => { const b = e.target.closest('[data-clear]'); if (!b) return; const i = +b.dataset.clear; classes[i].samples = []; classes[i].thumbs = []; const s = document.getElementById('thumbs-' + i); if (s) s.innerHTML = ''; updateCounts(); });
 window.addEventListener('pointerup', endHold);
 window.addEventListener('pointercancel', endHold);
 
