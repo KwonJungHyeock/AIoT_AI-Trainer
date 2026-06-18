@@ -93,20 +93,24 @@
   .mock .stage { padding: 16px; display: grid; grid-template-columns: 1.3fr .9fr; gap: 14px; }
   .mock .cam { border-radius: 14px; position: relative; overflow: hidden;
     background: linear-gradient(150deg, #2a2f45, #161a29); box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
-  .mock .cam::before { content:''; position: absolute; inset: 30% 34% 24% 30%; border: 2px solid rgba(255,106,82,.95); border-radius: 10px;
+  .mock .cam::before { content:''; position: absolute; inset: 28% 34% 22% 30%; border: 2px solid rgba(255,106,82,.95); border-radius: 10px;
     box-shadow: 0 0 0 4px rgba(255,106,82,.22); }
-  .mock .cam::after { content:'얼굴 1'; position: absolute; left: 30%; top: calc(30% - 18px); font-size: 9px; color: #fff;
-    background: var(--primary); padding: 2px 6px; border-radius: 5px; font-family: var(--sans); font-weight: 600; }
+  .mock .cam-tag { position: absolute; left: 30%; top: calc(28% - 18px); font-size: 9px; color: #fff; z-index: 1;
+    background: var(--primary); padding: 2px 7px; border-radius: 5px; font-weight: 700; transition: all .4s; }
   .mock .panel { display: flex; flex-direction: column; gap: 12px; }
-  .mock .donut { width: 92px; height: 92px; border-radius: 50%; margin: 2px auto 0;
-    background: conic-gradient(var(--primary) 0 76%, var(--bg-soft) 76% 100%); display: grid; place-items: center; }
-  .mock .donut i { width: 64px; height: 64px; border-radius: 50%; background: #fff; display: grid; place-items: center;
-    font-weight: 800; font-size: 18px; color: var(--primary-ink); box-shadow: var(--shadow-sm); }
+  .mock .donut { width: 92px; height: 92px; margin: 2px auto 0; position: relative; }
+  .mock .donut svg { width: 92px; height: 92px; transform: rotate(-90deg); }
+  .mock .donut .ring-bg { fill: none; stroke: var(--bg-soft); stroke-width: 9; }
+  .mock .donut .ring-fg { fill: none; stroke: var(--primary); stroke-width: 9; stroke-linecap: round;
+    transition: stroke-dasharray .7s cubic-bezier(.16,1,.3,1), stroke .4s; }
+  .mock .donut i { position: absolute; inset: 0; display: grid; place-items: center;
+    font-weight: 800; font-size: 19px; color: var(--primary-ink); }
   .mock .rows { display: flex; flex-direction: column; gap: 8px; }
   .mock .row { display: flex; align-items: center; gap: 7px; font-size: 10px; color: var(--ink-2); font-weight: 600; }
   .mock .row .lab { width: 30px; }
   .mock .row .track { flex: 1; height: 8px; border-radius: 5px; background: var(--bg-soft); overflow: hidden; }
-  .mock .row .fill { height: 100%; border-radius: 5px; background: linear-gradient(90deg, var(--primary), var(--primary-2)); }
+  .mock .row .fill { height: 100%; border-radius: 5px; width: 0; background: linear-gradient(90deg, var(--primary), var(--primary-2));
+    transition: width .7s cubic-bezier(.16,1,.3,1); }
 
   /* ── 지표 스트립 (박스 없이 구분선 띠로) ── */
   .strip { display: flex; align-items: center; margin: 30px 0 4px; padding: 4px 0;
@@ -259,17 +263,11 @@
   /* 히어로 목업 라이브 모션 */
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
   @keyframes detect { 0%,100%{ box-shadow:0 0 0 4px rgba(255,106,82,.22) } 50%{ box-shadow:0 0 0 7px rgba(255,106,82,.10) } }
-  @keyframes growbar { from{ width:0 } }
-  @keyframes spin { from{ transform:rotate(0) } to{ transform:rotate(360deg) } }
   .mock .cam::before { animation: detect 2.4s ease-in-out infinite; }
-  .mock .row .fill { animation: growbar 1.1s cubic-bezier(.16,1,.3,1) both; }
-  .mock .donut { position: relative; }
-  .mock .donut::after { content:''; position: absolute; inset: -3px; border-radius: 50%;
-    border: 2px solid transparent; border-top-color: rgba(255,106,82,.5); animation: spin 3.5s linear infinite; }
 
   @media (prefers-reduced-motion: reduce) {
     .reveal { opacity: 1; transform: none; transition: none; }
-    .mock .cam::before, .mock .row .fill, .mock .donut::after, .mock-cap i { animation: none; }
+    .mock .cam::before, .mock-cap i { animation: none; }
     html { scroll-behavior: auto; }
   }
 
@@ -335,34 +333,24 @@
     <div class="mock-wrap">
     <div class="mock" aria-hidden="true">
       <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i>
-        <span class="url">eduino-ai.app / 비전 · 얼굴 검출</span></div>
+        <span class="url">eduino-ai.app / 비전 · 실시간 추론</span></div>
       <div class="body">
         <div class="side" id="mock-side"></div>
         <div class="stage">
-          <div class="cam"></div>
+          <div class="cam"><span class="cam-tag" id="m-tag">웃음</span></div>
           <div class="panel">
-            <div class="donut"><i>76%</i></div>
-            <div class="rows">
-              <div class="row"><span class="lab">웃음</span><span class="track"><span class="fill" style="width:76%"></span></span></div>
-              <div class="row"><span class="lab">무표정</span><span class="track"><span class="fill" style="width:18%"></span></span></div>
-              <div class="row"><span class="lab">놀람</span><span class="track"><span class="fill" style="width:6%"></span></span></div>
+            <div class="donut">
+              <svg viewBox="0 0 92 92"><circle class="ring-bg" cx="46" cy="46" r="40"/><circle class="ring-fg" id="m-arc" cx="46" cy="46" r="40" stroke-dasharray="0 251.3"/></svg>
+              <i id="m-pct">0%</i>
             </div>
+            <div class="rows" id="m-rows"></div>
           </div>
         </div>
       </div>
     </div>
-    <div class="mock-cap"><i></i> 실제 화면 미리보기 · 비전 모듈</div>
+    <div class="mock-cap"><i></i> 실제 화면 미리보기 · 라이브 데모</div>
     </div>
   </section>
-
-  <div class="wrap">
-    <div class="strip">
-      <div class="s"><div class="num">6</div><div class="lbl">학습 모듈</div></div>
-      <div class="s"><div class="num">3</div><div class="lbl">단계 · 체험→제작→응용</div></div>
-      <div class="s"><div class="num">9</div><div class="lbl">비전 모듈 기능</div></div>
-      <div class="s"><div class="num">0원</div><div class="lbl">체험 시작 비용</div></div>
-    </div>
-  </div>
 
   <!-- 특징 -->
   <section id="features"><div class="wrap">
@@ -484,6 +472,38 @@ const SIDE = [
 ];
 document.getElementById('mock-side').innerHTML = SIDE.map((s,i)=>`<b class="${i===0?'act':''}">${s}</b>`).join('');
 
+/* ── 히어로 라이브 데모: 추론 결과를 순환 재생 ── */
+(function(){
+  const DC = 251.3; // 2πr (r=40)
+  const STATES = [
+    { tag:'웃음 😊',   labels:['웃음','무표정','놀람'], probs:[0.86,0.10,0.04] },
+    { tag:'놀람 😮',   labels:['웃음','무표정','놀람'], probs:[0.08,0.13,0.79] },
+    { tag:'무표정 😐', labels:['웃음','무표정','놀람'], probs:[0.12,0.74,0.14] },
+  ];
+  const rows = document.getElementById('m-rows');
+  const arc = document.getElementById('m-arc');
+  const pct = document.getElementById('m-pct');
+  const tag = document.getElementById('m-tag');
+  if (!rows || !arc) return;
+  // 막대 골격 생성(라벨은 고정)
+  rows.innerHTML = STATES[0].labels.map((l,i)=>
+    `<div class="row"><span class="lab">${l}</span><span class="track"><span class="fill" id="m-fill-${i}"></span></span></div>`).join('');
+  const fills = STATES[0].labels.map((_,i)=>document.getElementById('m-fill-'+i));
+
+  let cur = 0; // 현재 표시 중인 도넛 %
+  function apply(s){
+    const top = Math.round(Math.max(...s.probs) * 100);
+    s.probs.forEach((p,i)=>{ fills[i].style.width = Math.round(p*100)+'%'; });
+    arc.setAttribute('stroke-dasharray', (Math.max(...s.probs)*DC).toFixed(1)+' '+DC);
+    tag.textContent = s.tag;
+    const step = () => { if (cur === top) return; cur += (cur < top ? 1 : -1); pct.textContent = cur+'%'; requestAnimationFrame(step); };
+    step();
+  }
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let i = 0; apply(STATES[0]);
+  if (!reduce) setInterval(()=>{ i=(i+1)%STATES.length; apply(STATES[i]); }, 2600);
+})();
+
 /* 3단계 리스트 */
 const TIERS = {
   t1:['비추기만 하면 즉시 인식','결과를 게이지·오버레이로 확인','AI가 어떻게 보는지 체감'],
@@ -573,7 +593,7 @@ document.getElementById('paths-grid').innerHTML = PATHS.map(p=>`
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   // 등장 대상: 섹션 헤더 + 카드 그룹들
   const groups = [
-    ['.head'], ['.strip .s'], ['.why .c'], ['.tier'],
+    ['.head'], ['.why .c'], ['.tier'],
     ['#catalog .mod'], ['#plans-grid .plan'], ['#paths-grid .pathc'],
     ['.faq details'], ['.final'], ['.mock-wrap'],
   ];

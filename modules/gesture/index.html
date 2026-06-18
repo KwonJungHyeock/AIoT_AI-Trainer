@@ -149,6 +149,19 @@
   .learn { background:var(--panel-2); border:1px solid var(--border); border-radius:11px; padding:14px 16px; margin-top:16px; font-size:13px; color:var(--ink-2); line-height:1.65; }
   .learn b { color:var(--accent-ink); }
 
+  /* 중급 가이드 */
+  .guide { grid-column:1/-1; background:linear-gradient(180deg,var(--panel-2),var(--panel)); border:1px solid var(--border-2); border-radius:var(--r); padding:16px 20px; box-shadow:var(--shadow); }
+  .guide h3 { margin:0 0 12px; font-size:15px; font-weight:700; display:flex; gap:8px; align-items:center; }
+  .guide h3 .tagk { font-family:var(--mono); font-size:10.5px; font-weight:600; color:var(--accent-ink); background:var(--accent-soft); border:1px solid rgba(241,90,79,.35); border-radius:999px; padding:3px 9px; }
+  .guide ol { margin:0; padding:0; list-style:none; counter-reset:g; display:grid; grid-template-columns:repeat(3,1fr); gap:10px 22px; }
+  .guide li { counter-increment:g; position:relative; padding-left:30px; font-size:13px; color:var(--ink-2); line-height:1.5; }
+  .guide li::before { content:counter(g); position:absolute; left:0; top:0; width:21px; height:21px; border-radius:6px;
+    background:var(--accent-soft); border:1px solid rgba(241,90,79,.4); color:var(--accent-ink); font-family:var(--mono); font-size:11px; font-weight:700; display:grid; place-items:center; }
+  .guide li b { color:var(--ink); }
+  .guide .note { margin-top:13px; border-top:1px dashed var(--border); padding-top:11px; font-size:12.5px; color:var(--ink-3); line-height:1.6; }
+  .guide .note b { color:var(--accent-ink); }
+  @media (max-width:880px){ .guide ol{ grid-template-columns:1fr; } }
+
   @media (max-width:880px){ .layout{ grid-template-columns:1fr; } }
 </style>
 </head>
@@ -221,6 +234,18 @@
 
   <!-- 중급 -->
   <section id="panel-train" class="layout" style="display:none">
+    <div class="guide">
+      <h3><span class="tagk">따라하기</span> 내 제스처 AI 만들기 · 6단계</h3>
+      <ol>
+        <li><b>제스처 이름</b>을 정해요 (예: 주먹·손바닥·브이)</li>
+        <li><b>카메라 켜기</b> 후 손 모양을 만들어요</li>
+        <li>그 제스처의 <b>[샘플 모으기]를 길게</b> 누른 채 손의 각도·거리를 조금씩 바꿔 <b>30개+</b></li>
+        <li>다른 제스처도 같은 방식으로 (<b>2종 이상</b>)</li>
+        <li><b>[학습 시작]</b> — 정확도·손실 곡선 확인</li>
+        <li><b>[추론 시작]</b> — 손을 바꿔가며 결과 확인</li>
+      </ol>
+      <div class="note"><b>일반 이미지 분류와 뭐가 달라요?</b> 사진 픽셀 전체가 아니라 <b>손 관절 21개의 위치</b>만 학습해서, 가볍고 빠르며 배경·옷·조명에 덜 흔들려요. 그래서 적은 데이터로도 손 모양을 잘 구분합니다.</div>
+    </div>
     <div class="card">
       <h2>제스처 수집</h2>
       <p class="sub">제스처마다 손 모양을 다양하게 바꿔가며 30개 이상 모아주세요.</p>
@@ -309,6 +334,8 @@ if (typeof module !== 'undefined') { module.exports = { handFeature, fingersUp, 
 /* ── 모델 로드 ── */
 async function loadDetector() {
   if (detector) return detector;
+  try { await tf.setBackend('webgl'); } catch (e) { /* webgl 불가 시 기본 백엔드 */ }
+  await tf.ready();
   detector = await handPoseDetection.createDetector(
     handPoseDetection.SupportedModels.MediaPipeHands,
     { runtime: 'tfjs', modelType: 'full', maxHands: 1 }
@@ -321,11 +348,24 @@ function mkCam(videoEl, canvasEl, phEl) {
   return {
     stream: null, raf: null, video: videoEl, canvas: canvasEl, ph: phEl,
     async start() {
-      this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
+      });
       this.video.srcObject = this.stream;
+      // 메타데이터(해상도) 준비될 때까지 대기 → 캔버스 0×0 방지
+      await new Promise((res) => {
+        if (this.video.readyState >= 1 && this.video.videoWidth) return res();
+        this.video.onloadedmetadata = () => res();
+      });
       await this.video.play();
-      this.canvas.width = this.video.videoWidth; this.canvas.height = this.video.videoHeight;
+      this.syncSize();
       this.ph.style.display = 'none';
+    },
+    syncSize() {
+      const w = this.video.videoWidth, h = this.video.videoHeight;
+      if (w && (this.canvas.width !== w || this.canvas.height !== h)) {
+        this.canvas.width = w; this.canvas.height = h;
+      }
     },
     stop() {
       if (this.raf) cancelAnimationFrame(this.raf);
@@ -350,11 +390,14 @@ function drawHand(ctx, kp, color) {
 
 async function estimate(cam) {
   if (!cam.stream || !detector) return null;
+  cam.syncSize();
   const hands = await detector.estimateHands(cam.video, { flipHorizontal: false });
   const ctx = cam.canvas.getContext('2d');
   ctx.clearRect(0, 0, cam.canvas.width, cam.canvas.height);
   if (!hands.length) return null;
-  return hands[0].keypoints;
+  const kp = hands[0].keypoints;
+  if (!kp || kp.length < 21 || kp.some(p => !isFinite(p.x) || !isFinite(p.y))) return null;
+  return kp;
 }
 
 /* ════════ 초급: 가위바위보 ════════ */
@@ -464,6 +507,7 @@ window.addEventListener('touchend', (e) => bindCollect(e, false));
 $('add-cls').onclick = () => addClass();
 $('epochs').oninput = (e) => $('epochs-val').textContent = e.target.value;
 
+let lastCollect = 0;
 async function trainLoop() {
   if (!train.stream) return;
   const kp = await estimate(train);
@@ -472,8 +516,12 @@ async function trainLoop() {
     const col = collecting ? (classes.find(c => c.id === collecting) || {}).color || '#fff' : '#4d8dff';
     drawHand(ctx, kp, col);
     if (collecting) {
-      const c = classes.find(x => x.id === collecting);
-      if (c && c.samples.length < 200) { c.samples.push(handFeature(kp)); updateCount(c); }
+      const now = performance.now();
+      if (now - lastCollect > 70) { // 초당 ~14개로 제한 → 중복 프레임 방지
+        lastCollect = now;
+        const c = classes.find(x => x.id === collecting);
+        if (c && c.samples.length < 150) { c.samples.push(handFeature(kp)); updateCount(c); }
+      }
     }
   }
   if (inferring && head) await runInfer(kp);
@@ -502,8 +550,10 @@ $('btn-train').onclick = async () => {
 
   const xsArr = [], ysArr = [];
   usable.forEach((c, idx) => c.samples.forEach(s => {
+    if (s.length !== 42 || s.some(v => !isFinite(v))) return; // 손상 샘플 제외
     xsArr.push(s); const oh = new Array(usable.length).fill(0); oh[idx] = 1; ysArr.push(oh);
   }));
+  if (xsArr.length < 8) { setStatus('샘플 부족', 'busy'); $('btn-train').disabled = false; $('btn-infer').disabled = true; return; }
   const xs = tf.tensor2d(xsArr), ys = tf.tensor2d(ysArr);
 
   if (head) head.dispose();
