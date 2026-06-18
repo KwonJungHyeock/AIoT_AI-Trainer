@@ -664,7 +664,7 @@ const MODULES = [
 ];
 document.getElementById('catalog').innerHTML = MODULES.map(m=>{
   const tag=m.live?'a':'div', href=m.live?` href="course.html?c=${m.key}"`:'';
-  const status=m.live?'<span class="tag on">정식 코스</span>':'<span class="tag off">준비중</span>';
+  const status=m.live?'<span class="tag on">● 체험 가능</span>':'<span class="tag off">준비중</span>';
   const cls=['b1','b2','b3'];
   const lv=Object.entries(m.lv).map(([k,v],i)=>`<div class="r ${cls[i]}"><b>${k}</b><span>${v}</span></div>`).join('');
   return `<${tag} class="mod ${m.live?'live':'soon'}"${href}>
