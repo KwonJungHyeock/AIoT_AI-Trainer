@@ -27,14 +27,14 @@
 
   .topbar { position:sticky; top:0; z-index:30; background:rgba(246,247,251,.85); backdrop-filter:blur(14px) saturate(1.4); border-bottom:1px solid var(--line); }
   .topbar::after { content:''; display:block; height:3px; background:linear-gradient(90deg,var(--primary),#ff8a3d 40%,rgba(255,138,61,0) 80%); }
-  .topbar-inner { max-width:1080px; margin:0 auto; padding:11px 22px; display:flex; align-items:center; gap:13px; }
+  .topbar-inner { max-width:1280px; margin:0 auto; padding:11px 22px; display:flex; align-items:center; gap:13px; }
   .back { font-size:13px; font-weight:600; color:var(--ink-2); display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border:1px solid var(--line-2); border-radius:10px; background:#fff; box-shadow:var(--shadow-sm); }
   .back:hover { color:var(--primary-ink); border-color:var(--primary-line); }
   .logo-mark { width:34px; height:34px; border-radius:10px; background:linear-gradient(150deg,var(--primary-2),var(--primary)); color:#fff; display:grid; place-items:center; font-weight:800; font-size:18px; box-shadow:0 4px 12px rgba(240,71,58,.4), inset 0 1px 0 rgba(255,255,255,.4); }
   .logo-title { font-size:16px; font-weight:800; } .logo-title span { color:var(--primary); }
   .free { margin-left:auto; font-family:var(--mono); font-size:11px; font-weight:700; color:var(--green); background:var(--green-soft); border:1px solid rgba(17,160,111,.4); border-radius:999px; padding:6px 12px; }
 
-  main { max-width:1080px; margin:0 auto; padding:22px; }
+  main { max-width:1280px; margin:0 auto; padding:22px; }
   .intro { text-align:center; padding:8px 0 18px; }
   .intro h1 { margin:0 0 8px; font-size:27px; font-weight:800; letter-spacing:-.02em; }
   .intro h1 .g { background:linear-gradient(100deg,#ff8a3d,#f0473a 60%); -webkit-background-clip:text; background-clip:text; color:transparent; }
@@ -44,10 +44,23 @@
   .steps3 span { font-size:12.5px; font-weight:700; color:var(--ink-2); background:#fff; border:1px solid var(--line); border-radius:999px; padding:6px 13px; }
   .steps3 b { color:var(--primary); font-family:var(--mono); }
 
-  .tm { display:grid; grid-template-columns:1.05fr 0.78fr 1.12fr; gap:16px; align-items:start; margin-top:14px; }
+  .tm { display:grid; grid-template-columns:1.05fr 0.95fr 1.05fr; gap:16px; align-items:start; margin-top:14px; }
   .train-status { margin-top:12px; font-size:13px; color:var(--ink-3); text-align:center; font-weight:600; }
   .learnbox { margin-top:14px; background:var(--card-2); border:1px solid var(--line); border-radius:12px; padding:13px 15px; font-size:12.5px; color:var(--ink-2); line-height:1.7; }
   .learnbox b { color:var(--primary-ink); }
+  .tcurve[hidden] { display:none; }
+  .tlabel { font-size:12px; color:var(--ink-3); font-weight:700; margin-top:14px; }
+  .tg { width:100%; height:96px; background:var(--card-2); border:1px solid var(--line); border-radius:10px; margin-top:8px; display:block; }
+  .tg .grid { stroke:var(--line-2); stroke-width:1; stroke-dasharray:4 4; }
+  .tg-acc { font-size:13px; color:var(--ink-2); font-weight:600; margin-top:9px; text-align:center; }
+  .tg-acc b { color:var(--green); font-family:var(--mono); font-size:15px; }
+  .tconf { margin-top:12px; }
+  .tconf table { width:100%; border-collapse:collapse; font-size:11.5px; }
+  .tconf caption { caption-side:top; text-align:left; font-size:11px; color:var(--ink-4); margin-bottom:5px; }
+  .tconf th, .tconf td { border:1px solid var(--line); padding:5px 4px; text-align:center; }
+  .tconf th { background:var(--card-2); color:var(--ink-2); font-weight:700; }
+  .tconf td.rowh { background:var(--card-2); font-weight:700; color:var(--ink-2); }
+  .tconf td.diag { background:var(--green-soft); color:var(--green); font-weight:800; }
   @media (max-width:980px){ .tm{ grid-template-columns:1fr; } }
   .card { background:#fff; border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:18px; min-width:0; }
   .cls-item { min-width:0; }
@@ -146,6 +159,15 @@
       <p class="sub">모은 데이터로 AI가 패턴을 배워요.</p>
       <button class="btn primary block lg" id="train" disabled>학습하기</button>
       <div class="train-status" id="train-status">왼쪽에서 두 가지를 각각 3장 이상 모아주세요</div>
+      <div class="tcurve" id="tcurve" hidden>
+        <div class="tlabel">📈 데이터가 늘수록 정확도 ↑</div>
+        <svg class="tg" id="tg" viewBox="0 0 240 96" preserveAspectRatio="none">
+          <line class="grid" x1="10" y1="48" x2="230" y2="48"/>
+          <polyline id="tg-line" fill="none" stroke="#11a06f" stroke-width="2.4" stroke-linejoin="round"/>
+        </svg>
+        <div class="tg-acc">학습 정확도 <b id="tg-accv">—</b></div>
+        <div class="tconf" id="tconf"></div>
+      </div>
       <div class="learnbox">AI는 모은 예시의 <b>공통된 특징</b>을 찾아 둘을 구분하는 기준을 만들어요. 데이터가 <b>많고 다양</b>할수록 똑똑해집니다.</div>
     </div>
 
@@ -205,6 +227,10 @@ function feat() {
   return x;
 }
 function dist(a, b) { let s = 0; for (let i = 0; i < a.length; i++) { const d = a[i] - b[i]; s += d * d; } return Math.sqrt(s); }
+function meanVec(samps) { const n = samps[0].length, m = new Float32Array(n); samps.forEach(s => { for (let i = 0; i < n; i++) m[i] += s[i]; }); for (let i = 0; i < n; i++) m[i] /= samps.length; return m; }
+function esc(s) { return (s || '').replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m])); }
+let curveTimer = null;
+function drawCurve(a) { const W = 240, H = 96, pad = 10; const pts = a.map((v, i) => { const x = pad + (a.length <= 1 ? 0 : (i / (a.length - 1)) * (W - 2 * pad)); const y = H - pad - Math.max(0, Math.min(1, v)) * (H - 2 * pad); return x.toFixed(1) + ',' + y.toFixed(1); }); $('tg-line').setAttribute('points', pts.join(' ')); }
 if (typeof module !== 'undefined') { module.exports = { dist }; }
 
 function renderCls() {
@@ -276,11 +302,30 @@ $('stop').onclick = () => {
 };
 $('train').onclick = () => {
   if (!(classes[0].samples.length >= 3 && classes[1].samples.length >= 3)) return;
-  centroids = classes.map(c => { const n = c.samples[0].length, m = new Float32Array(n); c.samples.forEach(s => { for (let i = 0; i < n; i++) m[i] += s[i]; }); for (let i = 0; i < n; i++) m[i] /= c.samples.length; return m; });
+  centroids = classes.map(c => meanVec(c.samples));
   trained = true;
-  $('bars').innerHTML = classes.map((c, i) => `<div class="bar"><div class="top"><span style="color:${COLORS[i]}">${c.name}</span><span id="pc${i}">0%</span></div><div class="track"><div class="fill" id="bf${i}" style="background:${COLORS[i]}"></div></div></div>`).join('');
+  $('bars').innerHTML = classes.map((c, i) => `<div class="bar"><div class="top"><span style="color:${COLORS[i]}">${esc(c.name)}</span><span id="pc${i}">0%</span></div><div class="track"><div class="fill" id="bf${i}" style="background:${COLORS[i]}"></div></div></div>`).join('');
   $('guess').disabled = false; $('r-name').textContent = '학습 완료!'; $('r-name').style.color = ''; $('r-sub').textContent = '③에서 [맞혀보기 시작]을 눌러보세요';
   $('train-status').textContent = '✓ 학습 완료! 우측에서 맞혀보세요';
+
+  // 학습 곡선: 클래스별 1..k개로 중심을 만들 때의 정확도
+  const minN = Math.min(classes[0].samples.length, classes[1].samples.length);
+  const accs = [];
+  for (let k = 1; k <= minN; k++) {
+    const cen = classes.map(c => meanVec(c.samples.slice(0, k)));
+    let ok = 0, tot = 0;
+    classes.forEach((c, ci) => c.samples.forEach(s => { tot++; if ((dist(s, cen[0]) <= dist(s, cen[1]) ? 0 : 1) === ci) ok++; }));
+    accs.push(ok / tot);
+  }
+  // 혼동행렬 (최종 중심, 학습 데이터 기준)
+  const m = [[0, 0], [0, 0]];
+  classes.forEach((c, ci) => c.samples.forEach(s => { m[ci][dist(s, centroids[0]) <= dist(s, centroids[1]) ? 0 : 1]++; }));
+  $('tg-accv').textContent = Math.round((accs.length ? accs[accs.length - 1] : 0) * 100) + '%';
+  $('tconf').innerHTML = '<table><caption>학습 데이터 점검 (대각선 = 정답)</caption><tr><th>실제＼예측</th><th>' + esc(classes[0].name) + '</th><th>' + esc(classes[1].name) + '</th></tr>' +
+    [0, 1].map(i => '<tr><td class="rowh">' + esc(classes[i].name) + '</td>' + [0, 1].map(j => '<td class="' + (i === j ? 'diag' : '') + '">' + m[i][j] + '</td>').join('') + '</tr>').join('') + '</table>';
+  $('tcurve').hidden = false;
+  if (curveTimer) clearInterval(curveTimer);
+  let step = 1; curveTimer = setInterval(() => { drawCurve(accs.slice(0, step)); step++; if (step > accs.length) clearInterval(curveTimer); }, 35);
 };
 function classify() {
   const x = feat(), ds = centroids.map(c => dist(x, c));
