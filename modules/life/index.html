@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>생활 속 인식 AI — Eduino AI</title>
 <meta name="description" content="카메라로 QR·바코드를 읽고, 사진 속 글자를 인식(OCR)하는 체험형 생활 AI 수업 모듈." />
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
@@ -65,7 +65,12 @@
   .stage { position:relative; width:100%; aspect-ratio:4/3; background:#0d1016; border-radius:13px; overflow:hidden; border:1px solid var(--line); }
   .stage video, .stage canvas { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
   .stage .ph { position:absolute; inset:0; display:grid; place-items:center; color:#9aa3b2; font-size:13.5px; text-align:center; padding:20px; }
-  .scan-frame { position:absolute; inset:18% 22%; border:2px dashed rgba(255,255,255,.5); border-radius:14px; pointer-events:none; }
+  .scan-frame, .ocr-frame { position:absolute; border:2px dashed rgba(255,255,255,.55); border-radius:14px; pointer-events:none; }
+  .scan-frame { inset:18% 22%; }
+  .ocr-frame { inset:19% 5%; display:grid; place-items:end center; }
+  .ocr-frame span { font-size:11px; color:rgba(255,255,255,.8); background:rgba(0,0,0,.45); padding:3px 9px; border-radius:8px; margin-bottom:8px; }
+  .stage.flash { outline:4px solid var(--green); outline-offset:-4px; }
+  .stage.flash::after { content:'✓ 인식'; position:absolute; top:12px; left:12px; background:var(--green); color:#fff; font-size:12px; font-weight:700; padding:5px 11px; border-radius:999px; }
   .cam-ctrl { display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
   .btn { border:1px solid var(--line-2); background:#fff; color:var(--ink); border-radius:11px; padding:11px 16px; font-size:14px; font-weight:700; transition:.15s; box-shadow:var(--shadow-sm); display:inline-flex; align-items:center; justify-content:center; gap:7px; }
   .btn:hover { border-color:var(--primary-line); color:var(--primary-ink); }
@@ -108,6 +113,7 @@
   .learn b { color:var(--primary-ink); }
   .fill { flex:1 1 auto; }
 
+  .layout[hidden] { display:none; }
   @media (max-width:880px){ .layout{ grid-template-columns:1fr; align-items:start; } }
 </style>
 </head>
@@ -146,6 +152,7 @@
       <div class="cam-ctrl">
         <button class="btn primary lg" id="scan-cam">카메라 켜기</button>
         <button class="btn lg" id="scan-stop" disabled>중지</button>
+        <a class="btn lg" href="test-sheet.html" target="_blank" rel="noopener">🖨 실습용 코드 인쇄</a>
       </div>
     </div>
     <div class="card">
@@ -166,6 +173,7 @@
       <div class="stage">
         <video id="v-ocr" playsinline muted></video>
         <canvas id="c-ocr" style="display:none"></canvas>
+        <div class="ocr-frame" id="ocr-frame" style="display:none"><span>이 안에 글자를 맞춰주세요</span></div>
         <div class="ph" id="ph-ocr">📷 [카메라 켜기] 후<br>책·종이의 글자를 비춰주세요</div>
       </div>
       <div class="cam-ctrl">
@@ -226,73 +234,47 @@ function mkCam(v, c, ph) {
   };
 }
 
-/* ════════ 초급: QR·바코드 ════════ */
-const scan = mkCam($('v-scan'), $('c-scan'), $('ph-scan'));
-let barcodeDetector = null, lastCode = '', lastTime = 0, history = [];
-
-async function initDetector() {
-  if ('BarcodeDetector' in window) {
-    try { const fmts = await window.BarcodeDetector.getSupportedFormats(); barcodeDetector = new window.BarcodeDetector({ formats: fmts }); }
-    catch (e) { try { barcodeDetector = new window.BarcodeDetector(); } catch (_) {} }
-  }
-}
+/* ════════ 초급: QR·바코드 (ZXing — QR+1D 바코드 폭넓게 지원) ════════ */
+const scanVideo = $('v-scan'), scanStage = document.querySelector('#panel-scan .stage');
+let zreader = null, scanRunning = false, lastCode = '', lastTime = 0, history = [];
+function getReader() { if (!zreader) zreader = new ZXing.BrowserMultiFormatReader(); return zreader; }
+function fmtName(r) { try { return (ZXing.BarcodeFormat[r.getBarcodeFormat()] || 'code').toLowerCase().replace(/_/g, ' '); } catch (e) { return 'code'; } }
+function flash() { scanStage.classList.add('flash'); setTimeout(() => scanStage.classList.remove('flash'), 280); }
 function pushCode(value, format) {
   const now = Date.now();
-  if (value === lastCode && now - lastTime < 1500) { lastTime = now; return; } // 같은 코드 연속 무시
+  if (value === lastCode && now - lastTime < 1500) { lastTime = now; return; }
   lastCode = value; lastTime = now;
+  flash();
   history.unshift({ value, format, ts: new Date() });
   if (history.length > 30) history.pop();
-  // 최신 결과
   const sl = $('scan-latest'); sl.classList.remove('idle');
   sl.innerHTML = `<span class="fmt">${esc(format || 'code')}</span><div class="val">${valHtml(value)}</div>`;
-  // 기록
   $('scan-count').textContent = history.length + '개';
   $('codes').innerHTML = history.map(h => `<div class="ci"><span class="t">${h.ts.toTimeString().slice(0, 8)}</span><span class="v">${valHtml(h.value)}</span></div>`).join('');
   setStatus('읽음! · ' + history.length, 'ready');
 }
-function drawPoly(ctx, pts, color) {
-  if (!pts || !pts.length) return;
-  ctx.lineWidth = 4; ctx.strokeStyle = color; ctx.beginPath();
-  pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
-  ctx.closePath(); ctx.stroke();
-}
-async function scanLoop() {
-  if (!scan.stream) return;
-  scan.syncSize();
-  const ctx = scan.canvas.getContext('2d');
-  ctx.clearRect(0, 0, scan.canvas.width, scan.canvas.height);
-  try {
-    if (barcodeDetector) {
-      const codes = await barcodeDetector.detect(scan.video);
-      if (codes.length) {
-        const b = codes[0];
-        drawPoly(ctx, b.cornerPoints, '#2bb583');
-        pushCode(b.rawValue, b.format);
-      }
-    } else if (window.jsQR) {
-      ctx.drawImage(scan.video, 0, 0, scan.canvas.width, scan.canvas.height);
-      const img = ctx.getImageData(0, 0, scan.canvas.width, scan.canvas.height);
-      ctx.clearRect(0, 0, scan.canvas.width, scan.canvas.height);
-      const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
-      if (code) {
-        const L = code.location;
-        drawPoly(ctx, [L.topLeftCorner, L.topRightCorner, L.bottomRightCorner, L.bottomLeftCorner], '#2bb583');
-        pushCode(code.data, 'qr_code');
-      }
-    }
-  } catch (e) {}
-  scan.raf = requestAnimationFrame(scanLoop);
-}
 $('scan-cam').onclick = async () => {
+  if (scanRunning) return;
   try {
-    setStatus('카메라 시작…', 'busy'); await initDetector(); await scan.start();
-    $('scan-frame').style.display = 'block';
+    setStatus('카메라 시작…', 'busy'); $('ph-scan').style.display = 'none';
+    await getReader().decodeFromConstraints(
+      { video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } },
+      scanVideo,
+      (result) => { if (result) pushCode(result.getText(), fmtName(result)); }
+    );
+    scanRunning = true; $('scan-frame').style.display = 'block';
     $('scan-cam').disabled = true; $('scan-stop').disabled = false;
     $('scan-state').textContent = '스캔 중'; $('scan-state').classList.add('on');
-    setStatus('스캔 중 · LIVE', 'live'); scanLoop();
-  } catch (e) { setStatus('카메라 오류', 'busy'); alert('카메라를 시작할 수 없습니다: ' + e.message); }
+    setStatus('스캔 중 · LIVE', 'live');
+  } catch (e) { $('ph-scan').style.display = 'grid'; setStatus('카메라 오류', 'busy'); alert('카메라를 시작할 수 없습니다: ' + e.message); }
 };
-$('scan-stop').onclick = () => { scan.stop(); $('scan-frame').style.display = 'none'; $('scan-cam').disabled = false; $('scan-stop').disabled = true; $('scan-state').textContent = '대기'; $('scan-state').classList.remove('on'); setStatus('대기 중'); };
+function stopScan() {
+  if (zreader) { try { zreader.reset(); } catch (e) {} }
+  scanRunning = false; $('ph-scan').style.display = 'grid'; $('scan-frame').style.display = 'none';
+  $('scan-cam').disabled = false; $('scan-stop').disabled = true;
+  $('scan-state').textContent = '대기'; $('scan-state').classList.remove('on');
+}
+$('scan-stop').onclick = () => { stopScan(); setStatus('대기 중'); };
 
 /* ════════ 중급: OCR ════════ */
 const ocr = mkCam($('v-ocr'), $('c-ocr'), $('ph-ocr'));
@@ -307,7 +289,7 @@ $('lang-seg').addEventListener('click', (e) => {
 $('ocr-cam').onclick = async () => {
   try {
     setStatus('카메라 시작…', 'busy'); await ocr.start();
-    $('c-ocr').style.display = 'none'; ocr.video.style.display = '';
+    $('c-ocr').style.display = 'none'; ocr.video.style.display = ''; $('ocr-frame').style.display = 'grid';
     $('ocr-cam').disabled = true; $('ocr-shot').disabled = false; $('ocr-retake').disabled = true;
     $('ocr-state').textContent = '준비됨'; $('ocr-state').classList.add('on');
     setStatus('촬영 가능 · LIVE', 'live');
@@ -315,19 +297,34 @@ $('ocr-cam').onclick = async () => {
 };
 $('ocr-retake').onclick = () => {
   if (ocrBusy) return;
-  $('c-ocr').style.display = 'none'; ocr.video.style.display = '';
+  $('c-ocr').style.display = 'none'; ocr.video.style.display = ''; $('ocr-frame').style.display = 'grid';
   try { ocr.video.play(); } catch (e) {}
   $('ocr-shot').disabled = false; $('ocr-retake').disabled = true;
   setStatus('촬영 가능 · LIVE', 'live');
 };
+/* 캡처 전처리: 중앙 영역 크롭 + 업스케일 + 흑백·대비 보정 → OCR 정확도 향상 */
+function preprocessOCR() {
+  const vw = ocr.video.videoWidth, vh = ocr.video.videoHeight;
+  const cw = Math.round(vw * 0.90), ch = Math.round(vh * 0.62); // ocr-frame inset과 일치
+  const sx = Math.round((vw - cw) / 2), sy = Math.round((vh - ch) / 2);
+  const up = 1.5;
+  const cnv = $('c-ocr'); cnv.width = Math.round(cw * up); cnv.height = Math.round(ch * up);
+  const ctx = cnv.getContext('2d');
+  ctx.drawImage(ocr.video, sx, sy, cw, ch, 0, 0, cnv.width, cnv.height);
+  const img = ctx.getImageData(0, 0, cnv.width, cnv.height), d = img.data;
+  const contrast = 1.45, intercept = 128 * (1 - contrast);
+  for (let i = 0; i < d.length; i += 4) {
+    let g = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+    g = g * contrast + intercept; g = g < 0 ? 0 : g > 255 ? 255 : g;
+    d[i] = d[i + 1] = d[i + 2] = g;
+  }
+  ctx.putImageData(img, 0, 0);
+}
 $('ocr-shot').onclick = async () => {
   if (!ocr.stream || ocrBusy) return;
   ocrBusy = true;
-  // 현재 프레임을 캔버스에 고정
-  ocr.syncSize();
-  const ctx = $('c-ocr').getContext('2d');
-  ctx.drawImage(ocr.video, 0, 0, $('c-ocr').width, $('c-ocr').height);
-  $('c-ocr').style.display = ''; ocr.video.style.display = 'none';
+  preprocessOCR();
+  $('c-ocr').style.display = ''; ocr.video.style.display = 'none'; $('ocr-frame').style.display = 'none';
   try { ocr.video.pause(); } catch (e) {}
   $('ocr-shot').disabled = true; $('ocr-retake').disabled = true;
   $('ocr-state').textContent = '인식 중'; setStatus('글자 인식 중…', 'busy');
@@ -363,8 +360,8 @@ document.querySelectorAll('.step').forEach(btn => {
     $('panel-scan').hidden = s !== 'scan';
     $('panel-ocr').hidden = s !== 'ocr';
     // 반대편 카메라 정리
-    if (s === 'scan') { ocr.stop(); $('ocr-cam').disabled = false; $('ocr-shot').disabled = true; $('ocr-retake').disabled = true; $('ocr-state').textContent = '대기'; $('ocr-state').classList.remove('on'); $('c-ocr').style.display = 'none'; ocr.video.style.display = ''; }
-    else { scan.stop(); $('scan-frame').style.display = 'none'; $('scan-cam').disabled = false; $('scan-stop').disabled = true; $('scan-state').textContent = '대기'; $('scan-state').classList.remove('on'); }
+    if (s === 'scan') { ocr.stop(); $('ocr-cam').disabled = false; $('ocr-shot').disabled = true; $('ocr-retake').disabled = true; $('ocr-state').textContent = '대기'; $('ocr-state').classList.remove('on'); $('c-ocr').style.display = 'none'; $('ocr-frame').style.display = 'none'; ocr.video.style.display = ''; }
+    else { stopScan(); }
     setStatus('대기 중');
   };
 });
