@@ -61,20 +61,39 @@
   .nav .btn { margin-left: 8px; }
   .btn-lg { padding: 14px 26px; font-size: 16px; border-radius: 13px; }
 
-  /* ── 히어로 ── */
-  .hero { padding: 70px 0 28px; display: grid; grid-template-columns: 1.05fr .95fr; gap: 48px; align-items: center; }
+  /* ── 히어로 (프리미엄 다크 패널) ── */
+  .hero-band { position: relative; margin: 16px auto 4px; max-width: 1180px; border-radius: 30px; overflow: hidden;
+    background: linear-gradient(165deg, #14161f 0%, #1b1411 58%, #23101a 100%);
+    border: 1px solid rgba(255,255,255,.08);
+    box-shadow: 0 30px 80px rgba(20,22,31,.30), inset 0 1px 0 rgba(255,255,255,.06); }
+  .hero-band::before { content:''; position:absolute; inset:0; pointer-events:none; opacity:.5; z-index:0;
+    background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+    background-size: 34px 34px; -webkit-mask-image: radial-gradient(120% 95% at 50% 0%, #000 28%, transparent 76%); mask-image: radial-gradient(120% 95% at 50% 0%, #000 28%, transparent 76%); }
+  .hero-band .aurora { position:absolute; inset:-30% -12% auto -12%; height:140%; pointer-events:none; z-index:0; filter: blur(54px); opacity:.55;
+    background:
+      radial-gradient(38% 50% at 16% 22%, rgba(240,71,58,.60), transparent 60%),
+      radial-gradient(42% 55% at 82% 16%, rgba(255,138,61,.45), transparent 60%),
+      radial-gradient(46% 62% at 64% 80%, rgba(124,108,255,.36), transparent 62%);
+    animation: drift 16s ease-in-out infinite alternate; }
+  @keyframes drift { 0%{transform:translate3d(0,0,0) scale(1)} 100%{transform:translate3d(-3%,2%,0) scale(1.09)} }
+  .hero { position:relative; z-index:1; padding: 58px 48px 54px; display: grid; grid-template-columns: 1.05fr .95fr; gap: 46px; align-items: center; }
   .pill { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 700;
-    color: var(--primary-ink); background: var(--primary-soft); border: 1px solid var(--primary-line);
-    padding: 6px 13px; border-radius: 999px; }
-  .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--coral); box-shadow: 0 0 0 4px var(--coral-soft); }
-  .hero h1 { margin: 20px 0 16px; font-size: 50px; line-height: 1.08; font-weight: 800; letter-spacing: -0.035em; }
-  .hero h1 .g { background: linear-gradient(120deg, var(--primary), var(--coral)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .hero .lead { font-size: 17.5px; color: var(--ink-2); max-width: 520px; }
-  .hero-cta { display: flex; gap: 12px; margin: 28px 0 20px; flex-wrap: wrap; }
-  .trust { display: flex; gap: 18px; flex-wrap: wrap; color: var(--ink-3); font-size: 13px; }
-  .trust b { color: var(--ink); }
+    color: #ffd9d1; background: rgba(240,71,58,.13); border: 1px solid rgba(240,71,58,.34);
+    padding: 7px 14px; border-radius: 999px; backdrop-filter: blur(6px); }
+  .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--primary-2); box-shadow: 0 0 10px 2px rgba(255,106,82,.7); }
+  .hero h1 { margin: 20px 0 16px; font-size: 56px; line-height: 1.05; font-weight: 800; letter-spacing: -0.04em; color: #fff; }
+  .hero h1 .g { background: linear-gradient(100deg, #ff9a3d, #f0473a 52%, #ff6ab5); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero .lead { font-size: 17px; color: rgba(255,255,255,.74); max-width: 520px; }
+  .hero .lead b { color: #fff; }
+  .hero-cta { display: flex; gap: 12px; margin: 28px 0 22px; flex-wrap: wrap; }
+  .hero-band .btn-ghost { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.18); color: #fff; backdrop-filter: blur(6px); box-shadow: none; }
+  .hero-band .btn-ghost:hover { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.34); color: #fff; }
+  .hero-band .mock-cap { color: rgba(255,255,255,.5); }
+  .hero-band .mock { box-shadow: 0 24px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.06); }
+  .trust { display: flex; gap: 18px; flex-wrap: wrap; color: rgba(255,255,255,.62); font-size: 13px; }
+  .trust b { color: #fff; }
   .trust span { display: inline-flex; align-items: center; gap: 7px; }
-  .trust svg { width: 16px; height: 16px; color: var(--green); }
+  .trust svg { width: 16px; height: 16px; color: #34d399; }
 
   /* ── 히어로 제품 목업 ── */
   .mock { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg);
@@ -158,7 +177,8 @@
   .cat { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 18px; }
   .mod { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 24px;
     box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 13px; transition: .18s; }
-  .mod.live:hover { box-shadow: var(--shadow); transform: translateY(-3px); border-color: var(--primary-line); }
+  .mod.live:hover { transform: translateY(-4px); border-color: var(--primary-line);
+    box-shadow: 0 4px 14px rgba(20,22,31,.06), 0 22px 46px rgba(240,71,58,.17); }
   .mod.soon { background: var(--card-2); }
   .mod-top { display: flex; align-items: center; justify-content: space-between; }
   .mod-ic { width: 50px; height: 50px; border-radius: 14px; display: grid; place-items: center;
@@ -273,7 +293,8 @@
 
   /* ── 반응형 ── */
   @media (max-width: 960px) {
-    .hero { grid-template-columns: 1fr; gap: 32px; padding-top: 48px; }
+    .hero-band { border-radius: 22px; margin: 12px auto 4px; }
+    .hero { grid-template-columns: 1fr; gap: 32px; padding: 40px 22px; }
     .hero .mock-wrap { max-width: 520px; margin: 0 auto; width: 100%; }
     .why, .tiers, .paths { grid-template-columns: 1fr; }
     .plans { grid-template-columns: 1fr; }
@@ -313,7 +334,9 @@
 
 <main id="top">
   <!-- 히어로 -->
-  <section class="wrap hero" style="padding-bottom:8px">
+  <section class="hero-band">
+    <div class="aurora"></div>
+    <div class="wrap hero">
     <div>
       <span class="pill"><span class="dot"></span> 설치 없이 브라우저에서 바로 · 6개 모듈 모두 공개</span>
       <h1>AI를 <span class="g">만지면서</span><br>배우는 수업</h1>
@@ -349,6 +372,7 @@
       </div>
     </div>
     <div class="mock-cap"><i></i> 실제 화면 미리보기 · 라이브 데모</div>
+    </div>
     </div>
   </section>
 
