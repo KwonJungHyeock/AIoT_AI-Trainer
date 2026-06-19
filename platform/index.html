@@ -376,7 +376,7 @@
       <a class="link" href="#paths">학습경로</a>
       <a class="link" href="#teach">교사자료</a>
       <a class="link" href="#faq">FAQ</a>
-      <a class="btn btn-primary" href="sample.html">무료 샘플 체험 →</a>
+      <a class="btn btn-primary" href="/platform/sample.html">무료 샘플 체험 →</a>
     </nav>
   </div>
 </header>
@@ -392,7 +392,7 @@
       <p class="lead">카메라·소리·데이터로 학생이 직접 AI를 학습시키고 결과를 눈으로 확인합니다. 교실에서 함께 체험하도록 설계한 <b>6개의 AI 학습 코스</b>를, 필요한 주제만 골라 쓰세요.</p>
       <div class="hero-cta">
         <a class="btn btn-primary btn-lg" href="#modules">6개 코스 둘러보기 →</a>
-        <a class="btn btn-ghost btn-lg" href="sample.html">무료 샘플 체험</a>
+        <a class="btn btn-ghost btn-lg" href="/platform/sample.html">무료 샘플 체험</a>
       </div>
       <div class="trust">
         <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> 설치·가입 불필요</span>
@@ -552,7 +552,7 @@
       <h2>지금 바로 체험해 보세요</h2>
       <p>비전·제스처·데이터·텍스트·생활·개념 — <b>6개 코스 모두 공개</b>되어 있습니다. 클릭 한 번이면 시작입니다.</p>
       <div class="hero-cta" style="justify-content:center">
-        <a class="btn btn-primary btn-lg" href="sample.html">무료 샘플 체험 →</a>
+        <a class="btn btn-primary btn-lg" href="/platform/sample.html">무료 샘플 체험 →</a>
         <a class="btn btn-ghost btn-lg" href="#plans">도입 알아보기</a>
       </div>
     </div>
@@ -565,7 +565,7 @@
       <a class="brand" href="#top"><div class="logo-mark">E</div><div class="logo-title">Eduino <span>AI</span></div></a>
       <p class="about">설치 없이 브라우저에서 만지며 배우는 체험형 AI 학습 플랫폼. 체험 → 제작 → 응용.</p>
     </div>
-    <div class="col"><h4>제품</h4><a href="#features">특징</a><a href="#modules">코스</a><a href="#plans">요금</a><a href="../index.html">비전 코스 체험</a></div>
+    <div class="col"><h4>제품</h4><a href="#features">특징</a><a href="#modules">코스</a><a href="#plans">요금</a><a href="/index.html">비전 코스 체험</a></div>
     <div class="col"><h4>학습</h4><a href="#paths">학습 경로</a><a href="#faq">FAQ</a><a href="#modules">레벨 안내</a></div>
     <div class="col"><h4>도입</h4><a href="#plans">요금 안내</a><a href="#plans">학교 라이선스</a><a href="#top">문의</a></div>
   </div>
@@ -663,7 +663,7 @@ const MODULES = [
     lv:{초급:'QR·바코드 찾기',중급:'글자 인식(OCR)',심화:'명함·문서 정보 추출'}, aud:'초등~중등' },
 ];
 document.getElementById('catalog').innerHTML = MODULES.map(m=>{
-  const tag=m.live?'a':'div', href=m.live?` href="course.html?c=${m.key}"`:'';
+  const tag=m.live?'a':'div', href=m.live?` href="/platform/course.html?c=${m.key}"`:'';
   const status=m.live?'<span class="tag on">● 체험 가능</span>':'<span class="tag off">준비중</span>';
   const cls=['b1','b2','b3'];
   const lv=Object.entries(m.lv).map(([k,v],i)=>`<div class="r ${cls[i]}"><b>${k}</b><span>${v}</span></div>`).join('');

@@ -116,15 +116,15 @@
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="back" href="index.html#modules">← 코스 목록</a>
-    <a class="brand" href="index.html"><div class="logo-mark">E</div><div class="logo-title">Eduino <span>AI</span></div></a>
+    <a class="back" href="/platform/index.html#modules">← 코스 목록</a>
+    <a class="brand" href="/platform/index.html"><div class="logo-mark">E</div><div class="logo-title">Eduino <span>AI</span></div></a>
     <a class="btn btn-primary nav-cta" id="nav-cta" href="#">체험 시작 →</a>
   </div>
 </header>
 
 <main>
   <section class="chero">
-    <div class="crumb"><a href="index.html">Eduino AI</a> › <a href="index.html#modules">코스</a> › <span id="cr-name">코스</span></div>
+    <div class="crumb"><a href="/platform/index.html">Eduino AI</a> › <a href="/platform/index.html#modules">코스</a> › <span id="cr-name">코스</span></div>
     <div class="chead">
       <div class="cic" id="c-ic"></div>
       <div>
@@ -133,7 +133,7 @@
         <div class="chips" id="c-chips"></div>
         <div class="chero-cta">
           <a class="btn btn-primary btn-lg" id="c-start" href="#">체험 시작 →</a>
-          <a class="btn btn-ghost btn-lg" href="sample.html">무료 샘플 먼저 체험</a>
+          <a class="btn btn-ghost btn-lg" href="/platform/sample.html">무료 샘플 먼저 체험</a>
         </div>
       </div>
     </div>
@@ -179,7 +179,7 @@ const ICONS = {
 };
 const COURSES = {
   vision: {
-    name:'비전 · 영상처리 AI', href:'../index.html', audience:'초등~중등',
+    name:'비전 · 영상처리 AI', href:'/index.html', audience:'초등~중등',
     tagline:'카메라로 “보는 AI”. 물체·얼굴·손동작·소리를 인식하고, 내 사진으로 직접 분류 AI를 만들어 봅니다.',
     learn:['카메라 영상에서 물체·얼굴·자세(포즈)를 실시간으로 인식','내 사진을 모아 이미지 분류 AI를 직접 학습','목소리로 소리 분류, 색 추적·영상 효과 체험','AI가 “무엇을 보고 판단하는지” 시각적으로 이해'],
     curriculum:[
@@ -192,7 +192,7 @@ const COURSES = {
     tip:'<b>도입(5분)</b> 객체탐지로 교실 물건을 비춰 흥미 유발 → <b>전개</b> 학생별로 “가위/바위/보” 또는 표정 사진을 모아 분류 AI 제작 → <b>정리</b> 잘못 맞힌 사례로 “데이터가 왜 중요한가” 토론.'
   },
   gesture: {
-    name:'제스처 · 동작 AI', href:'../modules/gesture/index.html', audience:'초등~중등',
+    name:'제스처 · 동작 AI', href:'/modules/gesture/index.html', audience:'초등~중등',
     tagline:'손 관절을 실시간 추적해 가위바위보를 인식하고, 내 제스처를 학습시켜 봅니다.',
     learn:['손 21개 관절을 실시간으로 추적','규칙 기반으로 가위·바위·보 인식','내 제스처를 모아 전이학습으로 분류','학습 곡선·혼동행렬로 결과 확인'],
     curriculum:[
@@ -205,7 +205,7 @@ const COURSES = {
     tip:'손 모양을 다양한 각도·거리로 모을수록 정확도가 올라가요. 반 전체가 같은 제스처를 모아 “데이터 양 = 똑똑함”을 체감시켜 보세요.'
   },
   data: {
-    name:'데이터 · 예측 AI (AIoT)', href:'../modules/data/index.html', audience:'중·고~대학',
+    name:'데이터 · 예측 AI (AIoT)', href:'/modules/data/index.html', audience:'중·고~대학',
     tagline:'표·데이터의 관계를 보고, 예측 모델을 학습시키고, 비슷한 것끼리 자동으로 무리 짓습니다.',
     learn:['데이터의 관계(상관)를 그래프로 관찰','회귀를 경사하강법으로 학습 → 값 예측','비지도 군집화(K-means)로 자동 분류','과적합·일반화 등 핵심 개념 체득'],
     curriculum:[
@@ -218,7 +218,7 @@ const COURSES = {
     tip:'“공부시간↔점수” 같은 친숙한 예시로 시작해, 학생이 직접 점을 찍어 예측선이 따라오는 걸 보여주면 이해가 빨라요.'
   },
   text: {
-    name:'텍스트 · 언어 AI', href:'../modules/text/index.html', audience:'중등~대학',
+    name:'텍스트 · 언어 AI', href:'/modules/text/index.html', audience:'중등~대학',
     tagline:'글을 숫자로 바꿔 비슷한 말을 찾고, 예문을 모아 문장 분류 AI를 직접 학습시킵니다.',
     learn:['문장을 숫자(벡터)로 바꾸는 원리 이해','문장 간 “닮은 정도”를 수치로 비교','분류별 예문을 모아 분류 AI 학습','AI가 어떤 단어를 보고 판단하는지 확인'],
     curriculum:[
@@ -231,7 +231,7 @@ const COURSES = {
     tip:'“칭찬/불평”처럼 대비되는 분류로 시작하면 효과가 또렷해요. 학생이 예문을 직접 추가해 정확도가 오르는 걸 체험시켜 보세요.'
   },
   life: {
-    name:'생활 속 인식 AI', href:'../modules/life/index.html', audience:'초등~중등',
+    name:'생활 속 인식 AI', href:'/modules/life/index.html', audience:'초등~중등',
     tagline:'카메라로 QR·바코드를 읽고, 사진 속 글자를 인식(OCR)합니다. 생활 속 AI를 체험해요.',
     learn:['QR·바코드가 숫자/글자로 복원되는 원리','카메라로 코드를 실시간 스캔','사진 속 글자를 텍스트로 변환(OCR)','교정을 학습해 인식률을 올리는 경험'],
     curriculum:[
@@ -244,7 +244,7 @@ const COURSES = {
     tip:'모듈 안의 “실습용 코드 인쇄” 시트를 미리 출력해 나눠주면 바로 스캔 실습이 가능해요.'
   },
   concept: {
-    name:'머신러닝 개념 실험실', href:'../modules/concept/index.html', audience:'고교~대학',
+    name:'머신러닝 개념 실험실', href:'/modules/concept/index.html', audience:'고교~대학',
     tagline:'결정 경계·과적합, 지도학습 vs 비지도학습을 직접 그려보며 핵심 개념을 익힙니다.',
     learn:['정답(색)을 칠해 분류 경계를 학습','모델 복잡도와 과적합/일반화의 관계','지도 vs 비지도 학습의 차이','데이터로 개념을 “눈으로” 이해'],
     curriculum:[
@@ -275,7 +275,7 @@ document.getElementById('c-curr').innerHTML = c.curriculum.map((u, i) => `<div c
 document.getElementById('c-needs').innerHTML = c.needs.map(n => `<div class="n"><span class="ic">${n[0]}</span><span><b>${n[1]}</b> · ${n[2]}</span></div>`).join('');
 document.getElementById('c-tech').innerHTML = (c.tech || []).map(t => `<span class="tech">${t}</span>`).join('');
 document.getElementById('c-tip').innerHTML = c.tip;
-document.getElementById('c-other').innerHTML = ORDER.filter(k => k !== (COURSES[key] ? key : 'vision')).map(k => `<a href="course.html?c=${k}">${ICONS[k] ? '' : ''}${COURSES[k].name}</a>`).join('');
+document.getElementById('c-other').innerHTML = ORDER.filter(k => k !== (COURSES[key] ? key : 'vision')).map(k => `<a href="/platform/course.html?c=${k}">${ICONS[k] ? '' : ''}${COURSES[k].name}</a>`).join('');
 </script>
 </body>
 </html>
