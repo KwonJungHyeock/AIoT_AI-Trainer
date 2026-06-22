@@ -75,9 +75,14 @@
   .sh .sub { font-size:13px; color:var(--ink-3); font-weight:600; }
 
   /* ── 동작 미리보기 (시뮬레이션) ── */
-  .demo { display:grid; grid-template-columns:1.25fr .75fr; gap:18px; align-items:stretch; }
-  .demo-stage { position:relative; border-radius:var(--r); overflow:hidden; border:1px solid #20242f;
-    background:#0f1320; box-shadow:var(--shadow); aspect-ratio:16/10; }
+  .demo { display:grid; grid-template-columns:1.45fr 1fr; gap:18px; align-items:stretch; }
+  .demo-main { display:flex; flex-direction:column; gap:10px; }
+  .demo-feats { display:flex; gap:7px; flex-wrap:wrap; }
+  .dfeat { font-size:12.5px; font-weight:700; padding:7px 13px; border-radius:999px; border:1px solid var(--line-2); background:#fff; color:var(--ink-2); box-shadow:var(--shadow-sm); transition:.15s; }
+  .dfeat:hover:not(.on) { border-color:var(--primary-line); color:var(--primary-ink); }
+  .dfeat.on { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .demo-stage { position:relative; flex:1; min-height:264px; border-radius:var(--r); overflow:hidden; border:1px solid #20242f;
+    background:#0f1320; box-shadow:var(--shadow); }
   .demo-stage canvas { display:block; width:100%; height:100%; }
   .demo-stage .live { position:absolute; top:12px; right:12px; display:inline-flex; align-items:center; gap:6px;
     font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; color:#fff; background:rgba(0,0,0,.4);
@@ -96,7 +101,7 @@
   .pconn { width:2px; height:16px; margin-left:19px; background:var(--line-2); position:relative; overflow:hidden; }
   .pconn::after { content:''; position:absolute; left:-2px; width:6px; height:6px; border-radius:50%; background:var(--primary); top:0; animation:pdrop 1.6s linear infinite; }
   @keyframes pdrop { 0%{top:-6px;opacity:0} 25%{opacity:1} 75%{opacity:1} 100%{top:16px;opacity:0} }
-  .demo-cap { background:linear-gradient(180deg,var(--primary-soft),#fff); border:1px solid var(--primary-line); border-radius:var(--r); padding:14px 16px; font-size:13.5px; color:var(--ink-2); line-height:1.65; }
+  .demo-cap { flex:1; display:flex; align-items:center; background:linear-gradient(180deg,var(--primary-soft),#fff); border:1px solid var(--primary-line); border-radius:var(--r); padding:14px 16px; font-size:13.5px; color:var(--ink-2); line-height:1.65; }
   .demo-cap b { color:var(--primary-ink); }
 
   .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
@@ -120,7 +125,7 @@
   .flow-node:nth-child(1) { animation:nodeglow 4.5s infinite; }
   .flow-node:nth-child(3) { animation:nodeglow 4.5s infinite 1.5s; }
   .flow-node:nth-child(5) { animation:nodeglow 4.5s infinite 3s; }
-  @keyframes nodeglow { 0%,100%,33%{ box-shadow:var(--shadow-sm); transform:translateY(0); } 6%,27%{ box-shadow:0 0 0 2px var(--primary-line), var(--shadow); transform:translateY(-3px); } }
+  @keyframes nodeglow { 0%,100%,33%{ box-shadow:var(--shadow-sm); } 8%,25%{ box-shadow:0 0 0 2px var(--primary-line), var(--shadow); } }
   .flow-arrow { flex:0 0 46px; align-self:center; position:relative; height:3px; background:var(--line-2); border-radius:2px; }
   .flow-arrow::before { content:''; position:absolute; right:-1px; top:50%; transform:translateY(-50%); border-left:7px solid var(--line-2); border-top:5px solid transparent; border-bottom:5px solid transparent; }
   .flow-arrow::after { content:''; position:absolute; top:50%; transform:translateY(-50%); width:8px; height:8px; border-radius:50%; background:var(--primary); animation:flowdot 1.8s linear infinite; }
@@ -191,9 +196,12 @@
 
   <section class="blk"><div class="sh"><h2>동작 미리보기</h2><span class="sub">실제 코스에서 이렇게 동작해요</span></div>
     <div class="demo">
-      <div class="demo-stage">
-        <span class="live">LIVE</span>
-        <canvas id="demo-canvas"></canvas>
+      <div class="demo-main">
+        <div class="demo-feats" id="demo-feats"></div>
+        <div class="demo-stage">
+          <span class="live">LIVE</span>
+          <canvas id="demo-canvas"></canvas>
+        </div>
       </div>
       <div class="demo-side">
         <div class="pipe">
@@ -387,95 +395,197 @@ function screen(ctx,w,h){ ctx.clearRect(0,0,w,h); ctx.fillStyle=PAL.bg; ctx.fill
 const DATA_PTS = Array.from({length:14}, (_,i)=>{ const x=i/13; return [x, clamp(0.14+x*0.72+Math.sin(i*9.73)*0.11, 0.05, 0.95)]; });
 const CPTS = Array.from({length:30}, (_,i)=>{ const a=(Math.sin(i*12.9)*0.5+0.5), b=(Math.cos(i*7.31)*0.5+0.5); return [a*0.9+0.05, b*0.86+0.05, (a+b)>1 ? 1 : 0]; });
 const QR = (()=>{ const n=11, g=[]; for(let r=0;r<n;r++){ const row=[]; for(let cc=0;cc<n;cc++){ row.push((Math.sin(r*3.1+cc*1.73)*Math.cos(cc*2.29-r*0.91))>0 ? 1:0); } g.push(row); } return g; })();
+const CLC = [[.26,.32],[.7,.36],[.46,.76]];
+const CL_PTS = (()=>{ const a=[]; CLC.forEach((c,ci)=>{ for(let i=0;i<8;i++){ a.push([clamp(c[0]+Math.sin(ci*9+i*2.1)*0.1,.04,.96), clamp(c[1]+Math.cos(ci*5+i*1.7)*0.12,.04,.96), ci]); } }); return a; })();
 
-const SCENES = {};
-SCENES.vision = (ctx,w,h,t)=>{ screen(ctx,w,h);
-  const cx=w*0.5+Math.sin(t/1500)*w*0.07, cy=h*0.58, hr=h*0.085;
-  ctx.fillStyle='rgba(255,255,255,.92)';
-  ctx.beginPath(); ctx.arc(cx,cy-h*0.14,hr,0,7); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(cx-h*0.14,cy+h*0.2); ctx.quadraticCurveTo(cx,cy-h*0.04,cx+h*0.14,cy+h*0.2); ctx.closePath(); ctx.fill();
-  const p=(t%4200)/4200;
-  if(p<0.45){ const y=h*(p/0.45); ctx.strokeStyle=PAL.green; ctx.lineWidth=2; ctx.shadowColor=PAL.green; ctx.shadowBlur=12;
-    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); ctx.shadowBlur=0;
-    chip(ctx,12,12,'분석 중…',PAL.dim);
-  } else { const e=ease(clamp((p-0.45)/0.32,0,1));
-    const bx=cx-h*0.18, by=cy-h*0.26, bw=h*0.36, bh=h*0.5;
-    ctx.strokeStyle=PAL.green; ctx.lineWidth=2.5; rr(ctx,bx,by,bw,bh,8); ctx.stroke();
-    chip(ctx,bx,by-26,'사람  '+Math.round(92*e)+'%',PAL.green);
-    bar(ctx,12,h-20,w-24,0.92*e,PAL.green); }
-};
-SCENES.gesture = (ctx,w,h,t)=>{ screen(ctx,w,h);
-  const poses=[[.15,.1,.1,.1,.1],[1,1,1,1,1],[.15,1,1,.15,.15]], names=['✊ 바위','✋ 보','✌ 가위'];
-  const seg=1700, i=Math.floor(t/seg)%3, nx=(i+1)%3, k=ease(clamp(((t%seg)/seg-0.6)/0.4,0,1));
-  const px=w*0.5, py=h*0.82, pr=h*0.1;
+function drawPill(ctx,cx,y,txt){ ctx.font='600 14px Pretendard,sans-serif'; ctx.textBaseline='middle'; ctx.textAlign='left';
+  const tw=ctx.measureText(txt).width, pad=12, bh=30, x=cx-(tw+pad*2)/2;
+  ctx.fillStyle='rgba(255,255,255,.1)'; ctx.strokeStyle='rgba(255,255,255,.25)'; ctx.lineWidth=1.5; rr(ctx,x,y-bh/2,tw+pad*2,bh,8); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#fff'; ctx.fillText(txt,x+pad,y); }
+function drawHand(ctx,px,py,pr,pose){
   ctx.fillStyle='rgba(240,71,58,.16)'; ctx.strokeStyle=PAL.red; ctx.lineWidth=2;
   ctx.beginPath(); ctx.arc(px,py,pr,0,7); ctx.fill(); ctx.stroke();
-  for(let f=0;f<5;f++){ const ang=-Math.PI/2+(f-2)*0.46, ext=poses[i][f]*(1-k)+poses[nx][f]*k, len=pr*(0.5+ext*1.9);
+  for(let f=0;f<5;f++){ const ang=-Math.PI/2+(f-2)*0.46, len=pr*(0.5+pose[f]*1.9);
     const jx=px+Math.cos(ang)*pr, jy=py+Math.sin(ang)*pr, tx=px+Math.cos(ang)*(pr+len), ty=py+Math.sin(ang)*(pr+len), mx=(jx+tx)/2, my=(jy+ty)/2;
     ctx.strokeStyle=PAL.red; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(jx,jy); ctx.lineTo(mx,my); ctx.lineTo(tx,ty); ctx.stroke();
-    [[jx,jy],[mx,my],[tx,ty]].forEach(pt=>{ ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(pt[0],pt[1],3,0,7); ctx.fill(); }); }
-  chip(ctx,12,12,names[i],PAL.red);
+    [[jx,jy],[mx,my],[tx,ty]].forEach(p=>{ ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(p[0],p[1],3,0,7); ctx.fill(); }); } }
+
+const RPS = [[.15,.1,.1,.1,.1],[1,1,1,1,1],[.15,1,1,.15,.15]];
+const SCENES = {};
+
+/* ── 비전 ── */
+SCENES.v_detect = (ctx,w,h,t)=>{ screen(ctx,w,h);
+  const objs=[{x:.14,y:.46,w:.3,h:.38,c:PAL.blue,l:'노트북 94%'},{x:.56,y:.26,w:.18,h:.24,c:PAL.amber,l:'컵 88%'},{x:.62,y:.6,w:.24,h:.28,c:PAL.green,l:'책 81%'}];
+  objs.forEach((o,i)=>{ const X=o.x*w,Y=o.y*h,W=o.w*w,H=o.h*h;
+    ctx.fillStyle='rgba(255,255,255,.09)'; rr(ctx,X,Y,W,H,8); ctx.fill();
+    const ap=clamp((t-300-i*450)/500,0,1); if(ap<=0) return;
+    ctx.save(); ctx.globalAlpha=ap; ctx.strokeStyle=o.c; ctx.lineWidth=2.5; rr(ctx,X,Y,W,H,8); ctx.stroke(); chip(ctx,X,Y-24,o.l,o.c); ctx.restore(); });
+  chip(ctx,12,12,'객체 탐지 · COCO-SSD',PAL.dim);
 };
-SCENES.data = (ctx,w,h,t)=>{ screen(ctx,w,h);
+SCENES.v_face = (ctx,w,h,t)=>{ screen(ctx,w,h);
+  const cx=w*0.5+Math.sin(t/1400)*w*0.05, cy=h*0.52, R=h*0.24;
+  ctx.fillStyle='rgba(255,255,255,.9)'; ctx.beginPath(); ctx.ellipse(cx,cy,R*0.78,R,0,0,7); ctx.fill();
+  ctx.strokeStyle=PAL.green; ctx.lineWidth=2.5; rr(ctx,cx-R*0.98,cy-R*1.18,R*1.96,R*2.36,10); ctx.stroke();
+  chip(ctx,cx-R*0.98,cy-R*1.18-24,'얼굴 1명',PAL.green);
+  ctx.fillStyle=PAL.red; [[-.34,-.22],[.34,-.22],[0,.06],[-.22,.42],[.22,.42],[0,.48]].forEach(p=>{ ctx.beginPath(); ctx.arc(cx+p[0]*R*1.5,cy+p[1]*R,3,0,7); ctx.fill(); });
+  chip(ctx,12,12,'얼굴 검출 · BlazeFace',PAL.dim);
+};
+SCENES.v_pose = (ctx,w,h,t)=>{ screen(ctx,w,h);
+  const cx=w*0.5, top=h*0.18, u=h*0.12, sw=Math.sin(t/700)*0.5;
+  const J={head:[cx,top],neck:[cx,top+u],sl:[cx-u*0.95,top+u*1.1],sr:[cx+u*0.95,top+u*1.1],
+    el:[cx-u*1.4,top+u*2+sw*u],er:[cx+u*1.4,top+u*2-sw*u],hip:[cx,top+u*3.1],
+    kl:[cx-u*0.55,top+u*4.1],kr:[cx+u*0.55,top+u*4.1],fl:[cx-u*0.65,top+u*5.1],fr2:[cx+u*0.65,top+u*5.1]};
+  const bones=[['head','neck'],['neck','sl'],['neck','sr'],['sl','el'],['sr','er'],['neck','hip'],['hip','kl'],['hip','kr'],['kl','fl'],['kr','fr2']];
+  ctx.strokeStyle=PAL.blue; ctx.lineWidth=3; bones.forEach(b=>{ ctx.beginPath(); ctx.moveTo(J[b[0]][0],J[b[0]][1]); ctx.lineTo(J[b[1]][0],J[b[1]][1]); ctx.stroke(); });
+  ctx.fillStyle='#fff'; Object.values(J).forEach(p=>{ ctx.beginPath(); ctx.arc(p[0],p[1],4,0,7); ctx.fill(); });
+  chip(ctx,12,12,'자세 추정 · MoveNet',PAL.dim);
+};
+SCENES.v_classify = (ctx,w,h,t)=>{ screen(ctx,w,h);
+  const is=Math.min(w*0.3,h*0.5), ix=w*0.08, iy=h*0.5-is/2;
+  ctx.fillStyle='rgba(255,255,255,.1)'; ctx.strokeStyle='rgba(255,255,255,.3)'; ctx.lineWidth=2; rr(ctx,ix,iy,is,is,12); ctx.fill(); ctx.stroke();
+  const fc=ix+is/2, fcy=iy+is*0.54, fr=is*0.26;
+  ctx.fillStyle='rgba(255,255,255,.88)';
+  ctx.beginPath(); ctx.moveTo(fc-fr,fcy-fr*0.5); ctx.lineTo(fc-fr*0.6,fcy-fr*1.5); ctx.lineTo(fc-fr*0.1,fcy-fr*0.7); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(fc+fr,fcy-fr*0.5); ctx.lineTo(fc+fr*0.6,fcy-fr*1.5); ctx.lineTo(fc+fr*0.1,fcy-fr*0.7); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.arc(fc,fcy,fr,0,7); ctx.fill();
+  const cats=[['고양이',.92,PAL.green],['강아지',.05,PAL.blue],['토끼',.03,PAL.blue]];
+  const bx=ix+is+w*0.09, bw=w*0.32, e=ease(clamp((t-300)/800,0,1));
+  ctx.font='600 12px Pretendard,sans-serif'; ctx.textBaseline='alphabetic';
+  cats.forEach((ct,i)=>{ const y=iy+14+i*h*0.18;
+    ctx.textAlign='left'; ctx.fillStyle='#fff'; ctx.fillText(ct[0],bx,y-6);
+    ctx.textAlign='right'; ctx.fillStyle=PAL.dim; ctx.fillText(Math.round(ct[1]*e*100)+'%',bx+bw,y-6);
+    bar(ctx,bx,y,bw,ct[1]*e,ct[2]); });
+  ctx.textAlign='left'; chip(ctx,12,12,'이미지 분류 · MobileNet',PAL.dim);
+};
+
+/* ── 제스처 ── */
+SCENES.g_track = (ctx,w,h,t)=>{ screen(ctx,w,h);
+  const seg=1500, i=Math.floor(t/seg)%3, nx=(i+1)%3, k=ease(clamp(((t%seg)/seg-0.6)/0.4,0,1));
+  const pose=RPS[i].map((v,f)=>v*(1-k)+RPS[nx][f]*k);
+  drawHand(ctx,w*0.5,h*0.78,h*0.11,pose);
+  chip(ctx,12,12,'손 관절 21점 추적',PAL.dim);
+};
+SCENES.g_rps = (ctx,w,h,t)=>{ screen(ctx,w,h);
+  const names=['바위','보','가위'], ic=['✊','✋','✌'], i=Math.floor(t/1500)%3;
+  drawHand(ctx,w*0.3,h*0.74,h*0.11,RPS[i]);
+  ctx.fillStyle='#fff'; ctx.font='800 30px Pretendard,sans-serif'; ctx.textBaseline='middle'; ctx.textAlign='center';
+  ctx.fillText(ic[i]+' '+names[i], w*0.66, h*0.44); ctx.textAlign='left';
+  chip(ctx,w*0.66-46,h*0.44+26,'확신도 '+(90+i*2)+'%',PAL.green);
+  chip(ctx,12,12,'가위바위보 인식',PAL.dim);
+};
+
+/* ── 데이터 ── */
+SCENES.d_reg = (ctx,w,h,t)=>{ screen(ctx,w,h);
   const ox=w*0.12, oy=h*0.84, ax=w*0.78, ah=oy-h*0.14;
-  ctx.strokeStyle='rgba(255,255,255,.25)'; ctx.lineWidth=1.5;
-  ctx.beginPath(); ctx.moveTo(ox,oy-ah); ctx.lineTo(ox,oy); ctx.lineTo(ox+ax,oy); ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,.25)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(ox,oy-ah); ctx.lineTo(ox,oy); ctx.lineTo(ox+ax,oy); ctx.stroke();
   ctx.fillStyle=PAL.blue; DATA_PTS.forEach(p=>{ ctx.beginPath(); ctx.arc(ox+p[0]*ax, oy-p[1]*ah, 4, 0, 7); ctx.fill(); });
-  const e=ease(clamp((t%4400)/2200,0,1)), m=0.18+(0.74-0.18)*e, b=0.4-0.1*e;
-  ctx.strokeStyle=PAL.red; ctx.lineWidth=2.5;
-  ctx.beginPath(); ctx.moveTo(ox, oy-clamp(b,0,1)*ah); ctx.lineTo(ox+ax, oy-clamp(b+m,0,1)*ah); ctx.stroke();
-  chip(ctx,12,12,'예측선 학습  '+Math.round(e*100)+'%',PAL.red);
+  const e=ease(clamp((t-300)/2000,0,1)), m=0.18+(0.74-0.18)*e, b=0.4-0.1*e;
+  ctx.strokeStyle=PAL.red; ctx.lineWidth=2.5; ctx.beginPath(); ctx.moveTo(ox, oy-clamp(b,0,1)*ah); ctx.lineTo(ox+ax, oy-clamp(b+m,0,1)*ah); ctx.stroke();
+  chip(ctx,12,12,'회귀 예측  학습 '+Math.round(e*100)+'%',PAL.red);
 };
-SCENES.text = (ctx,w,h,t)=>{ screen(ctx,w,h);
-  ctx.font='600 14px Pretendard,sans-serif'; ctx.textBaseline='middle'; ctx.textAlign='left';
-  const s='“고양이가 귀여워”', tw=ctx.measureText(s).width, pad=12;
-  ctx.fillStyle='rgba(255,255,255,.1)'; ctx.strokeStyle='rgba(255,255,255,.25)'; ctx.lineWidth=1.5;
-  rr(ctx,w*0.5-(tw+pad*2)/2,h*0.16,tw+pad*2,30,8); ctx.fill(); ctx.stroke();
-  ctx.fillStyle='#fff'; ctx.fillText(s, w*0.5-(tw+pad*2)/2+pad, h*0.16+15);
-  const n=7, gap=w*0.5/n, bx=w*0.27, base=h*0.74;
-  for(let i=0;i<n;i++){ const bh=(0.28+0.6*Math.abs(Math.sin(t/620+i*1.1)))*h*0.36, x=bx+i*gap;
-    ctx.fillStyle=PAL.blue; rr(ctx,x,base-bh,gap*0.6,bh,3); ctx.fill(); }
+SCENES.d_cluster = (ctx,w,h,t)=>{ screen(ctx,w,h);
+  const cols=[PAL.red,PAL.blue,PAL.green], e=clamp((t-400)/1100,0,1);
+  CL_PTS.forEach(p=>{ ctx.fillStyle = e<=0 ? 'rgba(255,255,255,.5)' : cols[p[2]];
+    ctx.beginPath(); ctx.arc(w*0.1+p[0]*w*0.8, h*0.12+p[1]*h*0.74, 4, 0, 7); ctx.fill(); });
+  if(e>0){ CLC.forEach((cc,i)=>{ const x=w*0.1+cc[0]*w*0.8, y=h*0.12+cc[1]*h*0.74; ctx.strokeStyle=cols[i]; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(x-7,y); ctx.lineTo(x+7,y); ctx.moveTo(x,y-7); ctx.lineTo(x,y+7); ctx.stroke(); }); }
+  chip(ctx,12,12,'군집 · K-means (k=3)',PAL.dim);
+};
+
+/* ── 텍스트 ── */
+SCENES.t_sim = (ctx,w,h,t)=>{ screen(ctx,w,h);
+  drawPill(ctx,w*0.5,h*0.18,'“고양이가 귀여워”');
+  const n=7, gap=w*0.52/n, bx=w*0.24, base=h*0.72;
+  for(let i=0;i<n;i++){ const bh=(0.28+0.6*Math.abs(Math.sin(t/620+i*1.1)))*h*0.34; ctx.fillStyle=PAL.blue; rr(ctx,bx+i*gap,base-bh,gap*0.6,bh,3); ctx.fill(); }
   const sim=0.62+0.33*Math.abs(Math.sin(t/1900));
-  chip(ctx,12,12,'유사도 '+sim.toFixed(2),PAL.green);
+  ctx.fillStyle=PAL.dim; ctx.font='600 11px Pretendard,sans-serif'; ctx.textBaseline='alphabetic'; ctx.textAlign='right'; ctx.fillText('유사도 '+sim.toFixed(2),w-12,h-26); ctx.textAlign='left';
   bar(ctx,12,h-20,w-24,sim,PAL.green);
+  chip(ctx,12,12,'문장 → 벡터',PAL.dim);
 };
-SCENES.life = (ctx,w,h,t)=>{ screen(ctx,w,h);
+SCENES.t_classify = (ctx,w,h,t)=>{ screen(ctx,w,h);
+  drawPill(ctx,w*0.5,h*0.2,'“정말 마음에 들어요”');
+  const e=ease(clamp((t-300)/800,0,1)), cats=[['긍정',.91,PAL.green],['부정',.09,PAL.red]], bw=w*0.6, bx=w*0.2;
+  ctx.font='600 13px Pretendard,sans-serif'; ctx.textBaseline='alphabetic';
+  cats.forEach((ct,i)=>{ const y=h*0.52+i*h*0.22;
+    ctx.textAlign='left'; ctx.fillStyle='#fff'; ctx.fillText(ct[0],bx,y-7);
+    ctx.textAlign='right'; ctx.fillStyle=PAL.dim; ctx.fillText(Math.round(ct[1]*e*100)+'%',bx+bw,y-7);
+    bar(ctx,bx,y,bw,ct[1]*e,ct[2]); });
+  ctx.textAlign='left'; chip(ctx,12,12,'문장 분류 · 감정',PAL.dim);
+};
+
+/* ── 생활 ── */
+SCENES.l_qr = (ctx,w,h,t)=>{ screen(ctx,w,h);
   const s=Math.min(w,h)*0.5, qx=w*0.5-s/2, qy=h*0.4-s/2, cs=s/11;
-  ctx.fillStyle='#fff';
-  QR.forEach((row,r)=>row.forEach((v,cc)=>{ if(v) ctx.fillRect(qx+cc*cs, qy+r*cs, cs+0.5, cs+0.5); }));
+  ctx.fillStyle='#fff'; QR.forEach((row,r)=>row.forEach((v,cc)=>{ if(v) ctx.fillRect(qx+cc*cs, qy+r*cs, cs+0.5, cs+0.5); }));
   const fnd=(x,y)=>{ ctx.fillStyle='#fff'; ctx.fillRect(x,y,cs*3,cs*3); ctx.fillStyle=PAL.bg; ctx.fillRect(x+cs*0.5,y+cs*0.5,cs*2,cs*2); ctx.fillStyle='#fff'; ctx.fillRect(x+cs,y+cs,cs,cs); };
   fnd(qx,qy); fnd(qx+s-cs*3,qy); fnd(qx,qy+s-cs*3);
-  const p=(t%4000)/4000;
+  const p=(t%3600)/3600;
   if(p<0.6){ const y=qy+s*(p/0.6); ctx.strokeStyle=PAL.red; ctx.lineWidth=2; ctx.shadowColor=PAL.red; ctx.shadowBlur=10;
     ctx.beginPath(); ctx.moveTo(qx,y); ctx.lineTo(qx+s,y); ctx.stroke(); ctx.shadowBlur=0; chip(ctx,12,12,'스캔 중…',PAL.dim);
   } else { chip(ctx,12,12,'✓ 해독 완료',PAL.green);
     ctx.font='600 14px Pretendard,sans-serif'; ctx.fillStyle='#fff'; ctx.textBaseline='middle'; ctx.textAlign='center';
     ctx.fillText('https://eduino.kr', w*0.5, h*0.9); ctx.textAlign='left'; }
 };
-SCENES.concept = (ctx,w,h,t)=>{ screen(ctx,w,h);
-  CPTS.forEach(p=>{ ctx.fillStyle = p[2] ? 'rgba(240,71,58,.92)' : 'rgba(77,141,255,.92)';
-    ctx.beginPath(); ctx.arc(w*0.1+p[0]*w*0.8, h*0.12+p[1]*h*0.74, 4, 0, 7); ctx.fill(); });
+SCENES.l_ocr = (ctx,w,h,t)=>{ screen(ctx,w,h);
+  const dx=w*0.22, dy=h*0.16, dw=w*0.56, dh=h*0.58;
+  ctx.fillStyle='rgba(255,255,255,.93)'; rr(ctx,dx,dy,dw,dh,10); ctx.fill();
+  ctx.fillStyle='rgba(20,22,31,.18)'; for(let i=0;i<5;i++){ rr(ctx,dx+18,dy+22+i*dh*0.16,dw-36-(i===4?dw*0.32:0),8,4); ctx.fill(); }
+  const p=(t%3400)/3400;
+  if(p<0.62){ const y=dy+dh*(p/0.62); ctx.fillStyle='rgba(240,71,58,.16)'; ctx.fillRect(dx,y-9,dw,18);
+    ctx.strokeStyle=PAL.red; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(dx,y); ctx.lineTo(dx+dw,y); ctx.stroke();
+    chip(ctx,12,12,'글자 인식 중…',PAL.dim);
+  } else { ctx.fillStyle=PAL.green; ctx.font='600 14px Pretendard,sans-serif'; ctx.textBaseline='middle'; ctx.textAlign='center';
+    ctx.fillText('“오늘 급식: 카레라이스”', w*0.5, dy+dh+22); ctx.textAlign='left'; chip(ctx,12,12,'✓ 텍스트 변환 완료',PAL.green); }
+};
+
+/* ── 개념 ── */
+function cpts(ctx,w,h){ CPTS.forEach(p=>{ ctx.fillStyle = p[2] ? 'rgba(240,71,58,.92)' : 'rgba(77,141,255,.92)';
+  ctx.beginPath(); ctx.arc(w*0.1+p[0]*w*0.8, h*0.12+p[1]*h*0.74, 4, 0, 7); ctx.fill(); }); }
+SCENES.c_boundary = (ctx,w,h,t)=>{ screen(ctx,w,h); cpts(ctx,w,h);
   const curv=Math.sin(t/1500), tilt=Math.sin(t/2100);
   ctx.strokeStyle=PAL.green; ctx.lineWidth=2.5; ctx.beginPath();
-  for(let x=0;x<=w;x+=8){ const nx=x/w; const y=h*0.5 + (nx-0.5)*h*0.42*tilt + Math.sin(nx*Math.PI*1.6)*h*0.14*curv;
-    x===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y); } ctx.stroke();
+  for(let x=0;x<=w;x+=8){ const nx=x/w, y=h*0.5 + (nx-0.5)*h*0.42*tilt + Math.sin(nx*Math.PI*1.6)*h*0.14*curv; x===0?ctx.moveTo(x,y):ctx.lineTo(x,y); } ctx.stroke();
   chip(ctx,12,12,'결정 경계  정확도 '+Math.round(86+9*Math.abs(Math.sin(t/1700)))+'%',PAL.green);
+};
+SCENES.c_overfit = (ctx,w,h,t)=>{ screen(ctx,w,h); cpts(ctx,w,h);
+  ctx.strokeStyle=PAL.amber; ctx.lineWidth=2.5; ctx.beginPath();
+  for(let x=0;x<=w;x+=5){ const nx=x/w, y=h*0.5 + (nx-0.5)*h*0.28 + Math.sin(nx*Math.PI*8 + t/600)*h*0.16; x===0?ctx.moveTo(x,y):ctx.lineTo(x,y); } ctx.stroke();
+  chip(ctx,12,12,'과적합 · 경계가 점에 달라붙음',PAL.amber);
+};
+
+const FEATS = {
+  vision:[{id:'v_detect',label:'객체 탐지'},{id:'v_face',label:'얼굴 검출'},{id:'v_pose',label:'자세 추정'},{id:'v_classify',label:'이미지 분류'}],
+  gesture:[{id:'g_track',label:'손 관절 추적'},{id:'g_rps',label:'가위바위보'}],
+  data:[{id:'d_reg',label:'회귀 예측'},{id:'d_cluster',label:'군집 K-means'}],
+  text:[{id:'t_sim',label:'문장 유사도'},{id:'t_classify',label:'문장 분류'}],
+  life:[{id:'l_qr',label:'QR·바코드'},{id:'l_ocr',label:'글자 인식'}],
+  concept:[{id:'c_boundary',label:'결정 경계'},{id:'c_overfit',label:'과적합 비교'}],
 };
 
 (function startDemo(){
+  const feats = FEATS[dkey] || FEATS.vision;
+  const now0 = () => (window.performance && performance.now) ? performance.now() : Date.now();
+  let cur = 0, tBase = now0();
+  const chipsEl = document.getElementById('demo-feats');
+  function hi(){ if(!chipsEl) return; const k=chipsEl.children; for(let i=0;i<k.length;i++) k[i].classList.toggle('on', i===cur); }
+  if(chipsEl){
+    chipsEl.innerHTML = feats.map((f,i)=>`<button type="button" class="dfeat${i===0?' on':''}" data-i="${i}">${f.label}</button>`).join('');
+    chipsEl.querySelectorAll('.dfeat').forEach(b=>b.addEventListener('click',()=>{ cur=+b.dataset.i; tBase=now0(); hi(); }));
+  }
   const cv = document.getElementById('demo-canvas');
   if(!cv || !cv.getContext) return;
   const ctx = cv.getContext('2d');
-  if(!ctx) return;                       // jsdom 등 캔버스 미지원 환경 가드
-  const scene = SCENES[c.demo.scene] || SCENES.vision;
+  if(!ctx) return;                       // jsdom 등 캔버스 미지원 환경 가드 (탭은 위에서 이미 렌더)
   const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   function size(){ const r=cv.getBoundingClientRect(); const dpr=Math.min(window.devicePixelRatio||1,2);
     cv.width=Math.max(1,r.width*dpr); cv.height=Math.max(1,r.height*dpr); ctx.setTransform(dpr,0,0,dpr,0,0); }
   size(); window.addEventListener('resize', size);
-  const t0 = (window.performance && performance.now) ? performance.now() : Date.now();
-  function frame(now){ const r=cv.getBoundingClientRect(); scene(ctx, r.width, r.height, now-t0);
-    if(!reduce && window.requestAnimationFrame) requestAnimationFrame(frame); }
-  if(window.requestAnimationFrame) requestAnimationFrame(frame); else { const r=cv.getBoundingClientRect(); scene(ctx,r.width,r.height,1800); }
+  function draw(localT){ const r=cv.getBoundingClientRect(); (SCENES[feats[cur].id]||SCENES.v_detect)(ctx, r.width, r.height, localT); }
+  function frame(now){ if(now-tBase>3600){ cur=(cur+1)%feats.length; tBase=now; hi(); } draw(now-tBase);
+    if(window.requestAnimationFrame) requestAnimationFrame(frame); }
+  if(reduce) draw(2000);
+  else if(window.requestAnimationFrame) requestAnimationFrame(frame);
+  else draw(2000);
 })();
 </script>
 </body>
