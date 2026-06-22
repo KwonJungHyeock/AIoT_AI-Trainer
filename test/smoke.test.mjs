@@ -116,10 +116,11 @@ test('추론 1틱이 막대와 최상위 예측을 갱신한다 (이미지 탭)'
 test('음성 녹음 관리 모달: 목록 표시 + 개별 삭제', async () => {
   const { window, doc } = await loadApp();
   doc.querySelector('.nav-item[data-feature="audio"]').click();
-  // 첫 음성 클래스 선택 후 2회 녹음
-  doc.querySelectorAll('#a-class-list .class-item')[0].click();
-  await window.audioCapture();
-  await window.audioCapture();
+  await window.audioToggleMic(); // 마이크 켜기(스텁) → 클래스별 녹음 버튼 활성
+  // 첫 음성 클래스에 2회 녹음 (클래스 카드의 녹음 버튼 경로)
+  const aId = +doc.querySelectorAll('#a-class-list .class-item')[0].dataset.id;
+  await window.audioCaptureFor(aId);
+  await window.audioCaptureFor(aId);
   // 카운트 배지 클릭 → 녹음 모달 열림
   doc.querySelector('#a-class-list .class-item .class-count').click();
   assert.equal(doc.getElementById('audio-rec-overlay').classList.contains('on'), true);

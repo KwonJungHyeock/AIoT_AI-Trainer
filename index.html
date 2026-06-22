@@ -1191,7 +1191,7 @@
         <div class="card-b">
           <div id="p-class-list"></div>
           <button class="btn ghost" id="p-add-class" style="width:100%;margin-top:6px">+ 클래스 추가</button>
-          <p class="hint">동작을 만들고 클래스를 클릭하여 그 동작 자세로 데이터를 모으세요. (예: 팔 들기, 앉기, T자세)</p>
+          <p class="hint">동작을 만들고 각 클래스의 <b>📷 촬영</b>을 누르세요. <b>탭</b>=1장, <b>길게</b>=연속. (예: 팔 들기, 앉기, T자세)</p>
         </div>
       </aside>
 
@@ -1224,7 +1224,6 @@
 
           <div class="cam-controls">
             <button class="btn" id="p-cam-toggle">카메라 켜기</button>
-            <button class="btn blue" id="p-capture" disabled>자세 캡처 (꾹 누르면 연속)</button>
           </div>
         </div>
 
@@ -1311,7 +1310,7 @@
         <div class="card-b">
           <div id="a-class-list"></div>
           <button class="btn ghost" id="a-add-class" style="width:100%;margin-top:6px">+ 클래스 추가</button>
-          <p class="hint">클래스를 만들고 선택해 마이크에 1초씩 녹음합니다. (예: 켜, 꺼, 시작)</p>
+          <p class="hint">클래스를 만들고 각 클래스의 <b>🎤 녹음</b>을 누르면 1초씩 녹음됩니다. (예: 켜, 꺼, 시작)</p>
         </div>
       </aside>
 
@@ -1343,7 +1342,6 @@
 
           <div class="cam-controls">
             <button class="btn" id="a-mic-toggle">마이크 켜기</button>
-            <button class="btn blue" id="a-capture" disabled>1초 녹음</button>
           </div>
         </div>
 
@@ -2238,7 +2236,7 @@ const pEls = {
   video: $('p-webcam'), camOverlay: $('p-cam-overlay'),
   canvas: $('p-pose-overlay'),
   capTargetName: $('p-cap-target-name'), liveDot: $('p-live-dot'),
-  camToggle: $('p-cam-toggle'), capture: $('p-capture'),
+  camToggle: $('p-cam-toggle'),
   epochs: $('p-epochs'), train: $('p-train'),
   trainBar: $('p-train-bar'), trainHint: $('p-train-hint'),
   mEpoch: $('p-m-epoch'), mLoss: $('p-m-loss'), mAcc: $('p-m-acc'),
@@ -2253,8 +2251,12 @@ async function poseInit() {
   pEls.camToggle.addEventListener('click', poseToggleCam);
   pEls.train.addEventListener('click', poseTrain);
   pEls.inferToggle.addEventListener('click', () => pose.inferring ? poseStopInfer() : poseStartInfer());
-  pEls.capture.addEventListener('mousedown', poseStartHold);
-  pEls.capture.addEventListener('touchstart', (e) => { e.preventDefault(); poseStartHold(); });
+  pEls.classList.addEventListener('pointerdown', (e) => {
+    const b = e.target.closest('.cap-btn'); if (!b || b.disabled) return;
+    e.preventDefault(); startPoseClassCapture(+b.dataset.id);
+  });
+  window.addEventListener('pointerup', endPoseClassCapture);
+  window.addEventListener('pointercancel', endPoseClassCapture);
   poseAddClass('클래스 1'); poseAddClass('클래스 2');
 
   if (!window.poseDetection) { console.error('[pose] poseDetection library missing'); return; }
@@ -2291,6 +2293,7 @@ function poseRenderClasses() {
     onSelect: poseSelectClass, onRemove: poseRemoveClass,
     onRename: () => { poseRenderBars(); poseUpdateCapTarget(); },
     onThumbs: null,  // 동작 탭은 갤러리 없음
+    capture: true, capEnabled: () => !!pose.stream,
   });
   poseUpdateCapTarget();
 }
@@ -2306,7 +2309,7 @@ async function poseToggleCam() {
     pose.stream = null; pEls.video.srcObject = null;
     pEls.camOverlay.style.display = 'grid';
     pEls.camToggle.textContent = '카메라 켜기';
-    pEls.capture.disabled = true;
+    poseSetCapEnabled(false);
     pEls.liveDot.classList.remove('on');
     poseStopInfer();
     poseStopOverlayLoop();
@@ -2317,7 +2320,7 @@ async function poseToggleCam() {
     pEls.video.srcObject = pose.stream;
     pEls.camOverlay.style.display = 'none';
     pEls.camToggle.textContent = '카메라 끄기';
-    pEls.capture.disabled = false;
+    poseSetCapEnabled(true);
     pEls.liveDot.classList.add('on');
     poseStartOverlayLoop();
   } catch (e) {
@@ -2400,22 +2403,29 @@ async function poseCaptureSample() {
   const r = await extractKeypoints();
   if (!r) return;
   sel.embeddings.push(r.feat);
-
-  const cv = document.createElement('canvas');
-  cv.width = 64; cv.height = 48;
-  cv.getContext('2d').drawImage(pEls.video, 0, 0, 64, 48);
-  sel.thumbs.push(cv.toDataURL('image/jpeg', 0.6));
-
-  poseRenderClasses(); poseRefresh();
+  poseBumpClassCard(sel); poseRefresh();
+}
+function poseBumpClassCard(c) {
+  const item = pEls.classList.querySelector('.class-item[data-id="' + c.id + '"]');
+  if (!item) { poseRenderClasses(); return; }
+  const n = c.embeddings.length;
+  item.querySelectorAll('.class-count').forEach(e => e.textContent = n);
+  const cb = item.querySelector('.cap-count'); if (cb) cb.textContent = n;
+}
+function poseSetCapEnabled(on) {
+  pEls.classList.querySelectorAll('.cap-btn').forEach(b => b.disabled = !on);
 }
 
+/* 클래스별 촬영 — 카드의 [📷 촬영] 버튼(탭=1장, 길게=연속), 컨테이너 위임 */
 let poseHoldTimer = null;
-function poseStartHold() {
-  if (pEls.capture.disabled) return;
+function startPoseClassCapture(id) {
+  if (!pose.stream) return;
+  poseSelectClass(id);
   poseCaptureSample();
+  clearInterval(poseHoldTimer);
   poseHoldTimer = setInterval(poseCaptureSample, 200);
 }
-function poseEndHold() { clearInterval(poseHoldTimer); poseHoldTimer = null; }
+function endPoseClassCapture() { clearInterval(poseHoldTimer); poseHoldTimer = null; }
 
 async function poseTrain() {
   await trainHead({
@@ -2524,7 +2534,7 @@ const aEls = {
   addClass: $('a-add-class'),
   waveform: $('a-waveform'), micOverlay: $('a-mic-overlay'),
   capTargetName: $('a-cap-target-name'), liveDot: $('a-live-dot'),
-  micToggle: $('a-mic-toggle'), capture: $('a-capture'),
+  micToggle: $('a-mic-toggle'),
   epochs: $('a-epochs'), train: $('a-train'),
   trainBar: $('a-train-bar'), trainHint: $('a-train-hint'),
   mEpoch: $('a-m-epoch'), mLoss: $('a-m-loss'), mAcc: $('a-m-acc'),
@@ -2535,7 +2545,6 @@ const aEls = {
 async function audioInit() {
   aEls.addClass.addEventListener('click', () => audioAddClass());
   aEls.micToggle.addEventListener('click', audioToggleMic);
-  aEls.capture.addEventListener('click', audioCapture);
   aEls.train.addEventListener('click', audioTrain);
   aEls.inferToggle.addEventListener('click', () => audio.inferring ? audioStopInfer() : audioStartInfer());
   audioAddClass('클래스 1'); audioAddClass('클래스 2');
@@ -2562,6 +2571,9 @@ function audioRemoveClass(id) {
   audioRenderClasses(); audioRefresh();
 }
 function audioSelectClass(id) { audio.selectedId = id; setSelectedItem(aEls.classList, id); audioUpdateCapTarget(); }
+function audioSetCapEnabled(on) {
+  aEls.classList.querySelectorAll('.cap-btn').forEach(b => b.disabled = !on || audio.recording);
+}
 
 function audioRenderClasses() {
   aEls.classList.innerHTML = '';
@@ -2589,6 +2601,17 @@ function audioRenderClasses() {
     del.onclick = (e) => { e.stopPropagation(); audioRemoveClass(c.id); };
     row.appendChild(del);
     div.appendChild(row);
+
+    const rec = document.createElement('button');
+    rec.className = 'cap-btn'; rec.type = 'button';
+    const isRec = audio.recording && audio.recordingId === c.id;
+    rec.disabled = !audio.micStream || audio.recording;
+    rec.innerHTML = isRec
+      ? `<span class="ci">●</span><span class="cl">녹음 중…</span>`
+      : `<span class="ci">🎤</span><span class="cl">녹음</span><span class="cap-count">${c.count}</span>`;
+    rec.onclick = (e) => { e.stopPropagation(); audioCaptureFor(c.id); };
+    div.appendChild(rec);
+
     aEls.classList.appendChild(div);
   });
   aEls.classCountMeta.textContent = audio.classes.length + ' / ' + AUDIO_MAX;
@@ -2608,7 +2631,7 @@ async function audioToggleMic() {
     if (audio.wfRaf) { cancelAnimationFrame(audio.wfRaf); audio.wfRaf = null; }
     aEls.micOverlay.style.display = 'grid';
     aEls.micToggle.textContent = '마이크 켜기';
-    aEls.capture.disabled = true;
+    audioSetCapEnabled(false);
     aEls.liveDot.classList.remove('on');
     audioStopInfer();
     return;
@@ -2622,7 +2645,7 @@ async function audioToggleMic() {
     src.connect(audio.analyser);
     aEls.micOverlay.style.display = 'none';
     aEls.micToggle.textContent = '마이크 끄기';
-    aEls.capture.disabled = false;
+    audioSetCapEnabled(true);
     aEls.liveDot.classList.add('on');
     audioWaveformLoop();
   } catch (e) {
@@ -2649,22 +2672,19 @@ function audioWaveformLoop() {
   audio.wfRaf = requestAnimationFrame(audioWaveformLoop);
 }
 
-async function audioCapture() {
-  const sel = audio.classes.find(c => c.id === audio.selectedId);
-  if (!sel || !audio.base) return;
-  if (!audio.transfer) {
-    audio.transfer = audio.base.createTransfer('eddie-audio');
-  }
-  aEls.capture.disabled = true;
-  const oldText = aEls.capture.textContent;
-  aEls.capture.textContent = '녹음 중...';
+async function audioCaptureFor(id) {
+  const sel = audio.classes.find(c => c.id === id);
+  if (!sel || !audio.base || !audio.micStream || audio.recording) return;
+  if (!audio.transfer) audio.transfer = audio.base.createTransfer('eddie-audio');
+  audioSelectClass(id);
+  audio.recording = true; audio.recordingId = id;
+  audioRenderClasses(); // 버튼 비활성 + '녹음 중…' 표시
   try {
     await audio.transfer.collectExample(String(sel.id));
     sel.count++;
-    audioRenderClasses(); audioRefresh();
   } catch (e) { console.error('[audio] collect fail:', e); }
-  aEls.capture.disabled = !audio.micStream;
-  aEls.capture.textContent = oldText;
+  audio.recording = false; audio.recordingId = null;
+  audioRenderClasses(); audioRefresh();
 }
 
 async function audioTrain() {
@@ -3662,9 +3682,6 @@ function selectFeature(key) {
 }
 
 buildSidebar();
-
-window.addEventListener('mouseup', poseEndHold);
-window.addEventListener('touchend', poseEndHold);
 
 document.getElementById('gallery-close').addEventListener('click', closeGallery);
 document.getElementById('gallery-overlay').addEventListener('click', (e) => {
