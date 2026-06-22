@@ -139,6 +139,28 @@
   .learn b { color:var(--primary-ink); }
   .fill { flex:1 1 auto; }
 
+  /* 이론 보강 영역 (인터랙션 카드와 분리) */
+  .theory-sec { grid-column:1 / -1; margin-top:6px; }
+  .thead { display:flex; align-items:baseline; gap:10px; margin:0 0 14px; flex-wrap:wrap; }
+  .thead h2 { margin:0; font-size:18px; font-weight:800; letter-spacing:-.02em; }
+  .thead h2::before { content:''; display:inline-block; width:4px; height:16px; border-radius:2px; background:linear-gradient(180deg,var(--primary-2),var(--primary)); margin-right:9px; vertical-align:-2px; }
+  .thead span { font-size:12.5px; color:var(--ink-3); font-weight:600; }
+  .tgrid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .tcard { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; box-shadow:var(--shadow-sm); transition:.16s; }
+  .tcard:hover { box-shadow:var(--shadow); transform:translateY(-2px); border-color:var(--primary-line); }
+  .tcard .tc-ic { width:38px; height:38px; border-radius:11px; display:grid; place-items:center; font-size:19px; margin-bottom:10px; background:var(--primary-soft); }
+  .tcard:nth-child(1) .tc-ic { background:var(--green-soft); }
+  .tcard:nth-child(2) .tc-ic { background:var(--primary-soft); }
+  .tcard:nth-child(3) .tc-ic { background:var(--amber-soft); }
+  .tcard h3 { margin:0 0 6px; font-size:14.5px; font-weight:800; }
+  .tcard p { margin:0; font-size:13px; color:var(--ink-2); line-height:1.6; }
+  .tcard p b { color:var(--primary-ink); }
+  .tflow { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px; background:var(--card-2); border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
+  .tflow .tf-lab { font-size:11.5px; font-family:var(--mono); font-weight:700; color:var(--ink-3); margin-right:2px; }
+  .tflow .tf { font-size:12.5px; font-weight:700; color:var(--ink-2); background:#fff; border:1px solid var(--line-2); border-radius:8px; padding:6px 11px; }
+  .tflow .tarr { color:var(--ink-4); font-weight:700; }
+  @media (max-width:760px){ .tgrid { grid-template-columns:1fr; } }
+
   .layout[hidden] { display:none; }
   @media (max-width:880px){ .layout{ grid-template-columns:1fr; align-items:start; } }
 </style>
@@ -193,7 +215,28 @@
       <div class="scan-latest idle" id="scan-latest">아직 읽은 코드가 없어요</div>
       <div class="codes-head">스캔 기록 <span class="cnt" id="scan-count">0개</span></div>
       <div class="codes" id="codes"><div class="empty">코드를 비추면 여기에 기록돼요.</div></div>
-      <div class="learn fill"><b>QR·바코드는 어떻게 읽힐까?</b><br>흑백 사각형/막대 패턴은 사실 <b>숫자와 글자를 약속된 규칙으로 그린 그림</b>이에요. 카메라가 패턴을 찾아 밝고 어두운 칸을 0/1로 바꾸고, 오류정정 규칙으로 복원해 원래 정보(주소·숫자)를 읽어냅니다.</div>
+    </div>
+
+    <div class="theory-sec">
+      <div class="thead"><h2>원리와 활용</h2><span>QR·바코드가 정보로 바뀌는 법</span></div>
+      <div class="tgrid">
+        <div class="tcard">
+          <span class="tc-ic">🔍</span>
+          <h3>어떻게 읽힐까?</h3>
+          <p>흑백 칸·막대는 <b>0과 1을 약속된 규칙으로 그린 그림</b>이에요. 카메라가 모서리의 <b>위치인식 사각형</b>으로 방향을 잡고, 밝고 어두운 칸을 숫자로 바꾼 뒤 <b>오류정정</b>으로 복원해요. 그래서 일부가 가려지거나 구겨져도 읽힙니다.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">📊</span>
+          <h3>바코드 vs QR</h3>
+          <p><b>바코드</b>는 1차원(가로 막대)이라 주로 <b>숫자(상품번호)</b>를 담아요. <b>QR</b>은 2차원이라 주소·와이파이·결제처럼 <b>더 많은 정보</b>를 담고 손상에도 강합니다.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">🛒</span>
+          <h3>어디에 쓰일까?</h3>
+          <p>간편결제 · 전자출석 · 도서관 대출 · 물류 재고관리 · 식당 메뉴판 · 택배 송장까지 — 이미 <b>일상 곳곳</b>에서 매일 쓰입니다.</p>
+        </div>
+      </div>
+      <div class="tflow"><span class="tf-lab">처리 흐름</span><span class="tf">패턴 촬영</span><span class="tarr">→</span><span class="tf">칸을 0·1로 변환</span><span class="tarr">→</span><span class="tf">오류정정 복원</span><span class="tarr">→</span><span class="tf">정보 표시</span></div>
     </div>
   </section>
 
@@ -236,7 +279,28 @@
       </div>
       <div class="learned-head">AI가 배운 교정 <b id="ocr-count">0</b>개 <button class="btn-x" id="ocr-clearlearn" hidden>전체 초기화</button></div>
       <div class="chips" id="ocr-chips"><div class="chip-empty">아직 배운 교정이 없어요. 결과를 고치고 [교정 학습]을 눌러보세요.</div></div>
-      <div class="learn fill"><b>교정으로 배우는 OCR</b><br>처음엔 글자를 틀리게 읽을 수 있어요. 사람이 <b>고쳐서 알려주면</b> AI가 그 교정을 기억해 다음부터 같은 실수를 자동으로 바로잡습니다 — 사람의 피드백으로 똑똑해지는 거예요. <br>※ 또렷하고 가깝게, 프레임을 가득 채워 찍을수록 처음 인식부터 정확해져요.</div>
+    </div>
+
+    <div class="theory-sec">
+      <div class="thead"><h2>원리와 활용</h2><span>사진 속 글자가 텍스트로 바뀌는 법</span></div>
+      <div class="tgrid">
+        <div class="tcard">
+          <span class="tc-ic">🔠</span>
+          <h3>어떻게 읽힐까?</h3>
+          <p>사진에서 <b>글자가 있는 영역</b>을 찾고, 글자 하나하나의 <b>모양</b>을 학습된 모델이 문자로 알아맞혀 텍스트로 바꿔요. <b>또렷하고 크게</b> 찍을수록 정확합니다.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">🧠</span>
+          <h3>사람 피드백으로 똑똑해져요</h3>
+          <p>처음엔 틀릴 수 있어요. 사람이 <b>고쳐서 알려주면</b> 그 교정을 기억해 다음부터 같은 실수를 자동으로 바로잡습니다 — <b>피드백으로 배우는 AI</b>예요.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">📄</span>
+          <h3>어디에 쓰일까?</h3>
+          <p>명함→연락처 저장 · 영수증·문서 정리 · 자동차 <b>번호판 인식</b> · 책·간판 번역 · 시각장애인 글자 읽어주기 등에 쓰입니다.</p>
+        </div>
+      </div>
+      <div class="tflow"><span class="tf-lab">처리 흐름</span><span class="tf">글자 영역 찾기</span><span class="tarr">→</span><span class="tf">모양 인식</span><span class="tarr">→</span><span class="tf">텍스트 변환</span><span class="tarr">→</span><span class="tf">교정 학습</span></div>
     </div>
   </section>
 </main>
