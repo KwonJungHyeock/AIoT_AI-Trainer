@@ -52,7 +52,7 @@
   .step.active .n { background:var(--primary-soft); border-color:var(--primary-line); }
   .step .t b { font-size:14.5px; font-weight:700; display:block; } .step .t span { font-size:12px; color:var(--ink-3); }
 
-  .layout { display:grid; grid-template-columns:1.08fr .92fr; gap:18px; align-items:stretch; }
+  .layout { display:grid; grid-template-columns:1.08fr .92fr; gap:18px; align-items:start; }
   .layout[hidden] { display:none; }
   .layout > .card:first-child { align-self:start; }
   .card { background:#fff; border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:18px; display:flex; flex-direction:column; }
@@ -105,6 +105,27 @@
   .learn { background:var(--card-2); border:1px solid var(--line); border-radius:12px; padding:13px 15px; margin-top:14px; font-size:12.5px; color:var(--ink-2); line-height:1.7; }
   .learn b { color:var(--primary-ink); } .learn .ex { display:block; margin-top:7px; color:var(--ink-3); }
   .fill { flex:1 1 auto; }
+  /* 이론 보강 영역 (인터랙션 카드와 분리) */
+  .theory-sec { grid-column:1 / -1; margin-top:6px; }
+  .thead { display:flex; align-items:baseline; gap:10px; margin:0 0 14px; flex-wrap:wrap; }
+  .thead h2 { margin:0; font-size:18px; font-weight:800; letter-spacing:-.02em; }
+  .thead h2::before { content:''; display:inline-block; width:4px; height:16px; border-radius:2px; background:linear-gradient(180deg,var(--primary-2),var(--primary)); margin-right:9px; vertical-align:-2px; }
+  .thead span { font-size:12.5px; color:var(--ink-3); font-weight:600; }
+  .tgrid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .tcard { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; box-shadow:var(--shadow-sm); transition:.16s; }
+  .tcard:hover { box-shadow:var(--shadow); transform:translateY(-2px); border-color:var(--primary-line); }
+  .tcard .tc-ic { width:38px; height:38px; border-radius:11px; display:grid; place-items:center; font-size:19px; margin-bottom:10px; background:var(--primary-soft); }
+  .tcard:nth-child(1) .tc-ic { background:var(--green-soft); }
+  .tcard:nth-child(2) .tc-ic { background:var(--blue-soft); }
+  .tcard:nth-child(3) .tc-ic { background:var(--amber-soft); }
+  .tcard h3 { margin:0 0 6px; font-size:14.5px; font-weight:800; }
+  .tcard p { margin:0; font-size:13px; color:var(--ink-2); line-height:1.6; }
+  .tcard p b { color:var(--primary-ink); }
+  .tflow { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px; background:var(--card-2); border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
+  .tflow .tf-lab { font-size:11.5px; font-family:var(--mono); font-weight:700; color:var(--ink-3); margin-right:2px; }
+  .tflow .tf { font-size:12.5px; font-weight:700; color:var(--ink-2); background:#fff; border:1px solid var(--line-2); border-radius:8px; padding:6px 11px; }
+  .tflow .tarr { color:var(--ink-4); font-weight:700; }
+  @media (max-width:760px){ .tgrid { grid-template-columns:1fr; } }
   @media (max-width:880px){ .layout{ grid-template-columns:1fr; align-items:start; } }
 </style>
 </head>
@@ -157,9 +178,28 @@
         <div class="m"><span>학습 횟수</span><b id="bd-epoch">—</b></div>
         <div class="m"><span>맞힌 비율(정확도)</span><b id="bd-acc" class="acc">—</b></div>
       </div>
-      <div class="learn fill"><b>‘결정 경계’와 ‘과적합’이란?</b><br><b>결정 경계</b>는 AI가 ‘여기부터는 빨강, 저기부터는 파랑’이라고 나눈 선이에요.<br>복잡도가 <b>낮으면</b> 경계가 단순하고 매끈해서 새 데이터에도 잘 맞아요(<b>일반화</b>). <b>너무 높으면</b> 점 하나하나에 억지로 맞춰 경계가 울퉁불퉁해지는데, 이게 <b>과적합</b>이에요 — 학습 데이터는 잘 맞혀도 새 데이터엔 약해요.
-        <span class="ex">복잡도를 1→3으로 바꿔가며 경계 모양과 정확도가 어떻게 변하는지 보세요.</span>
+    </div>
+
+    <div class="theory-sec">
+      <div class="thead"><h2>원리와 활용</h2><span>AI가 데이터를 나누는 기준</span></div>
+      <div class="tgrid">
+        <div class="tcard">
+          <span class="tc-ic">✂️</span>
+          <h3>결정 경계란?</h3>
+          <p>AI가 ‘여기부터는 빨강, 저기부터는 파랑’이라고 나눈 <b>선(경계)</b>이에요. 새 데이터가 어느 쪽에 있는지로 분류를 결정합니다.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">🎯</span>
+          <h3>일반화 vs 과적합</h3>
+          <p>복잡도가 <b>낮으면</b> 경계가 매끈해 새 데이터에도 잘 맞아요(<b>일반화</b>). <b>너무 높으면</b> 점 하나하나에 억지로 맞춰 울퉁불퉁해지는데, 이게 <b>과적합</b> — 시험엔 강해도 실전엔 약해요.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">⚖️</span>
+          <h3>왜 중요할까?</h3>
+          <p>모든 AI 모델은 ‘외운 것’이 아니라 ‘<b>일반화</b>’해야 실제 데이터에서 잘 작동해요. 과적합을 피하는 건 머신러닝의 핵심 과제예요.</p>
+        </div>
       </div>
+      <div class="tflow"><span class="tf-lab">실험 흐름</span><span class="tf">라벨 칠하기</span><span class="tarr">→</span><span class="tf">경계 학습</span><span class="tarr">→</span><span class="tf">복잡도 조절</span><span class="tarr">→</span><span class="tf">일반화↔과적합 비교</span></div>
     </div>
   </section>
 
@@ -186,9 +226,28 @@
         <div class="c sup"><h3>🎯 지도학습</h3><p>정답표(라벨)가 <b>있어요</b>. 사람이 ‘이건 빨강, 저건 파랑’이라 알려주면 AI가 <b>경계를 배워</b> 새 점도 분류해요.<br><br>예) 스팸/정상 메일 분류, 사진 속 동물 이름 맞히기</p></div>
         <div class="c unsup"><h3>🧩 비지도학습</h3><p>정답표가 <b>없어요</b>. AI가 <b>비슷한 것끼리 스스로 묶어요</b>(군집화). 무리에 ‘이름’은 사람이 나중에 붙여요.<br><br>예) 고객을 취향별로 자동 분류, 비슷한 뉴스 묶기</p></div>
       </div>
-      <div class="learn fill"><b>한 줄 정리</b><br><b>지도학습</b> = 정답을 보고 배운다 → ‘분류·예측’. <b>비지도학습</b> = 정답 없이 구조를 발견한다 → ‘군집·요약’.
-        <span class="ex">[정답 없음(비지도)]을 누르면 색(정답)을 무시하고 위치만 보고 다시 묶어요. 원래 정답과 비슷하게 묶일 때도, 다르게 묶일 때도 있어요!</span>
+    </div>
+
+    <div class="theory-sec">
+      <div class="thead"><h2>원리와 활용</h2><span>두 가지 학습 방식의 차이</span></div>
+      <div class="tgrid">
+        <div class="tcard">
+          <span class="tc-ic">🎯</span>
+          <h3>지도학습</h3>
+          <p>정답표(라벨)가 <b>있어요</b>. ‘이건 빨강, 저건 파랑’을 알려주면 AI가 경계를 배워 새 점도 분류해요. → <b>분류·예측</b>에 강함.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">🧩</span>
+          <h3>비지도학습</h3>
+          <p>정답표가 <b>없어요</b>. AI가 위치만 보고 <b>비슷한 것끼리 스스로 묶어요</b>(군집화). 무리의 ‘이름’은 사람이 나중에 붙입니다. → <b>군집·요약</b>.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">🗂️</span>
+          <h3>어디에 쓰일까?</h3>
+          <p>지도: 스팸 분류·사진 인식·예측. 비지도: 고객 취향 그룹·비슷한 뉴스 묶기·이상치 탐지. 상황에 맞게 골라 써요.</p>
+        </div>
       </div>
+      <div class="tflow"><span class="tf-lab">한 줄 정리</span><span class="tf">정답 있음 → 지도(분류·예측)</span><span class="tarr">vs</span><span class="tf">정답 없음 → 비지도(군집·요약)</span></div>
     </div>
   </section>
 </main>
