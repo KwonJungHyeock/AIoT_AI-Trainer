@@ -458,7 +458,7 @@ function scrim(ctx,w,h){ ctx.fillStyle='rgba(15,19,32,.30)'; ctx.fillRect(0,0,w,
 
 /* 실사 배경 (선택적) — 있으면 도식 대신 사진 위에 오버레이, 없으면 도식 폴백.
    확장자(png/jpg/webp) 자동 감지. */
-const DEMO_IMG = { v_detect:'vision-detect', v_face:'vision-face', v_pose:'vision-pose', v_classify:'vision-classify' };
+const DEMO_IMG = { v_detect:'vision-detect', v_face:'vision-face', v_pose:'vision-pose', v_classify:'vision-classify', l_qr:'life-qr', l_ocr:'life-ocr' };
 const IMGS = {};
 if(typeof Image !== 'undefined'){
   Object.keys(DEMO_IMG).forEach(id=>{ const name=DEMO_IMG[id], exts=['webp','jpg']; let i=0;
@@ -625,7 +625,17 @@ SCENES.t_classify = (ctx,w,h,t)=>{ screen(ctx,w,h);
 };
 
 /* ── 생활 ── */
-SCENES.l_qr = (ctx,w,h,t)=>{ screen(ctx,w,h);
+SCENES.l_qr = (ctx,w,h,t)=>{
+  const im=IMGS.l_qr;
+  if(im && im.ok){ coverImg(ctx,im.img,w,h); scrim(ctx,w,h);
+    const p=(t%3600)/3600;
+    if(p<0.6){ const y=h*(p/0.6); ctx.strokeStyle=PAL.red; ctx.lineWidth=2; ctx.shadowColor=PAL.red; ctx.shadowBlur=10;
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); ctx.shadowBlur=0; chip(ctx,12,12,'스캔 중…',PAL.dim);
+    } else { chip(ctx,12,12,'✓ 해독 완료',PAL.green);
+      ctx.font='600 14px Pretendard,sans-serif'; ctx.fillStyle='#fff'; ctx.textBaseline='middle'; ctx.textAlign='center';
+      ctx.fillText('https://eduino.kr', w*0.5, h*0.9); ctx.textAlign='left'; }
+    return; }
+  screen(ctx,w,h);
   const s=Math.min(w,h)*0.5, qx=w*0.5-s/2, qy=h*0.4-s/2, cs=s/11;
   ctx.fillStyle='#fff'; QR.forEach((row,r)=>row.forEach((v,cc)=>{ if(v) ctx.fillRect(qx+cc*cs, qy+r*cs, cs+0.5, cs+0.5); }));
   const fnd=(x,y)=>{ ctx.fillStyle='#fff'; ctx.fillRect(x,y,cs*3,cs*3); ctx.fillStyle=PAL.bg; ctx.fillRect(x+cs*0.5,y+cs*0.5,cs*2,cs*2); ctx.fillStyle='#fff'; ctx.fillRect(x+cs,y+cs,cs,cs); };
@@ -637,7 +647,20 @@ SCENES.l_qr = (ctx,w,h,t)=>{ screen(ctx,w,h);
     ctx.font='600 14px Pretendard,sans-serif'; ctx.fillStyle='#fff'; ctx.textBaseline='middle'; ctx.textAlign='center';
     ctx.fillText('https://eduino.kr', w*0.5, h*0.9); ctx.textAlign='left'; }
 };
-SCENES.l_ocr = (ctx,w,h,t)=>{ screen(ctx,w,h);
+SCENES.l_ocr = (ctx,w,h,t)=>{
+  const im=IMGS.l_ocr;
+  if(im && im.ok){ coverImg(ctx,im.img,w,h); scrim(ctx,w,h);
+    const p=(t%3400)/3400;
+    if(p<0.62){ const y=h*(p/0.62); ctx.fillStyle='rgba(240,71,58,.16)'; ctx.fillRect(0,y-12,w,24);
+      ctx.strokeStyle=PAL.red; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
+      chip(ctx,12,12,'글자 인식 중…',PAL.dim);
+    } else { chip(ctx,12,12,'✓ 텍스트 변환 완료',PAL.green);
+      ctx.font='700 15px Pretendard,sans-serif'; ctx.textBaseline='middle'; ctx.textAlign='center';
+      const txt='“오늘 급식: 카레라이스”', tw=ctx.measureText(txt).width;
+      ctx.fillStyle='rgba(15,19,32,.66)'; rr(ctx, w*0.5-tw/2-10, h*0.86-15, tw+20, 30, 8); ctx.fill();
+      ctx.fillStyle='#fff'; ctx.fillText(txt, w*0.5, h*0.86); ctx.textAlign='left'; }
+    return; }
+  screen(ctx,w,h);
   const dx=w*0.22, dy=h*0.16, dw=w*0.56, dh=h*0.58;
   ctx.fillStyle='rgba(255,255,255,.93)'; rr(ctx,dx,dy,dw,dh,10); ctx.fill();
   ctx.fillStyle='rgba(20,22,31,.18)'; for(let i=0;i<5;i++){ rr(ctx,dx+18,dy+22+i*dh*0.16,dw-36-(i===4?dw*0.32:0),8,4); ctx.fill(); }
