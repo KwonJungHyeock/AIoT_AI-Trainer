@@ -168,6 +168,19 @@
   .quest-dialog .btn-skip { background:#fff; border:1px solid var(--line-2); color:var(--ink-2); border-radius:12px; padding:13px 20px; font-size:14px; font-weight:700; cursor:pointer; }
   .quest-replay { position:fixed; right:18px; bottom:18px; z-index:60; background:#fff; border:1px solid var(--line-2); border-radius:999px; padding:10px 16px; font-size:13px; font-weight:700; color:var(--ink-2); box-shadow:var(--shadow); cursor:pointer; display:none; align-items:center; gap:6px; }
   .quest-replay.on { display:inline-flex; }
+  .q-top { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .q-badge { font-size:10.5px; font-weight:800; color:var(--primary-ink); background:var(--primary-soft); border:1px solid var(--primary-line); border-radius:999px; padding:3px 9px; white-space:nowrap; transition:.2s; }
+  .quest-card.done .q-badge { color:var(--green); background:var(--green-soft); border-color:rgba(17,160,111,.35); }
+  .q-pbar { height:7px; border-radius:6px; background:var(--bg-soft); overflow:hidden; margin:12px 0 2px; }
+  .q-pbar i { display:block; height:100%; width:0; border-radius:6px; background:linear-gradient(90deg,var(--primary-2),var(--primary)); transition:width .35s ease; }
+  .quest-card.done .q-pbar i { background:linear-gradient(90deg,#1ece90,var(--green)); }
+  .quest-card.done .qprog { color:var(--green); }
+  .quest-hole.done { box-shadow:0 0 0 9999px rgba(15,19,32,.5); }
+  .quest-hole.done::after { border-color:var(--green); animation:none; }
+  /* 완료 축하 컨페티 */
+  .quest-confetti { position:fixed; inset:0; z-index:10001; pointer-events:none; overflow:hidden; }
+  .quest-confetti i { position:absolute; top:-14px; width:9px; height:14px; border-radius:2px; opacity:.95; animation:confFall linear forwards; }
+  @keyframes confFall { to { transform:translateY(108vh) rotate(720deg); opacity:.9; } }
 </style>
 </head>
 <body>
@@ -399,14 +412,16 @@ if (!window.isSecureContext) { const b = $('banner'); b.classList.add('on'); b.i
 <!-- ── 가이드 퀘스트 온보딩 ── -->
 <div id="quest-hole" class="quest-hole" hidden></div>
 <div id="quest-card" class="quest-card" hidden>
-  <div class="qk" id="q-k"></div>
+  <div class="q-top"><span class="qk" id="q-k"></span><span class="q-badge" id="q-badge">직접 해보세요</span></div>
   <h4 id="q-h"></h4>
   <p id="q-p"></p>
+  <div class="q-pbar" id="q-pbar"><i id="q-fill"></i></div>
   <div class="qf">
-    <button class="quest-skip" id="q-skip">가이드 건너뛰기</button>
-    <span class="qprog" id="q-prog"></span>
+    <button class="quest-skip" id="q-skip">건너뛰기</button>
+    <span class="qprog" id="q-pinfo"></span>
   </div>
 </div>
+<div class="quest-confetti" id="quest-confetti"></div>
 <div class="quest-modal" id="quest-modal">
   <div class="quest-dialog">
     <div class="qicon" id="q-icon">🤖</div>
@@ -431,10 +446,10 @@ if (!window.isSecureContext) { const b = $('banner'); b.classList.add('on'); b.i
 
   const STEPS = [
     { modal: 'intro' },
-    { sel: '#cam', k: 'STEP 1 / 5', h: '카메라를 켜요', p: '오른쪽 <b>[카메라 켜기]</b>를 눌러 시작해요. 켜면 자동으로 다음 단계로 넘어가요.', done: camOn },
-    { sel: '[data-collect="0"]', k: 'STEP 2 / 5', h: '첫 번째를 가르쳐요', p: '이 버튼을 눌러(탭=1장·길게=연속) 첫 번째 대상을 <b>3장 이상</b> 찍어요. 예: ✋ 손바닥', done: () => count(0) >= 3 },
-    { sel: '[data-collect="1"]', k: 'STEP 3 / 5', h: '두 번째도 가르쳐요', p: '두 번째 대상도 <b>3장 이상</b> 모아요. 둘이 서로 달라야 AI가 구분할 수 있어요. 예: ✊ 주먹', done: () => count(1) >= 3 },
-    { sel: '#train', k: 'STEP 4 / 5', h: 'AI를 학습시켜요', p: '<b>[학습하기]</b>를 누르면 AI가 두 가지의 <b>공통 특징</b>을 찾아 구분 기준을 만들어요.', done: trained },
+    { sel: '#cam', k: 'STEP 1 / 5', h: '카메라를 켜요', p: '오른쪽 <b>[카메라 켜기]</b>를 직접 눌러 시작해요. 켜면 다음 단계로 넘어가요.', done: camOn },
+    { sel: '[data-collect="0"]', k: 'STEP 2 / 5', h: '첫 번째를 직접 가르쳐요', p: '이 버튼을 눌러(탭=1장·길게=연속) 첫 번째 대상을 <b>3장 이상</b> 찍어보세요. 예: ✋ 손바닥', goal: 3, prog: () => count(0), done: () => count(0) >= 3 },
+    { sel: '[data-collect="1"]', k: 'STEP 3 / 5', h: '두 번째도 직접 가르쳐요', p: '두 번째 대상도 <b>3장 이상</b> 모아요. 둘이 서로 달라야 AI가 구분할 수 있어요. 예: ✊ 주먹', goal: 3, prog: () => count(1), done: () => count(1) >= 3 },
+    { sel: '#train', k: 'STEP 4 / 5', h: 'AI를 학습시켜요', p: '<b>[학습하기]</b>를 직접 눌러보세요. AI가 두 가지의 <b>공통 특징</b>을 찾아 구분 기준을 만들어요.', done: trained },
     { sel: '#guess', k: 'STEP 5 / 5', h: '맞혀보기로 확인!', p: '<b>[맞혀보기 시작]</b>을 누르고 카메라에 비춰보세요. AI가 실시간으로 둘을 구분합니다!', done: guessing },
     { modal: 'done' },
   ];
@@ -462,12 +477,44 @@ if (!window.isSecureContext) { const b = $('banner'); b.classList.add('on'); b.i
       $('q-skip2').onclick = () => end(true);
     } else {
       $('q-icon').textContent = '🎉';
-      $('q-title').textContent = '첫 AI를 완성했어요!';
-      $('q-desc').innerHTML = '데이터를 모아 → 학습하고 → 추론(맞히기)까지 — 방금 한 이 흐름이 바로 <b>머신러닝의 핵심</b>이에요. 더 많은 코스에서 깊이 배워볼까요?';
-      $('q-mbtns').innerHTML = '<button class="btn-go" id="q-more" onclick="location.href=\'/platform/index.html#modules\'">코스 둘러보기 →</button><button class="btn-skip" id="q-close">계속 체험하기</button>';
+      $('q-title').textContent = '첫 AI를 직접 만들었어요!';
+      $('q-desc').innerHTML = '데이터 수집 → 학습 → 추론까지, 방금 그 흐름이 바로 <b>머신러닝의 핵심</b>이에요.<br><br>이건 <b>맛보기 한 조각</b>일 뿐 — 정식 코스에선 <b>음성·동작·텍스트·실시간 추론</b>까지 직접 만들어요.';
+      $('q-mbtns').innerHTML = '<button class="btn-go" id="q-more">🚀 전체 코스 보러가기</button><button class="btn-skip" id="q-close">더 체험할래요</button>';
       modal.classList.add('on');
+      confetti();
+      $('q-more').onclick = () => location.href = '/platform/index.html#modules';
       $('q-close').onclick = () => end(true);
     }
+  }
+
+  function renderProg(step) {
+    if (step.goal) {
+      const c = Math.min(step.prog(), step.goal);
+      $('q-fill').style.width = (c / step.goal * 100) + '%';
+      $('q-pinfo').textContent = c + ' / ' + step.goal + '장';
+    } else {
+      const done = card.classList.contains('done');
+      $('q-fill').style.width = done ? '100%' : '40%';
+      $('q-pinfo').textContent = done ? '완료' : '직접 눌러보세요';
+    }
+  }
+  function complete(next) {
+    card.classList.add('done'); hole.classList.add('done');
+    $('q-badge').textContent = '✓ 완료!'; $('q-fill').style.width = '100%'; $('q-pinfo').textContent = '완료';
+    setTimeout(next, 950);
+  }
+  function confetti() {
+    const box = $('quest-confetti'), cols = ['#f0473a', '#ff6a52', '#11a06f', '#4d8dff', '#ffb15c', '#7c6cff'];
+    box.innerHTML = '';
+    for (let n = 0; n < 80; n++) {
+      const s = document.createElement('i');
+      s.style.left = Math.random() * 100 + 'vw';
+      s.style.background = cols[n % cols.length];
+      s.style.animationDuration = (2.2 + Math.random() * 1.8) + 's';
+      s.style.animationDelay = (Math.random() * 0.5) + 's';
+      box.appendChild(s);
+    }
+    setTimeout(() => { box.innerHTML = ''; }, 4800);
   }
 
   function place(step) {
@@ -490,12 +537,21 @@ if (!window.isSecureContext) { const b = $('banner'); b.classList.add('on'); b.i
     const step = STEPS[i];
     if (!step) return end(true);
     if (step.modal) return showModal(step.modal);
+    card.classList.remove('done'); hole.classList.remove('done');
     $('q-k').textContent = step.k; $('q-h').textContent = step.h; $('q-p').innerHTML = step.p;
-    $('q-prog').textContent = step.k;
+    $('q-badge').textContent = '직접 해보세요';
+    renderProg(step);
     const t = document.querySelector(step.sel);
     if (t) t.scrollIntoView({ block: 'center', behavior: 'smooth' });
     setTimeout(() => place(step), 320);
-    timer = setInterval(() => { if (step.done && step.done()) { go(i + 1); } }, 350);
+    let completing = false;
+    timer = setInterval(() => {
+      renderProg(step);
+      if (!completing && step.done && step.done()) {
+        completing = true; clearTimer();
+        complete(() => go(i + 1)); // ✓ 완료를 잠깐 보여준 뒤 다음 단계
+      }
+    }, 300);
   }
 
   function start() { replay.classList.remove('on'); go(0); }
