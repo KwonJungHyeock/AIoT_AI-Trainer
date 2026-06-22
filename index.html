@@ -302,8 +302,6 @@
   }
   .step-pill.active .step-pill-num { background: var(--accent); color: #fff; border-color: var(--accent); }
   .step-sep { width: 12px; height: 1px; background: var(--border-strong); flex: none; }
-  /* 기존 패널 내부 단계바는 상단 StepNav 로 대체 */
-  .steps-bar { display: none; }
 
   .feature-info {
     background: linear-gradient(135deg, var(--panel) 0%, rgba(240,71,58,.06) 100%);
@@ -545,15 +543,7 @@
     align-self: center; padding-left: 2px;
   }
 
-  /* ──────────────────────── ② 카메라 / 단계 ───────────────────────── */
-  /* 단계 인디케이터 — 카메라 박스 상단 통합 */
-  .steps-bar {
-    display: none; align-items: center;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
-    background: var(--panel-soft);
-    gap: 0;
-  }
+  /* ──────────────────────── ② 카메라 ───────────────────────── */
   /* 완료 단계 (상단 StepNav) */
   .step-pill.done:not(.active) {
     background: rgba(43,181,131,.14); border-color: var(--green); color: var(--green);
@@ -561,41 +551,6 @@
   .step-pill.done:not(.active) .step-pill-num {
     background: var(--green); color: #fff; border-color: var(--green);
   }
-  .step {
-    display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0;
-    transition: .2s;
-  }
-  .step-num {
-    width: 22px; height: 22px; border-radius: 50%;
-    background: var(--panel); border: 1.5px solid var(--border);
-    display: grid; place-items: center;
-    font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--ink-3);
-    flex: 0 0 auto;
-    transition: .2s;
-  }
-  .step-text { min-width: 0; }
-  .step-label {
-    font-size: 12.5px; font-weight: 500; color: var(--ink-3);
-    transition: .2s; line-height: 1.2;
-  }
-  .step-sub {
-    font-family: var(--mono); font-size: 9.5px; color: var(--ink-4);
-    letter-spacing: 0.04em; text-transform: uppercase; margin-top: 1px;
-  }
-  .step-line {
-    flex: 0 0 24px; height: 1px; background: var(--border); margin: 0 4px;
-  }
-  /* 활성 단계 */
-  .step.active .step-num {
-    background: var(--ink); border-color: var(--ink); color: #fff;
-  }
-  .step.active .step-label { color: var(--ink); font-weight: 600; }
-  /* 완료된 단계 */
-  .step.done .step-num {
-    background: var(--green); border-color: var(--green); color: #fff;
-  }
-  .step.done + .step-line { background: var(--green); }
-  .step.done .step-label { color: var(--ink-2); }
 
   /* 비디오 영역 */
   .stage-card { padding: 0; overflow: hidden; }
@@ -1028,41 +983,6 @@
   <!-- 중: 카메라 + 단계 + 학습 -->
   <section style="display:flex;flex-direction:column;gap:14px">
     <div class="card stage-card">
-      <!-- 단계 인디케이터 (카메라 박스 상단 통합) -->
-      <div class="steps-bar">
-        <div class="step active" data-step="1">
-          <div class="step-num">1</div>
-          <div class="step-text">
-            <div class="step-label">클래스 만들기</div>
-            <div class="step-sub">DEFINE</div>
-          </div>
-        </div>
-        <div class="step-line"></div>
-        <div class="step" data-step="2">
-          <div class="step-num">2</div>
-          <div class="step-text">
-            <div class="step-label">데이터 수집</div>
-            <div class="step-sub">CAPTURE</div>
-          </div>
-        </div>
-        <div class="step-line"></div>
-        <div class="step" data-step="3">
-          <div class="step-num">3</div>
-          <div class="step-text">
-            <div class="step-label">모델 학습</div>
-            <div class="step-sub">TRAIN</div>
-          </div>
-        </div>
-        <div class="step-line"></div>
-        <div class="step" data-step="4">
-          <div class="step-num">4</div>
-          <div class="step-text">
-            <div class="step-label">실시간 추론</div>
-            <div class="step-sub">INFER</div>
-          </div>
-        </div>
-      </div>
-
       <!-- 카메라 -->
       <div class="video-wrap">
         <video id="webcam" autoplay playsinline muted></video>
@@ -1197,15 +1117,6 @@
 
       <section style="display:flex;flex-direction:column;gap:14px">
         <div class="card stage-card">
-          <div class="steps-bar">
-            <div class="step active" data-step="1"><div class="step-num">1</div><div class="step-text"><div class="step-label">동작 만들기</div><div class="step-sub">DEFINE</div></div></div>
-            <div class="step-line"></div>
-            <div class="step" data-step="2"><div class="step-num">2</div><div class="step-text"><div class="step-label">자세 수집</div><div class="step-sub">CAPTURE</div></div></div>
-            <div class="step-line"></div>
-            <div class="step" data-step="3"><div class="step-num">3</div><div class="step-text"><div class="step-label">모델 학습</div><div class="step-sub">TRAIN</div></div></div>
-            <div class="step-line"></div>
-            <div class="step" data-step="4"><div class="step-num">4</div><div class="step-text"><div class="step-label">실시간 추론</div><div class="step-sub">INFER</div></div></div>
-          </div>
 
           <div class="video-wrap">
             <video id="p-webcam" autoplay playsinline muted></video>
@@ -1316,15 +1227,6 @@
 
       <section style="display:flex;flex-direction:column;gap:14px">
         <div class="card stage-card">
-          <div class="steps-bar">
-            <div class="step active" data-step="1"><div class="step-num">1</div><div class="step-text"><div class="step-label">단어 만들기</div><div class="step-sub">DEFINE</div></div></div>
-            <div class="step-line"></div>
-            <div class="step" data-step="2"><div class="step-num">2</div><div class="step-text"><div class="step-label">음성 녹음</div><div class="step-sub">CAPTURE</div></div></div>
-            <div class="step-line"></div>
-            <div class="step" data-step="3"><div class="step-num">3</div><div class="step-text"><div class="step-label">모델 학습</div><div class="step-sub">TRAIN</div></div></div>
-            <div class="step-line"></div>
-            <div class="step" data-step="4"><div class="step-num">4</div><div class="step-text"><div class="step-label">실시간 추론</div><div class="step-sub">INFER</div></div></div>
-          </div>
 
           <div class="video-wrap" style="aspect-ratio:16/8;background:#0a0e1a">
             <canvas id="a-waveform" style="position:absolute;inset:0;width:100%;height:100%;display:block"></canvas>
@@ -1606,7 +1508,6 @@
         <div class="card stage-card">
           <div class="video-wrap">
             <video id="fc-webcam" autoplay playsinline muted></video>
-            <canvas id="fc-canvas" class="pose-overlay" style="transform:translateZ(0)"></canvas>
             <div id="fc-boxes" class="det-boxes"></div>
             <div class="video-overlay" id="fc-cam-overlay">
               <div><div class="ph">CAMERA · STANDBY</div><div class="ph-msg">카메라를 켜면 얼굴이 검출됩니다</div></div>
@@ -1766,31 +1667,6 @@ function setStatus(text, kind) {
   els.status.className = 'status ' + (kind || '');
 }
 
-/* 단계 인디케이터 — 활성/완료 처리 */
-function updateSteps() {
-  const hasClass = state.classes.length >= 2;
-  const hasData  = state.classes.some(c => c.embeddings.length > 0) && state.classes.filter(c => c.embeddings.length > 0).length >= 2;
-  const trained  = state.trained;
-  const inferring = state.inferring;
-
-  const steps = document.querySelectorAll('.step');
-  steps.forEach(s => s.classList.remove('active', 'done'));
-
-  // 완료 단계
-  if (hasClass) steps[0].classList.add('done');
-  if (hasData)  steps[1].classList.add('done');
-  if (trained)  steps[2].classList.add('done');
-  if (inferring) steps[3].classList.add('done');
-
-  // 활성(현재) 단계 — 가장 마지막 미완료
-  let active = 0;
-  if (hasClass) active = 1;
-  if (hasData) active = 2;
-  if (trained) active = 3;
-  if (inferring) active = 3;
-  steps[active].classList.add('active');
-  syncStepNav();
-}
 
 /* ── 모델 로드 ───────────────────────────────────────── */
 async function init() {
@@ -3151,7 +3027,7 @@ async function skelLoop() {
    ============================================================ */
 const face = { model: null, stream: null, raf: null, lastT: 0 };
 const fcEls = {
-  video: $('fc-webcam'), canvas: $('fc-canvas'), boxes: $('fc-boxes'), camOverlay: $('fc-cam-overlay'),
+  video: $('fc-webcam'), boxes: $('fc-boxes'), camOverlay: $('fc-cam-overlay'),
   camToggle: $('fc-cam-toggle'), status: $('fc-status'), fps: $('fc-fps'),
   count: $('fc-count'), countBar: $('fc-count-bar'),
 };
@@ -3475,7 +3351,7 @@ function refresh() {
   if (canTrain && !state.trained) {
     els.trainHint.textContent = '데이터 준비 완료. [모델 학습 시작]을 누르세요.';
   }
-  updateSteps();
+  syncStepNav();
 }
 
 /* ── 학습 종류 탭 ─────────────────────────────────────── */
