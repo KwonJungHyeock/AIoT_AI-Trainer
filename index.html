@@ -401,9 +401,6 @@
     transform: scaleX(-1);
   }
   .video-wrap video { position: relative; z-index: 1; }
-  /* 얼굴 검출: 영상을 캔버스에 합성(좌우반전)해 박스와 함께 출력.
-     원본 video는 visibility:hidden(프레임 디코딩은 유지, 오버레이 평면만 제거)으로 숨김. */
-  #fc-webcam { visibility: hidden; }
 
   /* ─────────── 지도학습 placeholder ─────────── */
   .super-hero {
@@ -1428,7 +1425,7 @@
         <div class="card stage-card">
           <div class="video-wrap">
             <video id="d-webcam" autoplay playsinline muted></video>
-            <canvas id="d-overlay" class="pose-overlay" style="transform:none"></canvas>
+            <canvas id="d-overlay" class="pose-overlay" style="transform:translateZ(0)"></canvas>
             <div class="video-overlay" id="d-cam-overlay">
               <div><div class="ph">CAMERA · STANDBY</div><div class="ph-msg">카메라를 켜면 객체가 탐지됩니다</div></div>
             </div>
@@ -1606,7 +1603,7 @@
         <div class="card stage-card">
           <div class="video-wrap">
             <video id="fc-webcam" autoplay playsinline muted></video>
-            <canvas id="fc-canvas" class="pose-overlay" style="transform:none"></canvas>
+            <canvas id="fc-canvas" class="pose-overlay" style="transform:translateZ(0)"></canvas>
             <div class="video-overlay" id="fc-cam-overlay">
               <div><div class="ph">CAMERA · STANDBY</div><div class="ph-msg">카메라를 켜면 얼굴이 검출됩니다</div></div>
             </div>
@@ -3198,14 +3195,12 @@ async function faceLoop() {
     try {
       const preds = await face.model.estimateFaces(fcEls.video, false, false, true);
       const ctx = fcEls.canvas.getContext('2d');
-      // 영상을 캔버스에 직접 합성(좌우 반전) → <video> 하드웨어 오버레이가 박스를 덮는 문제 제거
       ctx.clearRect(0, 0, vw, vh);
-      ctx.save(); ctx.translate(vw, 0); ctx.scale(-1, 1); ctx.drawImage(fcEls.video, 0, 0, vw, vh); ctx.restore();
       ctx.font = 'bold 16px JetBrains Mono';
       preds.forEach((p) => {
         const box = faceBox(p);
         if (!box || !Number.isFinite(box.w) || box.w <= 0) return;
-        const mx = vw - box.x - box.w; // 합성 영상이 좌우 반전이므로 박스 X 반전
+        const mx = vw - box.x - box.w; // 영상이 좌우 반전 표시이므로 박스 X 반전(캔버스는 translateZ만 적용·미반전)
         ctx.strokeStyle = '#f0473a'; ctx.lineWidth = 3;
         ctx.strokeRect(mx, box.y, box.w, box.h);
         const prob = Array.isArray(p.probability) ? p.probability[0] : (typeof p.probability === 'number' ? p.probability : 1);
