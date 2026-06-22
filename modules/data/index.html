@@ -54,7 +54,7 @@
   .step .t b { font-size:14.5px; font-weight:700; display:block; }
   .step .t span { font-size:12px; color:var(--ink-3); }
 
-  .layout { display:grid; grid-template-columns:1.12fr .88fr; gap:18px; align-items:stretch; }
+  .layout { display:grid; grid-template-columns:1.12fr .88fr; gap:18px; align-items:start; }
   .layout[hidden] { display:none; }
   .layout > .card:first-child { align-self:start; }
   .card { background:#fff; border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:18px; display:flex; flex-direction:column; }
@@ -130,6 +130,28 @@
   .learn .ex { display:block; margin-top:7px; color:var(--ink-3); }
   .fill { flex:1 1 auto; }
 
+  /* 이론 보강 영역 (인터랙션 카드와 분리) */
+  .theory-sec { grid-column:1 / -1; margin-top:6px; }
+  .thead { display:flex; align-items:baseline; gap:10px; margin:0 0 14px; flex-wrap:wrap; }
+  .thead h2 { margin:0; font-size:18px; font-weight:800; letter-spacing:-.02em; }
+  .thead h2::before { content:''; display:inline-block; width:4px; height:16px; border-radius:2px; background:linear-gradient(180deg,var(--primary-2),var(--primary)); margin-right:9px; vertical-align:-2px; }
+  .thead span { font-size:12.5px; color:var(--ink-3); font-weight:600; }
+  .tgrid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .tcard { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; box-shadow:var(--shadow-sm); transition:.16s; }
+  .tcard:hover { box-shadow:var(--shadow); transform:translateY(-2px); border-color:var(--primary-line); }
+  .tcard .tc-ic { width:38px; height:38px; border-radius:11px; display:grid; place-items:center; font-size:19px; margin-bottom:10px; background:var(--primary-soft); }
+  .tcard:nth-child(1) .tc-ic { background:var(--green-soft); }
+  .tcard:nth-child(2) .tc-ic { background:var(--blue-soft); }
+  .tcard:nth-child(3) .tc-ic { background:var(--amber-soft); }
+  .tcard h3 { margin:0 0 6px; font-size:14.5px; font-weight:800; }
+  .tcard p { margin:0; font-size:13px; color:var(--ink-2); line-height:1.6; }
+  .tcard p b { color:var(--primary-ink); }
+  .tflow { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px; background:var(--card-2); border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
+  .tflow .tf-lab { font-size:11.5px; font-family:var(--mono); font-weight:700; color:var(--ink-3); margin-right:2px; }
+  .tflow .tf { font-size:12.5px; font-weight:700; color:var(--ink-2); background:#fff; border:1px solid var(--line-2); border-radius:8px; padding:6px 11px; }
+  .tflow .tarr { color:var(--ink-4); font-weight:700; }
+  @media (max-width:760px){ .tgrid { grid-template-columns:1fr; } }
+
   @media (max-width:880px){ .layout{ grid-template-columns:1fr; align-items:start; } }
 </style>
 </head>
@@ -181,10 +203,28 @@
         <div class="s"><span>관계 점수 (−1 ~ +1)</span><b id="ex-r">—</b></div>
         <div class="s"><span>어떤 관계?</span><b id="ex-rel">—</b></div>
       </div>
-      <div class="learn fill"><b>“관계가 있다”는 게 뭘까요?</b><br>두 가지가 같이 움직이는 정도를 <b>관계 점수</b>로 나타내요. <b>+1</b>에 가까우면 한쪽이 커질 때 다른 쪽도 커지고(↗), <b>−1</b>에 가까우면 반대로 움직여요(↘). <b>0</b>이면 별 관계가 없어요.
-        <span class="ex">예) 공부 시간이 늘면 점수도 오르는 편 → +점수 / 게임 시간이 늘면 성적은 내려가는 편 → −점수</span>
-        <span class="ex">[흐름선 그리기]를 누르면 점들의 흐름을 가장 잘 나타내는 선이 그려져요. 이 선이 ‘예측’의 출발점이에요!</span>
+    </div>
+
+    <div class="theory-sec">
+      <div class="thead"><h2>원리와 활용</h2><span>데이터의 ‘관계’를 읽는 법</span></div>
+      <div class="tgrid">
+        <div class="tcard">
+          <span class="tc-ic">🔗</span>
+          <h3>관계(상관)란?</h3>
+          <p>두 값이 함께 움직이는 정도를 <b>관계 점수</b>로 나타내요. <b>+1</b>이면 같이↗, <b>−1</b>이면 반대↘, <b>0</b>이면 무관. 점이 한 방향으로 줄지을수록 관계가 강해요.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">⚠️</span>
+          <h3>관계 ≠ 원인</h3>
+          <p>함께 움직인다고 한쪽이 <b>원인</b>인 건 아니에요. 아이스크림 판매와 물놀이 사고가 같이 늘어도, 진짜 원인은 <b>더위</b>죠. 관계는 ‘힌트’일 뿐 인과는 따로 확인해야 해요.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">📈</span>
+          <h3>어디에 쓰일까?</h3>
+          <p>광고비↔매출, 기온↔전력 사용량, 운동량↔건강처럼 <b>두 값의 연관</b>을 찾는 건 모든 데이터 분석·예측의 첫걸음이에요.</p>
+        </div>
       </div>
+      <div class="tflow"><span class="tf-lab">분석 흐름</span><span class="tf">데이터 모으기</span><span class="tarr">→</span><span class="tf">흩뿌려 보기</span><span class="tarr">→</span><span class="tf">방향·세기 읽기</span><span class="tarr">→</span><span class="tf">관계 점수</span></div>
     </div>
   </section>
 
@@ -226,10 +266,28 @@
         <div class="big" id="pr-yhat">먼저 학습시켜 주세요</div>
         <div class="po-note">입력 X일 때 나올 거라고 AI가 예상한 값이에요. <b>정확도가 아니에요!</b></div>
       </div>
-      <div class="learn fill"><b>AI는 어떻게 ‘예측’을 배울까요?</b><br>처음엔 아무 선이나 그어 놓고, 점들과 얼마나 <b>틀렸는지(오차)</b>를 봐요. 그리고 오차가 줄도록 선을 조금씩 옮기는 걸 <b>수십 번 반복</b>합니다. 이게 AI의 ‘학습’이에요.
-        <span class="ex">예) 기온(X)을 넣으면 아이스크림 판매량(Y)을 미리 짐작해요. ‘곡선’을 고르면 휘어진 관계도 표현할 수 있어요.</span>
-        <span class="ex">학습이 끝나면 X 슬라이더를 움직여 새로운 값의 Y를 예측해 보세요.</span>
+    </div>
+
+    <div class="theory-sec">
+      <div class="thead"><h2>원리와 활용</h2><span>AI가 ‘예측’을 배우는 법</span></div>
+      <div class="tgrid">
+        <div class="tcard">
+          <span class="tc-ic">📉</span>
+          <h3>회귀란?</h3>
+          <p>점들 사이를 <b>가장 잘 지나는 선·곡선</b>을 찾아, 새 입력값 X에 대한 결과 Y를 예측하는 방법이에요. 예: 기온(X)→아이스크림 판매량(Y).</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">🔁</span>
+          <h3>경사하강법</h3>
+          <p>처음엔 아무 선이나 긋고, 점들과 <b>얼마나 틀렸는지(오차)</b>를 본 뒤 오차가 줄도록 선을 <b>조금씩 수십 번</b> 옮겨요. 이 반복이 곧 ‘학습’입니다.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">🛰️</span>
+          <h3>어디에 쓰일까? (AIoT)</h3>
+          <p>센서값으로 <b>온도·미세먼지·전력 사용량</b>을 예측하거나, 판매·수요를 미리 짐작하는 등 사물인터넷·산업 현장에서 널리 쓰여요.</p>
+        </div>
       </div>
+      <div class="tflow"><span class="tf-lab">학습 흐름</span><span class="tf">점 찍기</span><span class="tarr">→</span><span class="tf">오차 측정</span><span class="tarr">→</span><span class="tf">선 조정 반복</span><span class="tarr">→</span><span class="tf">예측</span></div>
     </div>
   </section>
 
@@ -263,10 +321,28 @@
       </div>
       <div class="groups" id="cl-groups"><div class="group empty">아직 묶지 않았어요. 왼쪽에서 점을 만들고 [AI로 무리 짓기]를 눌러보세요.</div></div>
       <button class="btn block" id="cl-redo" disabled style="margin-top:10px">🔁 다른 시작으로 다시 묶기</button>
-      <div class="learn fill"><b>‘무리 짓기(군집화)’란?</b><br>정답표 없이 데이터만 보고 <b>비슷한 것끼리 자동으로 묶는</b> 방법이에요. ‘정답 없이 스스로 배운다’고 해서 <b>비지도 학습</b>이라고 불러요.
-        <span class="ex">방법: ① 무리 중심(★)을 아무 데나 놓고 ② 각 점을 가장 가까운 ★의 색으로 칠하고 ③ ★를 그 색 점들의 한가운데로 옮겨요. ②③을 반복하면 무리가 또렷해져요. (K-means)</span>
-        <span class="ex">예) 학생들의 키·몸무게만 보고 비슷한 체형끼리, 손님들의 구매 기록으로 취향이 비슷한 그룹끼리 자동 분류해요.</span>
+    </div>
+
+    <div class="theory-sec">
+      <div class="thead"><h2>원리와 활용</h2><span>정답 없이 스스로 묶는 법</span></div>
+      <div class="tgrid">
+        <div class="tcard">
+          <span class="tc-ic">🎨</span>
+          <h3>군집화(K-means)</h3>
+          <p>정답표 없이 데이터만 보고 <b>비슷한 것끼리 자동으로 묶어요</b>. ① 중심(★)을 놓고 ② 가까운 점을 그 색으로 칠하고 ③ ★를 한가운데로 옮기길 반복하면 무리가 또렷해집니다.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">🧭</span>
+          <h3>지도 vs 비지도</h3>
+          <p>정답(라벨)을 주고 배우면 <b>지도학습</b>, 정답 없이 스스로 규칙을 찾으면 <b>비지도학습</b>이에요. 군집화는 대표적인 비지도학습입니다.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">🛍️</span>
+          <h3>어디에 쓰일까?</h3>
+          <p>비슷한 손님끼리 묶어 <b>타깃 마케팅</b>, 평소와 다른 데이터를 찾는 <b>이상치 탐지</b>, 이미지·문서 자동 분류 등에 쓰여요.</p>
+        </div>
       </div>
+      <div class="tflow"><span class="tf-lab">묶기 흐름</span><span class="tf">점 분포</span><span class="tarr">→</span><span class="tf">중심 추측</span><span class="tarr">→</span><span class="tf">가까운 것끼리 묶기 반복</span><span class="tarr">→</span><span class="tf">무리 완성</span></div>
     </div>
   </section>
 </main>
