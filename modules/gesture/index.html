@@ -171,6 +171,28 @@
   .learn { background:var(--card-2); border:1px solid var(--line); border-radius:12px; padding:13px 15px; margin-top:16px; font-size:12.5px; color:var(--ink-2); line-height:1.6; }
   .learn b { color:var(--primary-ink); }
 
+  /* 이론 보강 영역 (인터랙션과 분리) — 타 코스와 동일 양식 */
+  .theory-sec { grid-column:1 / -1; margin-top:18px; }
+  .thead { display:flex; align-items:baseline; gap:10px; margin:0 0 14px; flex-wrap:wrap; }
+  .thead h2 { margin:0; font-size:18px; font-weight:800; letter-spacing:-.02em; }
+  .thead h2::before { content:''; display:inline-block; width:4px; height:16px; border-radius:2px; background:linear-gradient(180deg,var(--primary-2),var(--primary)); margin-right:9px; vertical-align:-2px; }
+  .thead span { font-size:12.5px; color:var(--ink-3); font-weight:600; }
+  .tgrid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .tcard { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; box-shadow:var(--shadow-sm); transition:.16s; }
+  .tcard:hover { box-shadow:var(--shadow); transform:translateY(-2px); border-color:var(--primary-line); }
+  .tcard .tc-ic { width:38px; height:38px; border-radius:11px; display:grid; place-items:center; font-size:19px; margin-bottom:10px; background:var(--primary-soft); }
+  .tcard:nth-child(1) .tc-ic { background:var(--green-soft); }
+  .tcard:nth-child(2) .tc-ic { background:#eaf1ff; }
+  .tcard:nth-child(3) .tc-ic { background:var(--amber-soft); }
+  .tcard h3 { margin:0 0 6px; font-size:14.5px; font-weight:800; }
+  .tcard p { margin:0; font-size:13px; color:var(--ink-2); line-height:1.6; }
+  .tcard p b { color:var(--primary-ink); }
+  .tflow { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px; background:var(--card-2); border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
+  .tflow .tf-lab { font-size:11.5px; font-family:var(--mono); font-weight:700; color:var(--ink-3); margin-right:2px; }
+  .tflow .tf { font-size:12.5px; font-weight:700; color:var(--ink-2); background:#fff; border:1px solid var(--line-2); border-radius:8px; padding:6px 11px; }
+  .tflow .tarr { color:var(--ink-4); font-weight:700; }
+  @media (max-width:760px){ .tgrid { grid-template-columns:1fr; } }
+
   /* 클래스(데이터셋) */
   .cls { display:flex; flex-direction:column; gap:10px; margin-bottom:12px; }
   .cls-item { background:var(--card-2); border:1px solid var(--line); border-radius:12px; padding:12px; transition:.15s; }
@@ -317,7 +339,28 @@
         </div>
         <div class="donut-lab">손 인식 신뢰도<b id="play-conf-label">대기 중</b></div>
       </div>
-      <div class="learn"><b>어떻게 인식할까?</b> AI가 찾은 손가락 끝과 관절의 <b>위치</b>로, 손목에서 손끝이 얼마나 멀리 폈는지 보고 펴짐/접힘을 판단해요. 펴진 손가락 0=바위, 2=가위, 5=보!</div>
+    </div>
+
+    <div class="theory-sec">
+      <div class="thead"><h2>원리와 활용</h2><span>손을 ‘점·선’으로 보고 판정하는 법</span></div>
+      <div class="tgrid">
+        <div class="tcard">
+          <span class="tc-ic">✋</span>
+          <h3>손 관절 21점 추적</h3>
+          <p>AI가 손가락 끝·관절의 <b>위치 21곳</b>을 실시간으로 찾아요. 사진 전체가 아니라 ‘점 좌표’만 보므로 <b>배경·옷·조명에 강하고 가벼워요</b>.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">📏</span>
+          <h3>규칙 기반 판정</h3>
+          <p>손목에서 손끝까지 <b>얼마나 폈는지</b>로 펴짐/접힘을 판단해요. 펴진 손가락 <b>0=바위, 2=가위, 5=보</b> — 학습 없이도 바로 작동합니다.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">🎮</span>
+          <h3>어디에 쓰일까?</h3>
+          <p>수어 인식, 동작 게임, 화면을 손으로 넘기는 <b>제스처 제어</b>, VR/AR의 맨손 조작 등 사람-컴퓨터 상호작용에 쓰여요.</p>
+        </div>
+      </div>
+      <div class="tflow"><span class="tf-lab">처리 흐름</span><span class="tf">카메라</span><span class="tarr">→</span><span class="tf">21점 추적</span><span class="tarr">→</span><span class="tf">펴진 손가락 세기</span><span class="tarr">→</span><span class="tf">가위·바위·보 판정</span></div>
     </div>
   </section>
 
@@ -404,6 +447,28 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="theory-sec">
+      <div class="thead"><h2>원리와 활용</h2><span>내 제스처를 학습시키는 법</span></div>
+      <div class="tgrid">
+        <div class="tcard">
+          <span class="tc-ic">📦</span>
+          <h3>데이터가 핵심</h3>
+          <p>같은 제스처도 <b>각도·거리를 바꿔 30개 이상</b> 모을수록 똑똑해져요. ‘데이터 양 = 정확도’ — AI 학습에서 가장 중요한 원칙이에요.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">🧠</span>
+          <h3>전이학습</h3>
+          <p>손 관절 <b>21개 좌표만</b> 입력으로 작은 분류기를 학습해요. 무거운 모델을 새로 만들지 않아 <b>브라우저에서 빠르게</b> 배웁니다.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">🔁</span>
+          <h3>추론 & 개선</h3>
+          <p>학습한 AI가 새 손 모양을 <b>실시간 예측</b>(막대가 가장 높은 것이 답). 틀리면 ① 단계로 돌아가 데이터를 더 모아 개선해요.</p>
+        </div>
+      </div>
+      <div class="tflow"><span class="tf-lab">학습 흐름</span><span class="tf">데이터 수집</span><span class="tarr">→</span><span class="tf">학습</span><span class="tarr">→</span><span class="tf">실시간 추론</span><span class="tarr">→</span><span class="tf">틀리면 보강</span></div>
     </div>
   </section>
 </main>
