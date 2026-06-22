@@ -182,9 +182,17 @@
   .cls-del { background:none; border:none; color:var(--ink-4); font-size:18px; line-height:1; padding:2px 6px; border-radius:6px; }
   .cls-del:hover { color:var(--primary); background:var(--primary-soft); }
   .cls-actions { display:flex; gap:8px; margin-top:10px; }
-  .collect { flex:1; border:1px solid var(--line-2); background:#fff; color:var(--ink-2); border-radius:9px; padding:9px; font-size:13px; font-weight:700; transition:.15s; }
-  .collect:hover { border-color:var(--primary-line); color:var(--primary-ink); }
-  .collect.rec { background:linear-gradient(150deg,var(--primary-2),var(--primary)); border-color:transparent; color:#fff; box-shadow:0 4px 12px rgba(240,71,58,.3); }
+  /* 이미지 분류와 동일한 수집 버튼 */
+  .cap-btn { flex:1; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:7px;
+    padding:11px; border-radius:10px; font-family:inherit; font-size:14px; font-weight:700; color:#fff;
+    background:linear-gradient(150deg,var(--primary-2),var(--primary));
+    box-shadow:0 5px 13px rgba(240,71,58,.3), inset 0 1px 0 rgba(255,255,255,.25);
+    transition:transform .08s, box-shadow .15s, filter .15s; touch-action:none; user-select:none; }
+  .cap-btn .ci { font-size:15px; line-height:1; }
+  .cap-btn .cap-count { min-width:22px; padding:1px 6px; border-radius:999px; background:rgba(255,255,255,.25); font-family:var(--mono,ui-monospace,monospace); font-size:12px; }
+  .cap-btn:hover:not(:disabled) { filter:brightness(1.04); }
+  .cap-btn:active:not(:disabled), .cap-btn.rec { transform:scale(.98); box-shadow:0 0 0 3px var(--primary-soft), 0 4px 10px rgba(240,71,58,.3); }
+  .cap-btn:disabled { background:var(--bg-soft); color:var(--ink-4); box-shadow:none; cursor:not-allowed; }
   .clear { border:1px solid var(--line-2); background:#fff; color:var(--ink-3); border-radius:9px; padding:9px 14px; font-size:13px; font-weight:600; }
   .clear:hover { color:var(--primary-ink); border-color:var(--primary-line); }
   .samp-bar { height:5px; border-radius:3px; background:var(--bg-soft); overflow:hidden; margin-top:10px; }
@@ -286,8 +294,7 @@
         <div class="ph" id="ph-play">📷 [카메라 켜기]를 누르고<br>손을 화면에 비춰주세요</div>
       </div>
       <div class="cam-ctrl">
-        <button class="btn primary lg" id="play-cam">카메라 켜기</button>
-        <button class="btn lg" id="play-stop" disabled>중지</button>
+        <button class="btn lg block" id="play-cam" style="width:100%">카메라 켜기</button>
       </div>
     </div>
     <div class="card">
@@ -335,8 +342,7 @@
           <div class="ph" id="ph-train">📷 [카메라 켜기]를 누르고<br>손을 화면에 비춰주세요</div>
         </div>
         <div class="cam-ctrl">
-          <button class="btn primary lg" id="train-cam">카메라 켜기</button>
-          <button class="btn lg" id="train-stop" disabled>중지</button>
+          <button class="btn lg block" id="train-cam" style="width:100%">카메라 켜기</button>
         </div>
       </div>
 
@@ -512,11 +518,11 @@ async function playLoop() {
   play.raf = requestAnimationFrame(playLoop);
 }
 $('play-cam').onclick = async () => {
+  if (play.stream) { play.stop(); $('play-cam').textContent = '카메라 켜기'; setStatus('대기 중'); return; }
   try { setStatus('모델 로딩…', 'busy'); await loadModel(); setStatus('카메라 시작…', 'busy'); await play.start();
-    $('play-cam').disabled = true; $('play-stop').disabled = false; setStatus('인식 중 · LIVE', 'live'); playLoop();
+    $('play-cam').textContent = '카메라 끄기'; setStatus('인식 중 · LIVE', 'live'); playLoop();
   } catch (e) { setStatus('카메라 오류', 'busy'); alert('카메라를 시작할 수 없습니다: ' + e.message); }
 };
-$('play-stop').onclick = () => { play.stop(); $('play-cam').disabled = false; $('play-stop').disabled = true; setStatus('대기 중'); };
 
 /* ════════ 중급 ════════ */
 const train = mkCam($('v-train'), $('c-train'), $('ph-train'));
@@ -565,7 +571,7 @@ function renderClasses() {
         <button class="cls-del" data-del="${c.id}" title="삭제">×</button>
       </div>
       <div class="cls-actions">
-        <button class="collect ${recording === c.id ? 'rec' : ''}" data-collect="${c.id}">${recording === c.id ? '● 수집 중지' : '샘플 모으기'}</button>
+        <button class="cap-btn ${recording === c.id ? 'rec' : ''}" data-collect="${c.id}" ${train.stream ? '' : 'disabled'}><span class="ci">📷</span><span>촬영</span><span class="cap-count" data-capcount="${c.id}">${c.samples.length}</span></button>
         <button class="clear" data-clear="${c.id}">비우기</button>
       </div>
       <div class="samp-bar"><i data-fill="${c.id}" style="width:${Math.min(100, c.samples.length * 2.5)}%"></i></div>
@@ -574,6 +580,7 @@ function renderClasses() {
 }
 function updateCount(c) {
   const el = document.querySelector(`[data-count="${c.id}"]`); if (el) el.textContent = c.samples.length + '개';
+  const cc = document.querySelector(`[data-capcount="${c.id}"]`); if (cc) cc.textContent = c.samples.length;
   const fill = document.querySelector(`[data-fill="${c.id}"]`); if (fill) fill.style.width = Math.min(100, c.samples.length * 2.5) + '%';
   updateTrainEnabled();
 }
@@ -589,7 +596,7 @@ let step = 1;
 function setStep(n) {
   if (n === step) { return; }
   // 단계를 떠날 때 정리
-  if (step === 1 && recording != null) setRecording(recording); // 녹화 중지
+  if (step === 1 && recording != null) setRecording(null); // 수집 중지
   if (step === 3 && inferring) { inferring = false; $('btn-infer').textContent = '추론 시작'; }
   step = n;
   document.querySelectorAll('.wstep').forEach(el => { el.hidden = +el.dataset.w !== n; });
@@ -604,25 +611,33 @@ function setStep(n) {
 document.querySelectorAll('.flow .fstep').forEach(b => { b.onclick = () => setStep(+b.dataset.w); });
 $('go-train').onclick = () => setStep(2);
 $('go-collect').onclick = () => setStep(1);
+// id = 수집할 클래스, null = 중지. (이미지 분류처럼 버튼을 누르고 있는 동안 수집)
 function setRecording(id) {
-  recording = (recording === id) ? null : id;
+  recording = id;
   document.querySelectorAll('[data-collect]').forEach(b => {
     const on = +b.dataset.collect === recording;
-    b.classList.toggle('rec', on); b.textContent = on ? '● 수집 중지' : '샘플 모으기';
+    b.classList.toggle('rec', on);
     b.closest('.cls-item').classList.toggle('rec', on);
   });
   $('rec-dot').classList.toggle('on', recording != null);
-  if (recording != null) { setStatus('수집 중 · REC', 'live'); $('train-hint').textContent = '손 각도·거리를 바꿔가며 모아보세요. 다시 누르면 멈춰요.'; const c = classes.find(x => x.id === recording); if (c) showCollecting(c); }
+  if (recording != null) { setStatus('수집 중 · REC', 'live'); $('train-hint').textContent = '꾹 누른 채 손 각도·거리를 바꿔가며 모으세요.'; const c = classes.find(x => x.id === recording); if (c) showCollecting(c); }
   else { setStatus(train.stream ? '수집 가능 · LIVE' : '대기 중', train.stream ? 'live' : ''); updateTrainEnabled(); showIdle(); }
 }
 
 $('cls-list').addEventListener('input', (e) => { const id = +e.target.dataset.id; if (!id) return; const c = classes.find(x => x.id === id); if (c) c.name = e.target.value; });
 $('cls-list').addEventListener('click', (e) => {
-  const del = e.target.dataset.del, clr = e.target.dataset.clear, col = e.target.dataset.collect;
+  const del = e.target.dataset.del, clr = e.target.dataset.clear;
   if (del) { if (recording === +del) recording = null; classes = classes.filter(c => c.id !== +del); renderClasses(); }
   if (clr) { const c = classes.find(x => x.id === +clr); if (c) { c.samples = []; updateCount(c); } }
-  if (col) setRecording(+col);
 });
+// 클래스별 [📷 촬영] — 누르고 있는 동안 수집(이미지 분류와 동일), 떼면 중지
+$('cls-list').addEventListener('pointerdown', (e) => {
+  const b = e.target.closest('[data-collect]'); if (!b || b.disabled) return;
+  if (!train.stream) { setStatus('먼저 카메라를 켜주세요', 'busy'); return; }
+  e.preventDefault(); setRecording(+b.dataset.collect);
+});
+window.addEventListener('pointerup', () => { if (recording != null) setRecording(null); });
+window.addEventListener('pointercancel', () => { if (recording != null) setRecording(null); });
 $('add-cls').onclick = () => addClass();
 $('epochs').oninput = (e) => $('epochs-val').textContent = e.target.value;
 
@@ -641,16 +656,25 @@ async function trainLoop() {
   if (inferring && head) await runInfer(kp);
   train.raf = requestAnimationFrame(trainLoop);
 }
+function gestureSetCapEnabled(on) { document.querySelectorAll('#cls-list .cap-btn').forEach(b => b.disabled = !on); }
+function trainCamStop() {
+  recording = null; renderClasses(); $('rec-dot').classList.remove('on'); train.stop();
+  inferring = false; $('btn-infer').textContent = '추론 시작';
+  $('train-cam').textContent = '카메라 켜기';
+  $('cam-state').textContent = '대기'; $('cam-state').classList.remove('on'); setStatus('대기 중'); showIdle();
+  gestureSetCapEnabled(false);
+}
 $('train-cam').onclick = async () => {
+  if (train.stream) { trainCamStop(); return; }
   try { setStatus('모델 로딩…', 'busy'); await loadModel(); setStatus('카메라 시작…', 'busy'); await train.start();
-    $('train-cam').disabled = true; $('train-stop').disabled = false;
+    $('train-cam').textContent = '카메라 끄기';
     $('cam-state').textContent = '인식 중'; $('cam-state').classList.add('on');
+    gestureSetCapEnabled(true);
     if (step === 3 && head) { inferring = true; $('btn-infer').textContent = '추론 중지'; setStatus('추론 중 · LIVE', 'live'); }
     else setStatus('수집 가능 · LIVE', 'live');
     trainLoop();
   } catch (e) { setStatus('카메라 오류', 'busy'); alert('카메라를 시작할 수 없습니다: ' + e.message); }
 };
-$('train-stop').onclick = () => { recording = null; renderClasses(); $('rec-dot').classList.remove('on'); train.stop(); inferring = false; $('btn-infer').textContent = '추론 시작'; $('train-cam').disabled = false; $('train-stop').disabled = true; $('cam-state').textContent = '대기'; $('cam-state').classList.remove('on'); setStatus('대기 중'); showIdle(); };
 
 $('btn-train').onclick = async () => {
   const usable = classes.filter(c => c.samples.length >= 8);
@@ -708,8 +732,8 @@ document.querySelectorAll('.step').forEach(btn => {
     const s = btn.dataset.step;
     $('panel-play').style.display = s === 'play' ? 'grid' : 'none';
     $('panel-train').style.display = s === 'train' ? 'block' : 'none';
-    if (s === 'play') { recording = null; train.stop(); inferring = false; $('rec-dot').classList.remove('on'); $('train-cam').disabled = false; $('train-stop').disabled = true; $('cam-state').textContent = '대기'; $('cam-state').classList.remove('on'); }
-    else { play.stop(); $('play-cam').disabled = false; $('play-stop').disabled = true; }
+    if (s === 'play') { recording = null; train.stop(); inferring = false; $('rec-dot').classList.remove('on'); $('train-cam').textContent = '카메라 켜기'; $('cam-state').textContent = '대기'; $('cam-state').classList.remove('on'); gestureSetCapEnabled(false); }
+    else { play.stop(); $('play-cam').textContent = '카메라 켜기'; }
     setStatus('대기 중');
   };
 });
