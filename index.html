@@ -322,9 +322,14 @@
   .fi-model { background: rgba(0,102,255,0.08); color: var(--blue); border-color: rgba(0,102,255,0.2); }
   .fi-desc { margin: 8px 0 0; font-size: 14.5px; color: var(--ink-3); line-height: 1.5; }
   .fi-theory { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
-  .fi-tcard { background: var(--panel-soft); border: 1px solid var(--border); border-radius: 8px; padding: 11px 13px; }
-  .fi-th { font-family: var(--mono); font-size: 11.5px; letter-spacing: .05em; color: var(--accent-ink); margin-bottom: 6px; font-weight: 700; }
-  .fi-tcard p { margin: 0; font-size: 14px; color: var(--ink-2); line-height: 1.55; }
+  .fi-tcard { position: relative; overflow: hidden; border-radius: 12px; padding: 14px 16px;
+    background: linear-gradient(150deg, #1b2030 0%, #14161f 70%); border: 1px solid #2a3142;
+    box-shadow: 0 8px 22px rgba(20,22,31,.18), inset 0 1px 0 rgba(255,255,255,.05); }
+  .fi-tcard::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .6;
+    background: radial-gradient(70% 90% at 92% -10%, rgba(240,71,58,.22), transparent 60%); }
+  .fi-tcard > * { position: relative; z-index: 1; }
+  .fi-th { font-family: var(--mono); font-size: 11.5px; letter-spacing: .05em; color: #ff9a8f; margin-bottom: 7px; font-weight: 700; }
+  .fi-tcard p { margin: 0; font-size: 14px; color: #c7cedb; line-height: 1.6; }
   @media (max-width: 720px) { .fi-theory { grid-template-columns: 1fr; } }
 
   /* 태블릿: 사이드바를 상단 가로 바로 전환(세로 공간 절약) */
@@ -3159,22 +3164,31 @@ async function faceLoop() {
   if (!face.stream) return;
   if (face.model && fcEls.video.readyState >= 2) {
     const vw = fcEls.video.videoWidth, vh = fcEls.video.videoHeight;
-    fcEls.canvas.width = vw; fcEls.canvas.height = vh;
+    const cw = fcEls.video.clientWidth || vw, ch = fcEls.video.clientHeight || vh;
+    fcEls.canvas.width = cw; fcEls.canvas.height = ch;
+    // object-fit: cover 매핑 (영상 native 좌표 → 표시 영역 좌표) — 박스가 얼굴에 정확히 붙도록
+    const scale = Math.max(cw / vw, ch / vh);
+    const offX = (cw - vw * scale) / 2, offY = (ch - vh * scale) / 2;
     try {
       const preds = await face.model.estimateFaces(fcEls.video, false);
       const ctx = fcEls.canvas.getContext('2d');
-      ctx.clearRect(0, 0, vw, vh);
-      ctx.font = 'bold 16px JetBrains Mono';
+      ctx.clearRect(0, 0, cw, ch);
+      ctx.font = 'bold 15px JetBrains Mono';
       preds.forEach((p) => {
-        const x1 = p.topLeft[0], y1 = p.topLeft[1];
-        const w = p.bottomRight[0] - x1, h = p.bottomRight[1] - y1;
-        const mx = vw - x1 - w; // 비디오가 좌우 반전이므로 박스 X 반전(캔버스는 transform:none)
-        ctx.strokeStyle = '#f15a4f'; ctx.lineWidth = 3;
-        ctx.strokeRect(mx, y1, w, h);
-        const label = 'FACE ' + Math.round((Array.isArray(p.probability) ? p.probability[0] : p.probability) * 100) + '%';
+        let tl = p.topLeft, br = p.bottomRight;
+        if (tl && typeof tl.arraySync === 'function') { tl = tl.arraySync(); br = br.arraySync(); }
+        if (Array.isArray(tl[0])) { tl = tl[0]; br = br[0]; }
+        const dx1 = tl[0] * scale + offX, dy1 = tl[1] * scale + offY;
+        const dw = (br[0] - tl[0]) * scale, dh = (br[1] - tl[1]) * scale;
+        if (![dx1, dy1, dw, dh].every(Number.isFinite)) return;
+        const mx = cw - dx1 - dw; // 비디오가 좌우 반전(scaleX(-1))이므로 박스 X 반전
+        ctx.strokeStyle = '#f0473a'; ctx.lineWidth = 3;
+        ctx.strokeRect(mx, dy1, dw, dh);
+        const prob = Array.isArray(p.probability) ? p.probability[0] : (typeof p.probability === 'number' ? p.probability : 1);
+        const label = 'FACE ' + Math.round(prob * 100) + '%';
         const tw = ctx.measureText(label).width;
-        ctx.fillStyle = '#f15a4f'; ctx.fillRect(mx, y1 - 20, tw + 10, 20);
-        ctx.fillStyle = '#fff'; ctx.fillText(label, mx + 5, y1 - 5);
+        ctx.fillStyle = '#f0473a'; ctx.fillRect(mx, dy1 - 20, tw + 10, 20);
+        ctx.fillStyle = '#fff'; ctx.fillText(label, mx + 5, dy1 - 5);
       });
       fcEls.count.textContent = preds.length;
       if (fcEls.countBar) fcEls.countBar.style.width = Math.min(100, preds.length * 25) + '%';
