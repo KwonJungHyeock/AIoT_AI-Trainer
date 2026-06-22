@@ -2355,8 +2355,9 @@ async function poseInferLoop() {
   const r = await extractKeypoints();
   if (r) {
     const x = tf.tensor2d([r.feat]);
-    const out = await pose.head.predict(x).data();
-    x.dispose();
+    const yhat = pose.head.predict(x);
+    const out = await yhat.data();
+    x.dispose(); yhat.dispose(); // 추론 텐서 누수 방지(장시간 수업 안정성)
     const names = pose.head._classNames;
     const topI = renderProbResults(out, names, (i) => `p-pct-${i}`, (i) => `p-fill-${i}`);
     pEls.topPred.className = 'top-pred active';
