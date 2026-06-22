@@ -401,8 +401,9 @@
     transform: scaleX(-1);
   }
   .video-wrap video { position: relative; z-index: 1; }
-  /* 얼굴 검출은 영상을 캔버스에 합성해 그리므로 원본 video는 숨김(오버레이 플레인 제거) */
-  #fc-webcam { opacity: 0; }
+  /* 얼굴 검출은 영상을 캔버스에 합성(좌우 반전)해 그림 → 원본 video의 transform 제거
+     (하드웨어 오버레이 승격 방지). 불투명 합성 캔버스가 위에서 영상+박스를 함께 출력. */
+  #fc-webcam { transform: none; }
 
   /* ─────────── 지도학습 placeholder ─────────── */
   .super-hero {
