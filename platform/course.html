@@ -448,7 +448,7 @@ function scrim(ctx,w,h){ ctx.fillStyle='rgba(15,19,32,.30)'; ctx.fillRect(0,0,w,
 const DEMO_IMG = { v_detect:'vision-detect', v_face:'vision-face', v_pose:'vision-pose', v_classify:'vision-classify' };
 const IMGS = {};
 if(typeof Image !== 'undefined'){
-  Object.keys(DEMO_IMG).forEach(id=>{ const name=DEMO_IMG[id], exts=['png','jpg','jpeg','webp']; let i=0;
+  Object.keys(DEMO_IMG).forEach(id=>{ const name=DEMO_IMG[id], exts=['webp','jpg']; let i=0;
     const rec={img:new Image(), ok:false}; IMGS[id]=rec;
     rec.img.onload=()=>{ if(rec.img.width>0) rec.ok=true; };
     rec.img.onerror=()=>{ i++; if(i<exts.length) rec.img.src='/platform/img/demo/'+name+'.'+exts[i]; };
@@ -495,7 +495,7 @@ SCENES.v_detect = (ctx,w,h,t)=>{
 SCENES.v_face = (ctx,w,h,t)=>{
   const im=IMGS.v_face;
   if(im && im.ok){ coverImg(ctx,im.img,w,h); scrim(ctx,w,h);
-    const bx=w*0.43, by=h*0.10, bw=w*0.16, bh=h*0.37;
+    const bx=w*0.415, by=h*0.11, bw=w*0.155, bh=h*0.34;
     ctx.strokeStyle=PAL.green; ctx.lineWidth=2.5; rr(ctx,bx,by,bw,bh,8); ctx.stroke();
     chip(ctx,bx,by-24,'얼굴 1명',PAL.green);
     ctx.fillStyle=PAL.red; [[.26,.32],[.74,.32],[.5,.55],[.32,.78],[.68,.78]].forEach(p=>{ ctx.beginPath(); ctx.arc(bx+p[0]*bw,by+p[1]*bh,2.6,0,7); ctx.fill(); });
@@ -511,7 +511,7 @@ SCENES.v_face = (ctx,w,h,t)=>{
 SCENES.v_pose = (ctx,w,h,t)=>{
   const im=IMGS.v_pose;
   if(im && im.ok){ coverImg(ctx,im.img,w,h); scrim(ctx,w,h);
-    const P={head:[.5,.14],neck:[.5,.24],sl:[.455,.27],sr:[.545,.27],el:[.43,.15],er:[.57,.15],hl:[.43,.06],hr:[.57,.06],hip:[.5,.55],kl:[.47,.74],kr:[.53,.74],fl:[.47,.93],fr2:[.53,.93]};
+    const P={head:[.5,.155],neck:[.5,.25],sl:[.455,.28],sr:[.545,.28],el:[.43,.16],er:[.57,.16],hl:[.43,.075],hr:[.57,.075],hip:[.5,.52],kl:[.47,.70],kr:[.53,.70],fl:[.47,.88],fr2:[.53,.88]};
     const bones=[['head','neck'],['neck','sl'],['neck','sr'],['sl','el'],['el','hl'],['sr','er'],['er','hr'],['neck','hip'],['hip','kl'],['kl','fl'],['hip','kr'],['kr','fr2']];
     ctx.strokeStyle=PAL.blue; ctx.lineWidth=3; bones.forEach(b=>{ ctx.beginPath(); ctx.moveTo(P[b[0]][0]*w,P[b[0]][1]*h); ctx.lineTo(P[b[1]][0]*w,P[b[1]][1]*h); ctx.stroke(); });
     ctx.fillStyle='#fff'; Object.keys(P).forEach(k=>{ ctx.beginPath(); ctx.arc(P[k][0]*w,P[k][1]*h,4,0,7); ctx.fill(); });
