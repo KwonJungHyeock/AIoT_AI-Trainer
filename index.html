@@ -506,6 +506,26 @@
     color: var(--ink-4); font-size: 16px; line-height: 1;
   }
   .class-del:hover { color: var(--rose); }
+  /* 클래스별 촬영 버튼 — 버튼형 학습의 핵심 액션 */
+  .cap-btn {
+    margin-top: 10px; width: 100%; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 14px; border-radius: 10px; font-family: var(--sans);
+    font-size: 14.5px; font-weight: 700; color: #fff;
+    background: linear-gradient(150deg, #ff6a52, var(--accent));
+    box-shadow: 0 6px 14px rgba(241,90,79,.32), inset 0 1px 0 rgba(255,255,255,.25);
+    transition: transform .08s, box-shadow .15s, filter .15s; touch-action: none; user-select: none;
+  }
+  .cap-btn .ci { font-size: 16px; line-height: 1; }
+  .cap-btn .cap-count {
+    min-width: 24px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,.25); font-family: var(--mono); font-size: 12px; font-weight: 700;
+  }
+  .cap-btn:hover:not(:disabled) { filter: brightness(1.04); box-shadow: 0 9px 20px rgba(241,90,79,.42), inset 0 1px 0 rgba(255,255,255,.25); }
+  .cap-btn:active:not(:disabled) { transform: scale(.97); box-shadow: 0 0 0 3px var(--accent-soft), 0 4px 10px rgba(241,90,79,.3); }
+  .cap-btn:disabled { background: var(--panel-soft); color: var(--ink-4); box-shadow: none; cursor: not-allowed; }
+  .cap-btn:disabled .cap-count { background: rgba(0,0,0,.06); }
+
   .thumbs { display: flex; gap: 3px; margin-top: 8px; flex-wrap: wrap; }
   .thumbs img {
     width: 26px; height: 26px; border-radius: 4px; object-fit: cover;
@@ -687,7 +707,7 @@
   /* 카메라 하단 컨트롤 */
   .cam-controls {
     padding: 14px 16px;
-    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    display: grid; grid-template-columns: 1fr; gap: 10px;
     border-top: 1px solid var(--border);
   }
 
@@ -991,7 +1011,7 @@
     <div class="card-b">
       <div id="class-list"></div>
       <button class="btn ghost" id="add-class" style="width:100%;margin-top:6px">+ 클래스 추가</button>
-      <p class="hint">분류할 종류를 만드세요. 클래스를 클릭하면 그 클래스로 사진을 모읍니다.</p>
+      <p class="hint">분류할 종류를 만들고, 각 클래스의 <b>📷 촬영</b>을 누르세요. <b>탭</b>하면 1장, <b>길게</b> 누르면 연속으로 찍힙니다.</p>
     </div>
   </aside>
 
@@ -1048,10 +1068,9 @@
         </div>
       </div>
 
-      <!-- 카메라 컨트롤 -->
+      <!-- 카메라 컨트롤 (촬영은 왼쪽 클래스별 버튼으로) -->
       <div class="cam-controls">
         <button class="btn" id="cam-toggle">카메라 켜기</button>
-        <button class="btn blue" id="capture" disabled>촬영 (꾹 누르면 연속)</button>
       </div>
     </div>
 
@@ -1723,7 +1742,7 @@ const els = {
   classList: $('class-list'), classCountMeta: $('class-count-meta'),
   addClass: $('add-class'),
   video: $('webcam'), camOverlay: $('cam-overlay'),
-  camToggle: $('cam-toggle'), capture: $('capture'),
+  camToggle: $('cam-toggle'),
   capTargetName: $('cap-target-name'), liveDot: $('live-dot'),
   epochs: $('epochs'), train: $('train'),
   trainBar: $('train-bar'), trainHint: $('train-hint'),
@@ -1832,6 +1851,15 @@ function renderClassList(cfg) {
 
     div.appendChild(row);
 
+    if (cfg.capture) {
+      const cap = document.createElement('button');
+      cap.className = 'cap-btn'; cap.dataset.id = c.id; cap.type = 'button';
+      cap.disabled = !cfg.capEnabled();
+      cap.innerHTML = `<span class="ci">📷</span><span class="cl">촬영</span><span class="cap-count">${c.embeddings.length}</span>`;
+      cap.onclick = (e) => e.stopPropagation(); // 캡처는 컨테이너 위임으로 처리(롱프레스)
+      div.appendChild(cap);
+    }
+
     if (c.thumbs.length) {
       const t = document.createElement('div'); t.className = 'thumbs';
       if (cfg.onThumbs) { t.style.cursor = 'pointer'; t.title = '클릭해서 갤러리 열기'; }
@@ -1864,6 +1892,7 @@ function renderClasses() {
     onSelect: selectClass, onRemove: removeClass,
     onRename: () => { renderBars(); updateCapTarget(); },
     onThumbs: openGallery,
+    capture: true, capEnabled: () => !!state.stream,
   });
   updateCapTarget();
 }
@@ -1880,7 +1909,7 @@ async function toggleCam() {
     state.stream = null; els.video.srcObject = null;
     els.camOverlay.style.display = 'grid';
     els.camToggle.textContent = '카메라 켜기';
-    els.capture.disabled = true;
+    setCapEnabled(false);
     els.liveDot.classList.remove('on');
     stopInfer();
     return;
@@ -1890,7 +1919,7 @@ async function toggleCam() {
     els.video.srcObject = state.stream;
     els.camOverlay.style.display = 'none';
     els.camToggle.textContent = '카메라 끄기';
-    els.capture.disabled = false;
+    setCapEnabled(true);
     els.liveDot.classList.add('on');
   } catch (e) {
     console.error(e);
@@ -1910,7 +1939,30 @@ function captureSample() {
   cv.getContext('2d').drawImage(els.video, 0, 0, 64, 48);
   sel.thumbs.push(cv.toDataURL('image/jpeg', 0.6));
 
-  renderClasses(); refresh();
+  bumpClassCard(sel); refresh();
+}
+
+/* 촬영 중에는 전체 재렌더(깜빡임·롱프레스 끊김)를 피하고 해당 카드만 갱신 */
+function bumpClassCard(c) {
+  const item = els.classList.querySelector('.class-item[data-id="' + c.id + '"]');
+  if (!item) { renderClasses(); return; }
+  const n = c.embeddings.length;
+  item.querySelectorAll('.class-count').forEach(e => e.textContent = n);
+  const cb = item.querySelector('.cap-count'); if (cb) cb.textContent = n;
+  let t = item.querySelector('.thumbs');
+  if (!t) {
+    t = document.createElement('div'); t.className = 'thumbs';
+    t.style.cursor = 'pointer'; t.title = '클릭해서 갤러리 열기';
+    t.addEventListener('click', (e) => { e.stopPropagation(); selectClass(c.id); openGallery(c.id); });
+    item.appendChild(t);
+  }
+  t.innerHTML = '';
+  c.thumbs.slice(-6).forEach(src => { const im = document.createElement('img'); im.src = src; t.appendChild(im); });
+  if (n > 6) { const m = document.createElement('span'); m.className = 'more'; m.textContent = '+' + (n - 6); t.appendChild(m); }
+}
+
+function setCapEnabled(on) {
+  els.classList.querySelectorAll('.cap-btn').forEach(b => b.disabled = !on);
 }
 
 /* ── 학습 ───────────────────────────────────────────── */
@@ -3385,17 +3437,25 @@ els.camToggle.onclick = toggleCam;
 els.train.onclick = train;
 els.inferToggle.onclick = toggleInfer;
 
+/* 클래스별 촬영 — 카드의 [📷 촬영] 버튼: 탭=1장, 길게=연속.
+   컨테이너 위임이라 촬영 중 카드가 갱신돼도 롱프레스가 끊기지 않는다. */
 let holdTimer = null;
-function startHold() {
-  if (els.capture.disabled) return;
+function startClassCapture(id) {
+  if (!state.stream) return;
+  selectClass(id);
   captureSample();
+  clearInterval(holdTimer);
   holdTimer = setInterval(captureSample, 120);
 }
-function endHold() { clearInterval(holdTimer); holdTimer = null; }
-els.capture.addEventListener('mousedown', startHold);
-els.capture.addEventListener('touchstart', (e) => { e.preventDefault(); startHold(); });
-window.addEventListener('mouseup', endHold);
-window.addEventListener('touchend', endHold);
+function endClassCapture() { clearInterval(holdTimer); holdTimer = null; }
+els.classList.addEventListener('pointerdown', (e) => {
+  const b = e.target.closest('.cap-btn');
+  if (!b || b.disabled) return;
+  e.preventDefault();
+  startClassCapture(+b.dataset.id);
+});
+window.addEventListener('pointerup', endClassCapture);
+window.addEventListener('pointercancel', endClassCapture);
 
 /* 탭/서브탭을 떠날 때 활성 카메라·마이크·추론 루프를 일괄 정리.
    각 toggle 함수는 "켜져 있으면 끈다"는 토글 구조이므로,
@@ -3427,8 +3487,6 @@ const FEATURES = {
     panel: 'panel-supervised', sub: 'sub-audio', type: '전이학습', model: 'Speech Commands', desc: '짧은 음성 명령을 녹음해 단어를 분류합니다.' },
   pose:    { name: '동작 분류', icon: IC('<circle cx="12" cy="4" r="2"/><path d="M12 6v6m0 0l-4 6m4-6l4 6M6 9l6 1 6-1"/>'),
     panel: 'panel-supervised', sub: 'sub-pose', type: '지도학습 · 전이학습', model: 'MoveNet', desc: '자세 키포인트(관절 위치)를 수집·학습해 동작을 분류합니다.' },
-  text:    { name: '텍스트 분류', icon: IC('<path d="M4 6h16M4 12h16M4 18h10"/>'), disabled: true, badge: '준비중',
-    type: '전이학습', model: 'USE', desc: '문장 임베딩 + 분류 헤드로 텍스트를 분류합니다. (준비 중)' },
 
   filter:  { name: '영상 효과(필터)', icon: IC('<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/>'), badge: '알고리즘',
     panel: 'panel-pretrained', sub: 'sub-filter', type: '영상처리 알고리즘', model: 'Canvas · 프레임 차분', desc: '흑백·색반전·고대비·블러 필터와 모션 감지를 실시간으로 체험합니다.' },
@@ -3446,7 +3504,7 @@ const FEATURES = {
 
 /* 사이드바 그룹 구성 — 이 배열 순서대로 렌더된다. */
 const NAV_GROUPS = [
-  { title: 'AI 학습·추론 · 만드는 AI', items: ['image', 'audio', 'pose', 'text'] },
+  { title: 'AI 학습·추론 · 만드는 AI', items: ['image', 'audio', 'pose'] },
   { title: 'AI 영상처리 · 체험하는 AI', items: ['filter', 'colortrack', 'face', 'skeleton', 'detect'] },
 ];
 

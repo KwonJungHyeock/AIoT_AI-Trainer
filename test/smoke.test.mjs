@@ -129,13 +129,12 @@ test('음성 녹음 관리 모달: 목록 표시 + 개별 삭제', async () => {
   assert.equal(doc.querySelectorAll('#audio-rec-grid .gallery-item').length, 1, '삭제 후 1개');
 });
 
-test('사이드바가 config 기반 2그룹으로 생성되고 준비중 항목은 비활성', async () => {
+test('사이드바가 config 기반 2그룹으로 생성된다 (텍스트 분류 제거됨)', async () => {
   const { doc } = await loadApp();
   assert.equal(doc.querySelectorAll('#sidebar .nav-group').length, 2);
-  assert.equal(doc.querySelectorAll('#sidebar .nav-item').length, 9);
-  const text = doc.querySelector('.nav-item[data-feature="text"]');
-  assert.equal(text.classList.contains('disabled'), true);
-  assert.match(text.querySelector('.nav-badge').textContent, /준비중/);
+  assert.equal(doc.querySelectorAll('#sidebar .nav-item').length, 8);
+  // 텍스트 분류 항목은 제거됨
+  assert.equal(doc.querySelector('.nav-item[data-feature="text"]'), null);
   // 사전학습 뱃지
   assert.match(doc.querySelector('.nav-item[data-feature="detect"] .nav-badge').textContent, /사전학습/);
 });
