@@ -130,6 +130,8 @@
   /* 카메라 */
   .stage { position:relative; width:100%; aspect-ratio:4/3; background:#0d1016; border-radius:13px; overflow:hidden; border:1px solid var(--line); }
   .stage video, .stage canvas { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transform:scaleX(-1); }
+  /* 오버레이 레이어 고정 — 손 랜드마크 캔버스가 영상 위에 확실히 표시(GPU 레이어 가림 예방) */
+  .stage video { z-index:1; } .stage canvas { z-index:2; }
   .stage .ph { position:absolute; inset:0; display:grid; place-items:center; color:#9aa3b2; font-size:13.5px; text-align:center; padding:20px; }
   .stage .rec-dot { position:absolute; top:12px; left:12px; display:none; align-items:center; gap:7px; z-index:2;
     background:rgba(240,71,58,.92); color:#fff; font-size:11.5px; font-weight:700; padding:5px 11px; border-radius:999px; }

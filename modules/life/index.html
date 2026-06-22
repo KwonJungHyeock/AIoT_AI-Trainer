@@ -72,6 +72,8 @@
 
   .stage { position:relative; width:100%; aspect-ratio:4/3; background:#0d1016; border-radius:13px; overflow:hidden; border:1px solid var(--line); }
   .stage video, .stage canvas { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  /* 오버레이 레이어 고정(예방) */
+  .stage video { z-index:1; } .stage canvas { z-index:2; }
   .stage .ph { position:absolute; inset:0; display:grid; place-items:center; color:#9aa3b2; font-size:13.5px; text-align:center; padding:20px; }
   .scan-frame, .ocr-frame { position:absolute; border:2px dashed rgba(255,255,255,.55); border-radius:14px; pointer-events:none; }
   .scan-frame { inset:18% 22%; }
