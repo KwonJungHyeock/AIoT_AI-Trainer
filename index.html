@@ -322,14 +322,12 @@
   .fi-model { background: rgba(0,102,255,0.08); color: var(--blue); border-color: rgba(0,102,255,0.2); }
   .fi-desc { margin: 8px 0 0; font-size: 14.5px; color: var(--ink-3); line-height: 1.5; }
   .fi-theory { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
-  .fi-tcard { position: relative; overflow: hidden; border-radius: 12px; padding: 14px 16px;
-    background: linear-gradient(150deg, #1b2030 0%, #14161f 70%); border: 1px solid #2a3142;
-    box-shadow: 0 8px 22px rgba(20,22,31,.18), inset 0 1px 0 rgba(255,255,255,.05); }
-  .fi-tcard::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .6;
-    background: radial-gradient(70% 90% at 92% -10%, rgba(240,71,58,.22), transparent 60%); }
-  .fi-tcard > * { position: relative; z-index: 1; }
-  .fi-th { font-family: var(--mono); font-size: 11.5px; letter-spacing: .05em; color: #ff9a8f; margin-bottom: 7px; font-weight: 700; }
-  .fi-tcard p { margin: 0; font-size: 14px; color: #c7cedb; line-height: 1.6; }
+  .fi-tcard { position: relative; border-radius: 12px; padding: 14px 16px; border: 1px solid var(--border);
+    box-shadow: 0 1px 2px rgba(20,22,31,.04), inset 0 1px 0 rgba(255,255,255,.7); }
+  .fi-theory > .fi-tcard:nth-child(1) { background: linear-gradient(158deg, #fbfdff 0%, #eef3fb 100%); }
+  .fi-theory > .fi-tcard:nth-child(2) { background: linear-gradient(158deg, #fffbfa 0%, #fdf1ed 100%); }
+  .fi-th { font-family: var(--mono); font-size: 11.5px; letter-spacing: .05em; color: var(--accent-ink); margin-bottom: 7px; font-weight: 700; }
+  .fi-tcard p { margin: 0; font-size: 14px; color: var(--ink-2); line-height: 1.6; }
   @media (max-width: 720px) { .fi-theory { grid-template-columns: 1fr; } }
 
   /* 태블릿: 사이드바를 상단 가로 바로 전환(세로 공간 절약) */
@@ -3160,35 +3158,52 @@ async function faceToggle() {
     fcEls.status.textContent = 'LIVE';
   } catch (e) { console.error('[face] model:', e); fcEls.status.textContent = 'MODEL ERROR'; }
 }
+// BlazeFace 예측에서 박스 좌표를 형태 무관하게 안전 추출(텐서/배열/중첩/box/landmarks)
+function faceBox(p) {
+  const toXY = (v) => {
+    if (v == null) return null;
+    if (typeof v.arraySync === 'function') v = v.arraySync();
+    if (Array.isArray(v) && Array.isArray(v[0])) v = v[0];
+    const x = +(v[0]), y = +(v[1]);
+    return (Number.isFinite(x) && Number.isFinite(y)) ? [x, y] : null;
+  };
+  const tl = toXY(p.topLeft), br = toXY(p.bottomRight);
+  if (tl && br) return { x: tl[0], y: tl[1], w: br[0] - tl[0], h: br[1] - tl[1] };
+  const b = p.box;
+  if (b) {
+    if (b.xMin != null) return { x: b.xMin, y: b.yMin, w: b.xMax - b.xMin, h: b.yMax - b.yMin };
+    if (b.left != null) return { x: b.left, y: b.top, w: b.width, h: b.height };
+  }
+  let lm = p.landmarks;
+  if (lm && typeof lm.arraySync === 'function') lm = lm.arraySync();
+  if (Array.isArray(lm) && lm.length) {
+    const xs = lm.map(q => q[0]), ys = lm.map(q => q[1]);
+    const x0 = Math.min(...xs), y0 = Math.min(...ys), x1 = Math.max(...xs), y1 = Math.max(...ys);
+    return { x: x0 - 25, y: y0 - 45, w: (x1 - x0) + 50, h: (y1 - y0) + 75 };
+  }
+  return null;
+}
 async function faceLoop() {
-  if (!face.stream) return;
-  if (face.model && fcEls.video.readyState >= 2) {
+  if (!face.stream || !face.model) { face.raf = requestAnimationFrame(faceLoop); return; }
+  if (fcEls.video.readyState >= 2) {
     const vw = fcEls.video.videoWidth, vh = fcEls.video.videoHeight;
-    const cw = fcEls.video.clientWidth || vw, ch = fcEls.video.clientHeight || vh;
-    fcEls.canvas.width = cw; fcEls.canvas.height = ch;
-    // object-fit: cover 매핑 (영상 native 좌표 → 표시 영역 좌표) — 박스가 얼굴에 정확히 붙도록
-    const scale = Math.max(cw / vw, ch / vh);
-    const offX = (cw - vw * scale) / 2, offY = (ch - vh * scale) / 2;
+    fcEls.canvas.width = vw; fcEls.canvas.height = vh; // 객체 탐지와 동일한 검증된 방식
     try {
       const preds = await face.model.estimateFaces(fcEls.video, false);
       const ctx = fcEls.canvas.getContext('2d');
-      ctx.clearRect(0, 0, cw, ch);
-      ctx.font = 'bold 15px JetBrains Mono';
+      ctx.clearRect(0, 0, vw, vh);
+      ctx.font = 'bold 16px JetBrains Mono';
       preds.forEach((p) => {
-        let tl = p.topLeft, br = p.bottomRight;
-        if (tl && typeof tl.arraySync === 'function') { tl = tl.arraySync(); br = br.arraySync(); }
-        if (Array.isArray(tl[0])) { tl = tl[0]; br = br[0]; }
-        const dx1 = tl[0] * scale + offX, dy1 = tl[1] * scale + offY;
-        const dw = (br[0] - tl[0]) * scale, dh = (br[1] - tl[1]) * scale;
-        if (![dx1, dy1, dw, dh].every(Number.isFinite)) return;
-        const mx = cw - dx1 - dw; // 비디오가 좌우 반전(scaleX(-1))이므로 박스 X 반전
+        const box = faceBox(p);
+        if (!box || !Number.isFinite(box.w) || box.w <= 0) return;
+        const mx = vw - box.x - box.w; // 비디오 좌우 반전 → 박스 X 반전
         ctx.strokeStyle = '#f0473a'; ctx.lineWidth = 3;
-        ctx.strokeRect(mx, dy1, dw, dh);
+        ctx.strokeRect(mx, box.y, box.w, box.h);
         const prob = Array.isArray(p.probability) ? p.probability[0] : (typeof p.probability === 'number' ? p.probability : 1);
         const label = 'FACE ' + Math.round(prob * 100) + '%';
         const tw = ctx.measureText(label).width;
-        ctx.fillStyle = '#f0473a'; ctx.fillRect(mx, dy1 - 20, tw + 10, 20);
-        ctx.fillStyle = '#fff'; ctx.fillText(label, mx + 5, dy1 - 5);
+        ctx.fillStyle = '#f0473a'; ctx.fillRect(mx, box.y - 20, tw + 10, 20);
+        ctx.fillStyle = '#fff'; ctx.fillText(label, mx + 5, box.y - 5);
       });
       fcEls.count.textContent = preds.length;
       if (fcEls.countBar) fcEls.countBar.style.width = Math.min(100, preds.length * 25) + '%';
