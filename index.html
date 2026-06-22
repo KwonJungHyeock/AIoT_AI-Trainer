@@ -3189,7 +3189,8 @@ async function faceLoop() {
     const vw = fcEls.video.videoWidth, vh = fcEls.video.videoHeight;
     fcEls.canvas.width = vw; fcEls.canvas.height = vh; // 객체 탐지와 동일한 검증된 방식
     try {
-      const preds = await face.model.estimateFaces(fcEls.video, false);
+      // returnTensors=false, flipHorizontal=false, annotateBoxes=true → 1개라도 박스 좌표 포함
+      const preds = await face.model.estimateFaces(fcEls.video, false, false, true);
       const ctx = fcEls.canvas.getContext('2d');
       ctx.clearRect(0, 0, vw, vh);
       ctx.font = 'bold 16px JetBrains Mono';
