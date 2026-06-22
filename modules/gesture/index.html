@@ -59,7 +59,7 @@
   .cintro { text-align:center; padding:6px 0 16px; }
   .cintro .eyebrow { display:inline-block; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.06em; color:var(--primary-ink); background:var(--primary-soft); border:1px solid var(--primary-line); border-radius:999px; padding:5px 12px; margin-bottom:10px; }
   .cintro h1 { margin:0 0 7px; font-size:26px; font-weight:800; letter-spacing:-.02em; }
-  .cintro p { margin:0 auto; max-width:600px; font-size:14px; color:var(--ink-2); line-height:1.6; }
+  .cintro p { margin:0 auto; max-width:760px; font-size:14px; color:var(--ink-2); line-height:1.6; }
   .cintro p b { color:var(--primary-ink); }
 
   /* 단계 탭 */
@@ -122,7 +122,10 @@
   @media (max-width:880px){ .work{ grid-template-columns:1fr; align-items:start; } .wstep>.card{ height:auto; } }
 
   /* 레이아웃(초급) */
-  .layout { display:grid; grid-template-columns:1.12fr .88fr; gap:18px; align-items:start; }
+  .layout { display:grid; grid-template-columns:1.12fr .88fr; gap:18px; align-items:stretch; }
+  /* 가위바위보 판정 카드: 카메라 카드와 같은 높이로 맞추고 내용 균등 배치 */
+  .rps-body { flex:1; display:flex; flex-direction:column; justify-content:space-evenly; align-items:center; gap:10px; margin-top:6px; }
+  .rps-body .fingers, .rps-body .donut-wrap { margin:0; }
   .card { background:#fff; border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:18px; }
   .card h2 { margin:0 0 4px; font-size:16px; font-weight:800; display:flex; align-items:center; gap:8px; }
   .card h2::before { content:''; width:4px; height:16px; border-radius:2px; background:var(--primary); }
@@ -294,7 +297,7 @@
   <div class="cintro">
     <span class="eyebrow">제스처 · 동작 AI 코스</span>
     <h1>손동작으로 배우는 AI</h1>
-    <p>카메라가 손의 <b>관절 21개</b>를 실시간으로 추적해요. 먼저 가위바위보를 인식해 원리를 보고(초급), 그다음 <b>내 제스처를 직접 가르쳐</b> 나만의 분류 AI를 만들어 봅니다(중급).</p>
+    <p>카메라가 손의 <b>관절 21개</b>를 추적해요. 가위바위보로 원리를 보고(초급), <b>내 제스처를 직접 학습</b>시켜 봅니다(중급).</p>
   </div>
 
   <div class="steps">
@@ -323,21 +326,23 @@
     <div class="card">
       <h2>가위바위보 판정</h2>
       <p class="sub">규칙 기반(펴진 손가락)으로 즉시 인식 — 학습 없이 작동합니다.</p>
-      <div class="rps-big">
-        <div class="rps-emoji" id="rps-emoji">✋</div>
-        <div class="rps-name" id="rps-name">손을 비춰주세요</div>
-        <div class="rps-hint" id="rps-hint">바위 ✊ · 보 ✋ · 가위 ✌️</div>
-      </div>
-      <div class="fingers" id="fingers"></div>
-      <div class="donut-wrap">
-        <div class="donut">
-          <svg width="92" height="92" viewBox="0 0 92 92">
-            <circle class="ring-bg" cx="46" cy="46" r="40"/>
-            <circle class="ring-fg" id="play-arc" cx="46" cy="46" r="40" stroke-dasharray="0 251.3"/>
-          </svg>
-          <div class="pct" id="play-pct">0%</div>
+      <div class="rps-body">
+        <div class="rps-big">
+          <div class="rps-emoji" id="rps-emoji">✋</div>
+          <div class="rps-name" id="rps-name">손을 비춰주세요</div>
+          <div class="rps-hint" id="rps-hint">바위 ✊ · 보 ✋ · 가위 ✌️</div>
         </div>
-        <div class="donut-lab">손 인식 신뢰도<b id="play-conf-label">대기 중</b></div>
+        <div class="fingers" id="fingers"></div>
+        <div class="donut-wrap">
+          <div class="donut">
+            <svg width="92" height="92" viewBox="0 0 92 92">
+              <circle class="ring-bg" cx="46" cy="46" r="40"/>
+              <circle class="ring-fg" id="play-arc" cx="46" cy="46" r="40" stroke-dasharray="0 251.3"/>
+            </svg>
+            <div class="pct" id="play-pct">0%</div>
+          </div>
+          <div class="donut-lab">손 인식 신뢰도<b id="play-conf-label">대기 중</b></div>
+        </div>
       </div>
     </div>
 
