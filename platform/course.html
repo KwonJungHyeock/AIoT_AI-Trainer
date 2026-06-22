@@ -438,6 +438,22 @@ function screen(ctx,w,h){ ctx.clearRect(0,0,w,h); ctx.fillStyle=PAL.bg; ctx.fill
   ctx.strokeStyle=PAL.grid; ctx.lineWidth=1;
   for(let x=24;x<w;x+=26){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
   for(let y=24;y<h;y+=26){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); } }
+function coverImg(ctx,im,w,h){ const ir=im.width/im.height, sr=w/h; let dw,dh;
+  if(ir>sr){ dh=h; dw=h*ir; } else { dw=w; dh=w/ir; }
+  ctx.drawImage(im,(w-dw)/2,(h-dh)/2,dw,dh); }
+function scrim(ctx,w,h){ ctx.fillStyle='rgba(15,19,32,.30)'; ctx.fillRect(0,0,w,h); }
+
+/* 실사 배경 (선택적) — 있으면 도식 대신 사진 위에 오버레이, 없으면 도식 폴백.
+   확장자(png/jpg/webp) 자동 감지. */
+const DEMO_IMG = { v_detect:'vision-detect', v_face:'vision-face', v_pose:'vision-pose', v_classify:'vision-classify' };
+const IMGS = {};
+if(typeof Image !== 'undefined'){
+  Object.keys(DEMO_IMG).forEach(id=>{ const name=DEMO_IMG[id], exts=['png','jpg','jpeg','webp']; let i=0;
+    const rec={img:new Image(), ok:false}; IMGS[id]=rec;
+    rec.img.onload=()=>{ if(rec.img.width>0) rec.ok=true; };
+    rec.img.onerror=()=>{ i++; if(i<exts.length) rec.img.src='/platform/img/demo/'+name+'.'+exts[i]; };
+    rec.img.src='/platform/img/demo/'+name+'.'+exts[0]; });
+}
 
 const DATA_PTS = Array.from({length:14}, (_,i)=>{ const x=i/13; return [x, clamp(0.14+x*0.72+Math.sin(i*9.73)*0.11, 0.05, 0.95)]; });
 const CPTS = Array.from({length:30}, (_,i)=>{ const a=(Math.sin(i*12.9)*0.5+0.5), b=(Math.cos(i*7.31)*0.5+0.5); return [a*0.9+0.05, b*0.86+0.05, (a+b)>1 ? 1 : 0]; });
@@ -461,7 +477,14 @@ const RPS = [[.15,.1,.1,.1,.1],[1,1,1,1,1],[.15,1,1,.15,.15]];
 const SCENES = {};
 
 /* ── 비전 ── */
-SCENES.v_detect = (ctx,w,h,t)=>{ screen(ctx,w,h);
+SCENES.v_detect = (ctx,w,h,t)=>{
+  const im=IMGS.v_detect;
+  if(im && im.ok){ coverImg(ctx,im.img,w,h); scrim(ctx,w,h);
+    const objs=[{x:.33,y:.36,w:.33,h:.42,c:PAL.blue,l:'노트북 94%'},{x:.13,y:.60,w:.15,h:.26,c:PAL.amber,l:'컵 88%'},{x:.70,y:.69,w:.25,h:.19,c:PAL.green,l:'책 81%'}];
+    objs.forEach((o,i)=>{ const ap=clamp((t-300-i*450)/500,0,1); if(ap<=0) return;
+      ctx.save(); ctx.globalAlpha=ap; ctx.strokeStyle=o.c; ctx.lineWidth=2.5; rr(ctx,o.x*w,o.y*h,o.w*w,o.h*h,8); ctx.stroke(); chip(ctx,o.x*w,o.y*h-24,o.l,o.c); ctx.restore(); });
+    chip(ctx,12,12,'객체 탐지 · COCO-SSD',PAL.dim); return; }
+  screen(ctx,w,h);
   const objs=[{x:.14,y:.46,w:.3,h:.38,c:PAL.blue,l:'노트북 94%'},{x:.56,y:.26,w:.18,h:.24,c:PAL.amber,l:'컵 88%'},{x:.62,y:.6,w:.24,h:.28,c:PAL.green,l:'책 81%'}];
   objs.forEach((o,i)=>{ const X=o.x*w,Y=o.y*h,W=o.w*w,H=o.h*h;
     ctx.fillStyle='rgba(255,255,255,.09)'; rr(ctx,X,Y,W,H,8); ctx.fill();
@@ -469,7 +492,15 @@ SCENES.v_detect = (ctx,w,h,t)=>{ screen(ctx,w,h);
     ctx.save(); ctx.globalAlpha=ap; ctx.strokeStyle=o.c; ctx.lineWidth=2.5; rr(ctx,X,Y,W,H,8); ctx.stroke(); chip(ctx,X,Y-24,o.l,o.c); ctx.restore(); });
   chip(ctx,12,12,'객체 탐지 · COCO-SSD',PAL.dim);
 };
-SCENES.v_face = (ctx,w,h,t)=>{ screen(ctx,w,h);
+SCENES.v_face = (ctx,w,h,t)=>{
+  const im=IMGS.v_face;
+  if(im && im.ok){ coverImg(ctx,im.img,w,h); scrim(ctx,w,h);
+    const bx=w*0.43, by=h*0.10, bw=w*0.16, bh=h*0.37;
+    ctx.strokeStyle=PAL.green; ctx.lineWidth=2.5; rr(ctx,bx,by,bw,bh,8); ctx.stroke();
+    chip(ctx,bx,by-24,'얼굴 1명',PAL.green);
+    ctx.fillStyle=PAL.red; [[.26,.32],[.74,.32],[.5,.55],[.32,.78],[.68,.78]].forEach(p=>{ ctx.beginPath(); ctx.arc(bx+p[0]*bw,by+p[1]*bh,2.6,0,7); ctx.fill(); });
+    chip(ctx,12,12,'얼굴 검출 · BlazeFace',PAL.dim); return; }
+  screen(ctx,w,h);
   const cx=w*0.5+Math.sin(t/1400)*w*0.05, cy=h*0.52, R=h*0.24;
   ctx.fillStyle='rgba(255,255,255,.9)'; ctx.beginPath(); ctx.ellipse(cx,cy,R*0.78,R,0,0,7); ctx.fill();
   ctx.strokeStyle=PAL.green; ctx.lineWidth=2.5; rr(ctx,cx-R*0.98,cy-R*1.18,R*1.96,R*2.36,10); ctx.stroke();
@@ -477,7 +508,15 @@ SCENES.v_face = (ctx,w,h,t)=>{ screen(ctx,w,h);
   ctx.fillStyle=PAL.red; [[-.34,-.22],[.34,-.22],[0,.06],[-.22,.42],[.22,.42],[0,.48]].forEach(p=>{ ctx.beginPath(); ctx.arc(cx+p[0]*R*1.5,cy+p[1]*R,3,0,7); ctx.fill(); });
   chip(ctx,12,12,'얼굴 검출 · BlazeFace',PAL.dim);
 };
-SCENES.v_pose = (ctx,w,h,t)=>{ screen(ctx,w,h);
+SCENES.v_pose = (ctx,w,h,t)=>{
+  const im=IMGS.v_pose;
+  if(im && im.ok){ coverImg(ctx,im.img,w,h); scrim(ctx,w,h);
+    const P={head:[.5,.14],neck:[.5,.24],sl:[.455,.27],sr:[.545,.27],el:[.43,.15],er:[.57,.15],hl:[.43,.06],hr:[.57,.06],hip:[.5,.55],kl:[.47,.74],kr:[.53,.74],fl:[.47,.93],fr2:[.53,.93]};
+    const bones=[['head','neck'],['neck','sl'],['neck','sr'],['sl','el'],['el','hl'],['sr','er'],['er','hr'],['neck','hip'],['hip','kl'],['kl','fl'],['hip','kr'],['kr','fr2']];
+    ctx.strokeStyle=PAL.blue; ctx.lineWidth=3; bones.forEach(b=>{ ctx.beginPath(); ctx.moveTo(P[b[0]][0]*w,P[b[0]][1]*h); ctx.lineTo(P[b[1]][0]*w,P[b[1]][1]*h); ctx.stroke(); });
+    ctx.fillStyle='#fff'; Object.keys(P).forEach(k=>{ ctx.beginPath(); ctx.arc(P[k][0]*w,P[k][1]*h,4,0,7); ctx.fill(); });
+    chip(ctx,12,12,'자세 추정 · MoveNet',PAL.dim); return; }
+  screen(ctx,w,h);
   const cx=w*0.5, top=h*0.18, u=h*0.12, sw=Math.sin(t/700)*0.5;
   const J={head:[cx,top],neck:[cx,top+u],sl:[cx-u*0.95,top+u*1.1],sr:[cx+u*0.95,top+u*1.1],
     el:[cx-u*1.4,top+u*2+sw*u],er:[cx+u*1.4,top+u*2-sw*u],hip:[cx,top+u*3.1],
@@ -487,7 +526,19 @@ SCENES.v_pose = (ctx,w,h,t)=>{ screen(ctx,w,h);
   ctx.fillStyle='#fff'; Object.values(J).forEach(p=>{ ctx.beginPath(); ctx.arc(p[0],p[1],4,0,7); ctx.fill(); });
   chip(ctx,12,12,'자세 추정 · MoveNet',PAL.dim);
 };
-SCENES.v_classify = (ctx,w,h,t)=>{ screen(ctx,w,h);
+SCENES.v_classify = (ctx,w,h,t)=>{
+  const im=IMGS.v_classify;
+  if(im && im.ok){ coverImg(ctx,im.img,w,h); scrim(ctx,w,h);
+    const cats=[['고양이',.92,PAL.green],['강아지',.05,PAL.blue],['토끼',.03,PAL.blue]];
+    const e=ease(clamp((t-300)/800,0,1)), pw=w*0.36, px=w-pw-14, py=h*0.18, ph=h*0.5, bw=pw-28;
+    ctx.fillStyle='rgba(15,19,32,.62)'; ctx.strokeStyle='rgba(255,255,255,.14)'; ctx.lineWidth=1; rr(ctx,px,py,pw,ph,12); ctx.fill(); ctx.stroke();
+    ctx.font='600 12px Pretendard,sans-serif'; ctx.textBaseline='alphabetic';
+    cats.forEach((ct,i)=>{ const y=py+34+i*((ph-44)/3); const bx=px+14;
+      ctx.textAlign='left'; ctx.fillStyle='#fff'; ctx.fillText(ct[0],bx,y-6);
+      ctx.textAlign='right'; ctx.fillStyle=PAL.dim; ctx.fillText(Math.round(ct[1]*e*100)+'%',bx+bw,y-6);
+      bar(ctx,bx,y,bw,ct[1]*e,ct[2]); });
+    ctx.textAlign='left'; chip(ctx,12,12,'이미지 분류 · MobileNet',PAL.dim); return; }
+  screen(ctx,w,h);
   const is=Math.min(w*0.3,h*0.5), ix=w*0.08, iy=h*0.5-is/2;
   ctx.fillStyle='rgba(255,255,255,.1)'; ctx.strokeStyle='rgba(255,255,255,.3)'; ctx.lineWidth=2; rr(ctx,ix,iy,is,is,12); ctx.fill(); ctx.stroke();
   const fc=ix+is/2, fcy=iy+is*0.54, fr=is*0.26;
