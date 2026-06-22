@@ -401,6 +401,8 @@
     transform: scaleX(-1);
   }
   .video-wrap video { position: relative; z-index: 1; }
+  /* 얼굴 검출은 영상을 캔버스에 합성해 그리므로 원본 video는 숨김(오버레이 플레인 제거) */
+  #fc-webcam { opacity: 0; }
 
   /* ─────────── 지도학습 placeholder ─────────── */
   .super-hero {
@@ -3193,15 +3195,16 @@ async function faceLoop() {
     const vw = fcEls.video.videoWidth, vh = fcEls.video.videoHeight;
     fcEls.canvas.width = vw; fcEls.canvas.height = vh; // 객체 탐지와 동일한 검증된 방식
     try {
-      // returnTensors=false, flipHorizontal=false, annotateBoxes=true → 1개라도 박스 좌표 포함
       const preds = await face.model.estimateFaces(fcEls.video, false, false, true);
       const ctx = fcEls.canvas.getContext('2d');
+      // 영상을 캔버스에 직접 합성(좌우 반전) → <video> 하드웨어 오버레이가 박스를 덮는 문제 제거
       ctx.clearRect(0, 0, vw, vh);
+      ctx.save(); ctx.translate(vw, 0); ctx.scale(-1, 1); ctx.drawImage(fcEls.video, 0, 0, vw, vh); ctx.restore();
       ctx.font = 'bold 16px JetBrains Mono';
       preds.forEach((p) => {
         const box = faceBox(p);
         if (!box || !Number.isFinite(box.w) || box.w <= 0) return;
-        const mx = vw - box.x - box.w; // 비디오 좌우 반전 → 박스 X 반전
+        const mx = vw - box.x - box.w; // 합성 영상이 좌우 반전이므로 박스 X 반전
         ctx.strokeStyle = '#f0473a'; ctx.lineWidth = 3;
         ctx.strokeRect(mx, box.y, box.w, box.h);
         const prob = Array.isArray(p.probability) ? p.probability[0] : (typeof p.probability === 'number' ? p.probability : 1);
