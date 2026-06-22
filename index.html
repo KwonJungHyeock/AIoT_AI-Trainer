@@ -401,6 +401,11 @@
     transform: scaleX(-1);
   }
   .video-wrap video { position: relative; z-index: 1; }
+  /* 검출 박스를 HTML div로 영상 위에 표시 (캔버스-영상 GPU 레이어 충돌 회피) */
+  .det-boxes { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+  .det-box { position: absolute; border: 3px solid #f0473a; border-radius: 4px; box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
+  .det-box span { position: absolute; top: -21px; left: -1px; background: #f0473a; color: #fff;
+    font-family: var(--mono); font-size: 12px; font-weight: 700; padding: 1px 6px; border-radius: 4px 4px 0 0; white-space: nowrap; }
 
   /* ─────────── 지도학습 placeholder ─────────── */
   .super-hero {
@@ -1604,6 +1609,7 @@
           <div class="video-wrap">
             <video id="fc-webcam" autoplay playsinline muted></video>
             <canvas id="fc-canvas" class="pose-overlay" style="transform:translateZ(0)"></canvas>
+            <div id="fc-boxes" class="det-boxes"></div>
             <div class="video-overlay" id="fc-cam-overlay">
               <div><div class="ph">CAMERA · STANDBY</div><div class="ph-msg">카메라를 켜면 얼굴이 검출됩니다</div></div>
             </div>
@@ -3125,7 +3131,7 @@ async function skelLoop() {
    ============================================================ */
 const face = { model: null, stream: null, raf: null, lastT: 0 };
 const fcEls = {
-  video: $('fc-webcam'), canvas: $('fc-canvas'), camOverlay: $('fc-cam-overlay'),
+  video: $('fc-webcam'), canvas: $('fc-canvas'), boxes: $('fc-boxes'), camOverlay: $('fc-cam-overlay'),
   camToggle: $('fc-cam-toggle'), status: $('fc-status'), fps: $('fc-fps'),
   count: $('fc-count'), countBar: $('fc-count-bar'),
 };
@@ -3135,7 +3141,7 @@ async function faceToggle() {
     face.stream.getTracks().forEach((t) => t.stop());
     face.stream = null; fcEls.video.srcObject = null;
     if (face.raf) cancelAnimationFrame(face.raf); face.raf = null;
-    fcEls.canvas.getContext('2d').clearRect(0, 0, fcEls.canvas.width, fcEls.canvas.height);
+    fcEls.boxes.innerHTML = '';
     fcEls.camOverlay.style.display = 'grid';
     fcEls.camToggle.textContent = '카메라 켜기 · 검출 시작';
     fcEls.status.textContent = 'IDLE'; fcEls.fps.textContent = '—'; fcEls.count.textContent = '0';
@@ -3191,24 +3197,23 @@ async function faceLoop() {
   if (!face.stream || !face.model) { face.raf = requestAnimationFrame(faceLoop); return; }
   if (fcEls.video.readyState >= 2) {
     const vw = fcEls.video.videoWidth, vh = fcEls.video.videoHeight;
-    fcEls.canvas.width = vw; fcEls.canvas.height = vh; // 객체 탐지와 동일한 검증된 방식
+    // 표시 영역(컨테이너) 크기 기준으로 object-fit:cover 매핑 → HTML div 박스로 영상 위에 그림
+    const W = fcEls.boxes.clientWidth || vw, H = fcEls.boxes.clientHeight || vh;
     try {
       const preds = await face.model.estimateFaces(fcEls.video, false, false, true);
-      const ctx = fcEls.canvas.getContext('2d');
-      ctx.clearRect(0, 0, vw, vh);
-      ctx.font = 'bold 16px JetBrains Mono';
+      const scale = Math.max(W / vw, H / vh);
+      const offX = (W - vw * scale) / 2, offY = (H - vh * scale) / 2;
+      let html = '';
       preds.forEach((p) => {
         const box = faceBox(p);
         if (!box || !Number.isFinite(box.w) || box.w <= 0) return;
-        const mx = vw - box.x - box.w; // 영상이 좌우 반전 표시이므로 박스 X 반전(캔버스는 translateZ만 적용·미반전)
-        ctx.strokeStyle = '#f0473a'; ctx.lineWidth = 3;
-        ctx.strokeRect(mx, box.y, box.w, box.h);
+        const dw = box.w * scale, dh = box.h * scale;
+        const dx = box.x * scale + offX, dy = box.y * scale + offY;
+        const left = W - dx - dw; // 영상이 좌우 반전(scaleX(-1))이므로 X 반전
         const prob = Array.isArray(p.probability) ? p.probability[0] : (typeof p.probability === 'number' ? p.probability : 1);
-        const label = 'FACE ' + Math.round(prob * 100) + '%';
-        const tw = ctx.measureText(label).width;
-        ctx.fillStyle = '#f0473a'; ctx.fillRect(mx, box.y - 20, tw + 10, 20);
-        ctx.fillStyle = '#fff'; ctx.fillText(label, mx + 5, box.y - 5);
+        html += `<div class="det-box" style="left:${left.toFixed(1)}px;top:${dy.toFixed(1)}px;width:${dw.toFixed(1)}px;height:${dh.toFixed(1)}px"><span>FACE ${Math.round(prob * 100)}%</span></div>`;
       });
+      fcEls.boxes.innerHTML = html;
       fcEls.count.textContent = preds.length;
       if (fcEls.countBar) fcEls.countBar.style.width = Math.min(100, preds.length * 25) + '%';
       const now = performance.now();
