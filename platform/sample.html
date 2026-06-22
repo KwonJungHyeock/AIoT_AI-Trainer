@@ -37,15 +37,28 @@
   .free { margin-left:auto; font-family:var(--mono); font-size:11px; font-weight:700; color:var(--green); background:var(--green-soft); border:1px solid rgba(17,160,111,.4); border-radius:999px; padding:6px 12px; }
 
   main { max-width:1280px; margin:0 auto; padding:22px; }
-  .intro { text-align:center; padding:8px 0 18px; }
-  .intro .eyebrow { display:inline-block; font-family:var(--mono); font-size:11.5px; font-weight:700; letter-spacing:.06em; color:var(--primary-ink); background:var(--primary-soft); border:1px solid var(--primary-line); border-radius:999px; padding:6px 13px; margin-bottom:13px; }
-  .intro h1 { margin:0 0 8px; font-size:33px; font-weight:800; letter-spacing:-.03em; }
-  .intro h1 .g { background:linear-gradient(100deg,#ff8a3d,#f0473a 60%); -webkit-background-clip:text; background-clip:text; color:transparent; }
-  .intro p { margin:0 auto; max-width:560px; font-size:14.5px; color:var(--ink-2); }
+  /* 다크 히어로 밴드 (고급화) */
+  .intro { position:relative; margin:6px 0 20px; border-radius:26px; overflow:hidden; padding:42px 28px 34px; text-align:center;
+    background:linear-gradient(165deg,#14161f 0%, #1b1411 58%, #23101a 100%);
+    border:1px solid rgba(255,255,255,.08); box-shadow:0 30px 70px rgba(20,22,31,.28), inset 0 1px 0 rgba(255,255,255,.06); }
+  .intro::before { content:''; position:absolute; inset:0; pointer-events:none; opacity:.72;
+    background:radial-gradient(40% 56% at 16% 18%, rgba(240,71,58,.5), transparent 60%), radial-gradient(44% 58% at 84% 12%, rgba(255,138,61,.42), transparent 60%), radial-gradient(52% 66% at 62% 104%, rgba(124,108,255,.32), transparent 62%); }
+  .intro::after { content:''; position:absolute; inset:0; pointer-events:none;
+    background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px); background-size:32px 32px;
+    -webkit-mask-image:radial-gradient(120% 95% at 50% 0%,#000 26%,transparent 78%); mask-image:radial-gradient(120% 95% at 50% 0%,#000 26%,transparent 78%); }
+  .intro > * { position:relative; z-index:1; }
+  .intro .eyebrow { display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11.5px; font-weight:700; letter-spacing:.06em; color:#ffd9d1; background:rgba(240,71,58,.16); border:1px solid rgba(240,71,58,.36); border-radius:999px; padding:6px 13px; margin-bottom:15px; }
+  .intro h1 { margin:0 0 10px; font-size:38px; font-weight:800; letter-spacing:-.03em; color:#fff; line-height:1.12; }
+  .intro h1 .g { background:linear-gradient(100deg,#ff9a3d,#ff6a52 50%,#ff6ab5); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .intro p { margin:0 auto; max-width:600px; font-size:15px; color:rgba(255,255,255,.76); line-height:1.6; }
+  .intro p b { color:#fff; }
+  .trust { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:18px; }
+  .trust span { display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:rgba(255,255,255,.85); background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.16); border-radius:999px; padding:7px 13px; backdrop-filter:blur(6px); }
 
-  .steps3 { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:14px 0 6px; }
-  .steps3 span { font-size:12.5px; font-weight:700; color:var(--ink-2); background:#fff; border:1px solid var(--line); border-radius:999px; padding:6px 13px; }
-  .steps3 b { color:var(--primary); font-family:var(--mono); }
+  .steps3 { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:16px 0 2px; }
+  .steps3 span { font-size:12.5px; font-weight:700; color:#fff; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); border-radius:999px; padding:6px 13px; }
+  .steps3 b { color:#ff9a8f; font-family:var(--mono); }
+  @media (max-width:600px) { .intro { padding:30px 18px; } .intro h1 { font-size:27px; } }
 
   .tm { display:grid; grid-template-columns:1.05fr 0.95fr 1.05fr; gap:16px; align-items:start; margin-top:14px; }
   .train-status { margin-top:12px; font-size:13px; color:var(--ink-3); text-align:center; font-weight:600; }
@@ -196,9 +209,15 @@
 <main>
   <div class="banner" id="banner"></div>
   <div class="intro">
-    <span class="eyebrow">무료 체험 · 미니 이미지 학습</span>
+    <span class="eyebrow">⚡ 무료 체험 · 미니 이미지 학습</span>
     <h1>1분 만에 <span class="g">나만의 AI를 가르쳐</span> 보기</h1>
-    <p>카메라로 두 가지를 보여주며 가르치면 AI가 둘을 구분해요. 클래스 이름은 <b>원하는 대로</b> 바꿀 수 있어요 — 예: 사과/바나나, 웃는 얼굴/무표정, ✋/✊. 이게 “AI 학습”의 가장 작은 한 조각이에요.</p>
+    <p>카메라로 두 가지를 보여주면 AI가 둘을 구분해요. <b>설치도 코딩도 없이</b> — 지금 바로 “AI 학습”의 가장 작은 한 조각을 직접 만들어 보세요.</p>
+    <div class="trust">
+      <span>🌐 설치 없이 브라우저에서</span>
+      <span>🔒 데이터는 기기 안에서만 · 개인정보 안전</span>
+      <span>🎓 현장 교사가 설계</span>
+      <span>📷 카메라만 있으면 OK</span>
+    </div>
     <div class="steps3"><span><b>①</b> 데이터 모으기</span><span><b>②</b> 학습</span><span><b>③</b> 미리보기·맞히기</span></div>
   </div>
 
