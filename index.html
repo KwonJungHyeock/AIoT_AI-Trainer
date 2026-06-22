@@ -3158,28 +3158,30 @@ async function faceToggle() {
     fcEls.status.textContent = 'LIVE';
   } catch (e) { console.error('[face] model:', e); fcEls.status.textContent = 'MODEL ERROR'; }
 }
-// BlazeFace 예측에서 박스 좌표를 형태 무관하게 안전 추출(텐서/배열/중첩/box/landmarks)
+// BlazeFace 반환 형태가 버전/차원에 따라 제각각(텐서/[x,y]/[[x1,y1,x2,y2]]/빈배열)이라
+// topLeft+bottomRight를 깊게 평탄화해 앞 4개를 [x1,y1,x2,y2]로 사용. 실패 시 landmarks로 박스 생성.
 function faceBox(p) {
-  const toXY = (v) => {
-    if (v == null) return null;
-    if (typeof v.arraySync === 'function') v = v.arraySync();
-    if (Array.isArray(v) && Array.isArray(v[0])) v = v[0];
-    const x = +(v[0]), y = +(v[1]);
-    return (Number.isFinite(x) && Number.isFinite(y)) ? [x, y] : null;
+  const flat = (v) => {
+    if (v == null) return [];
+    if (typeof v.arraySync === 'function') { try { v = v.arraySync(); } catch (e) { return []; } }
+    const out = [];
+    (function rec(a) { if (Array.isArray(a)) a.forEach(rec); else if (typeof a === 'number' && Number.isFinite(a)) out.push(a); })(v);
+    return out;
   };
-  const tl = toXY(p.topLeft), br = toXY(p.bottomRight);
-  if (tl && br) return { x: tl[0], y: tl[1], w: br[0] - tl[0], h: br[1] - tl[1] };
-  const b = p.box;
-  if (b) {
-    if (b.xMin != null) return { x: b.xMin, y: b.yMin, w: b.xMax - b.xMin, h: b.yMax - b.yMin };
-    if (b.left != null) return { x: b.left, y: b.top, w: b.width, h: b.height };
+  const nums = flat(p.topLeft).concat(flat(p.bottomRight));
+  if (nums.length >= 4) {
+    const [x1, y1, x2, y2] = nums;
+    const w = x2 - x1, h = y2 - y1;
+    if (w > 0 && h > 0) return { x: x1, y: y1, w, h };
   }
   let lm = p.landmarks;
-  if (lm && typeof lm.arraySync === 'function') lm = lm.arraySync();
+  if (lm && typeof lm.arraySync === 'function') { try { lm = lm.arraySync(); } catch (e) { lm = null; } }
   if (Array.isArray(lm) && lm.length) {
-    const xs = lm.map(q => q[0]), ys = lm.map(q => q[1]);
-    const x0 = Math.min(...xs), y0 = Math.min(...ys), x1 = Math.max(...xs), y1 = Math.max(...ys);
-    return { x: x0 - 25, y: y0 - 45, w: (x1 - x0) + 50, h: (y1 - y0) + 75 };
+    const xs = lm.map(q => q[0]).filter(Number.isFinite), ys = lm.map(q => q[1]).filter(Number.isFinite);
+    if (xs.length && ys.length) {
+      const x0 = Math.min(...xs), y0 = Math.min(...ys), x1 = Math.max(...xs), y1 = Math.max(...ys);
+      return { x: x0 - 25, y: y0 - 45, w: (x1 - x0) + 50, h: (y1 - y0) + 75 };
+    }
   }
   return null;
 }
