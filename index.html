@@ -953,9 +953,10 @@
 
   /* footer */
   footer {
-    max-width: 1320px; margin: 0 auto; padding: 16px 24px 24px;
-    color: var(--ink-4); font-family: var(--mono); font-size: 10.5px;
-    letter-spacing: 0.04em; text-align: center; text-transform: uppercase;
+    max-width: 1320px; margin: 0 auto; padding: 22px 24px 28px;
+    border-top: 1px solid var(--border);
+    color: var(--ink-4); font-family: var(--sans); font-size: 12.5px;
+    letter-spacing: 0; text-align: center;
   }
 </style>
 </head>
@@ -1717,7 +1718,7 @@
   </div>
 </div>
 
-<footer>EDUINO ML TRAINER · v2 · ALL COMPUTATION ON-DEVICE · NO DATA LEAVES YOUR BROWSER</footer>
+<footer>© 2026 Eduino AI · 보고 만지며 배우는 AI 수업</footer>
 
 <script>
 /* ============================================================
@@ -3193,6 +3194,11 @@ async function faceLoop() {
     try {
       // returnTensors=false, flipHorizontal=false, annotateBoxes=true → 1개라도 박스 좌표 포함
       const preds = await face.model.estimateFaces(fcEls.video, false, false, true);
+      if (preds && preds.length && !face._logged) {
+        face._logged = true;
+        try { console.log('[face] pred[0] =', JSON.stringify(preds[0]), '→ box =', JSON.stringify(faceBox(preds[0]))); }
+        catch (e) { console.log('[face] pred[0] keys =', Object.keys(preds[0]), preds[0]); }
+      }
       const ctx = fcEls.canvas.getContext('2d');
       ctx.clearRect(0, 0, vw, vh);
       ctx.font = 'bold 16px JetBrains Mono';
