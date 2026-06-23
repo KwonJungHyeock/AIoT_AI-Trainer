@@ -419,6 +419,11 @@
     document.body.style.transition='opacity .25s'; document.body.style.opacity='0';
     setTimeout(()=>{ location.href = href; }, 230);
   }
+  /* 뒤로가기(bfcache 복원) 시 페이드아웃 상태로 되살아나 검정화면이 되는 것 방지 */
+  window.addEventListener('pageshow', () => {
+    document.body.style.transition = 'none';
+    document.body.style.opacity = '1';
+  });
 
   tiles.forEach((t,i)=>{
     t.addEventListener('mouseenter', ()=>move(i));
