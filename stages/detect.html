@@ -53,10 +53,10 @@
   .chip.live { color:#04140c; background:var(--green); border-color:var(--green); }
   .chip.idle { color:var(--ink-3); }
 
-  /* 메인 */
-  .wrap { position:relative; z-index:5; flex:1; min-height:0; display:flex; gap:18px; padding:0 22px 16px; align-items:stretch; }
-  .stagecol { flex:1; min-width:0; display:flex; align-items:center; justify-content:center; }
-  .viewport { position:relative; aspect-ratio:var(--ar, 16 / 9); height:100%; width:auto; max-width:100%; max-height:100%;
+  /* 메인 — [영상 | 패널]을 한 덩어리로 가운데 정렬, 사이 간격 고정 */
+  .wrap { position:relative; z-index:5; flex:1; min-height:0; display:flex; gap:18px; padding:0 22px 16px; align-items:stretch; justify-content:center; }
+  .stagecol { flex:0 1 auto; min-width:0; display:flex; align-items:center; justify-content:center; }
+  .viewport { position:relative; aspect-ratio:var(--ar, 4 / 3); height:100%; width:auto; max-width:100%; max-height:100%;
     border-radius:20px; overflow:hidden; background:#05060c;
     border:1px solid var(--line-2); box-shadow:0 0 0 1px rgba(59,134,255,.15), 0 30px 70px rgba(0,0,0,.55); }
   .viewport video, .viewport canvas { position:absolute; inset:0; width:100%; height:100%; }
@@ -80,22 +80,23 @@
   .startbtn:hover { transform:translateY(-2px); filter:brightness(1.06); }
   .startbtn.loading { opacity:.7; pointer-events:none; }
 
-  /* 사이드 패널 */
-  .side { width:300px; flex:none; display:flex; flex-direction:column; gap:14px; align-self:center; max-height:100%; }
-  .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:16px; }
-  .card h2 { margin:0 0 12px; font-size:13px; font-weight:700; color:var(--ink-2); display:flex; align-items:center; justify-content:space-between; }
-  .card h2 .cnt { font-family:var(--mono); font-size:18px; font-weight:700; color:var(--acc-2); }
-  .det-list { display:flex; flex-direction:column; gap:9px; max-height:300px; overflow:auto; }
-  .empty { color:var(--ink-3); font-size:12.5px; text-align:center; padding:18px 0; }
-  .det-row { }
-  .det-head { display:flex; justify-content:space-between; font-size:13px; font-weight:600; margin-bottom:5px; }
+  /* 사이드 패널 — 영상과 같은 높이로 꽉, 탐지목록은 남는 높이를 채움 */
+  .side { width:360px; flex:none; display:flex; flex-direction:column; gap:16px; align-self:stretch; min-height:0; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:18px; }
+  .list-card { flex:1; min-height:0; display:flex; flex-direction:column; }
+  .card h2 { margin:0 0 14px; font-size:14px; font-weight:700; color:var(--ink-2); display:flex; align-items:center; justify-content:space-between; }
+  .card h2 .cnt { font-family:var(--mono); font-size:24px; font-weight:700; color:var(--acc-2); }
+  .det-list { display:flex; flex-direction:column; gap:12px; flex:1; min-height:0; overflow:auto; }
+  .empty { color:var(--ink-3); font-size:13px; text-align:center; padding:24px 0; margin:auto; }
+  .det-head { display:flex; justify-content:space-between; font-size:14.5px; font-weight:600; margin-bottom:6px; }
   .det-pct { font-family:var(--mono); color:var(--acc-2); }
-  .gauge { height:7px; border-radius:99px; background:rgba(255,255,255,.08); overflow:hidden; }
+  .gauge { height:9px; border-radius:99px; background:rgba(255,255,255,.08); overflow:hidden; }
   .gauge-fill { height:100%; border-radius:99px; background:linear-gradient(90deg,var(--acc),var(--acc-2)); transition:width .2s; }
-  .ctrl label { display:flex; justify-content:space-between; font-size:12.5px; color:var(--ink-2); margin-bottom:8px; }
-  .ctrl input[type=range] { width:100%; accent-color:var(--acc); }
-  .stopbtn { width:100%; margin-top:4px; font-size:13.5px; font-weight:700; color:var(--ink-2);
-    background:rgba(255,255,255,.04); border:1px solid var(--line-2); border-radius:11px; padding:11px; transition:.15s; }
+  .ctrl label { display:flex; justify-content:space-between; font-size:13.5px; color:var(--ink-2); margin-bottom:10px; }
+  .ctrl label span { font-family:var(--mono); color:var(--acc-2); }
+  .ctrl input[type=range] { width:100%; height:6px; accent-color:var(--acc); }
+  .stopbtn { width:100%; margin-top:14px; font-size:14px; font-weight:700; color:var(--ink-2);
+    background:rgba(255,255,255,.04); border:1px solid var(--line-2); border-radius:12px; padding:13px; transition:.15s; }
   .stopbtn:hover { color:#fff; border-color:var(--acc-2); }
 
   @media (max-width:860px){
@@ -139,7 +140,7 @@
   </div>
 
   <aside class="side">
-    <div class="card">
+    <div class="card list-card">
       <h2>탐지된 사물 <span class="cnt" id="count">0</span></h2>
       <div class="det-list" id="list"><div class="empty">아직 없어요 — 카메라를 켜보세요</div></div>
     </div>
