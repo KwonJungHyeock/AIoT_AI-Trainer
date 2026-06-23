@@ -257,7 +257,7 @@
   <h1 class="stage-title">플레이할 <b>모드를 선택</b>하세요</h1>
 
   <div class="tiles" id="tiles">
-    <button class="tile explore" data-i="0" data-href="/index.html#explore">
+    <button class="tile explore" data-i="0" data-href="/explore.html">
       <div class="tile-art"></div>
       <img class="tile-thumb" data-base="/platform/img/console-explore" alt="" />
       <div class="tile-scrim"></div>
@@ -271,7 +271,7 @@
       <div class="tile-play">▶ PLAY</div>
     </button>
 
-    <button class="tile create" data-i="1" data-href="/index.html#create">
+    <button class="tile create" data-i="1" data-href="/create.html">
       <div class="tile-art"></div>
       <img class="tile-thumb" data-base="/platform/img/console-create" alt="" />
       <div class="tile-scrim"></div>
@@ -310,11 +310,11 @@
     { cls:'explore', kicker:'MODE 01 · 관찰', title:'기본기능 체험하기',
       desc:'학습 없이 클릭 한 번으로 AI를 작동시켜, 컴퓨터가 화면 속 세상을 어떻게 인식하는지 직접 관찰해요. 수업 도입에 딱 좋아요.',
       chips:['객체 탐지','얼굴 검출','뼈대 검출','색상 추적','영상 효과'],
-      glowA:'rgba(59,134,255,.28)', glowB:'rgba(59,134,255,.10)', href:'/index.html#explore' },
+      glowA:'rgba(59,134,255,.28)', glowB:'rgba(59,134,255,.10)', href:'/explore.html' },
     { cls:'create', kicker:'MODE 02 · 창작', title:'직접 제작하기',
       desc:'내가 직접 데이터를 모아 AI를 학습시키고 결과를 평가해요. 클래스 만들기 → 수집 → 학습 → 추론까지, 나만의 AI를 완성합니다.',
       chips:['이미지 분류','음성 분류','동작 분류'],
-      glowA:'rgba(255,87,71,.26)', glowB:'rgba(255,132,114,.12)', href:'/index.html#create' },
+      glowA:'rgba(255,87,71,.26)', glowB:'rgba(255,132,114,.12)', href:'/create.html' },
   ];
 
   const tilesEl = document.getElementById('tiles');

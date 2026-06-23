@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" href="/favicon.png" />
+<meta name="theme-color" content="#0a0b12" />
+<title>직접 제작 · VISION AI</title>
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<style>
+  :root {
+    --bg:#0a0b12; --bg-2:#120f14;
+    --ink:#f2f4fb; --ink-2:#cdb6bd; --ink-3:#9c7d84;
+    --line:rgba(255,255,255,.10); --line-2:rgba(255,255,255,.16);
+    --panel:rgba(255,255,255,.045);
+    --acc:#ff5747; --acc-2:#ff8472; --acc-soft:rgba(255,87,71,.16);
+    --green:#42e29b;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; min-height:100%; }
+  body { font-family:'Pretendard',system-ui,sans-serif; background:var(--bg); color:var(--ink);
+    min-height:100vh; overflow-x:hidden; word-break:keep-all; -webkit-font-smoothing:antialiased;
+    display:flex; flex-direction:column; }
+  a { color:inherit; text-decoration:none; } button { font-family:inherit; cursor:pointer; }
+
+  .ambient { position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:radial-gradient(60% 55% at 25% 8%, var(--acc-soft), transparent 60%),
+               radial-gradient(50% 50% at 85% 92%, rgba(255,132,114,.08), transparent 62%),
+               linear-gradient(180deg, var(--bg-2), var(--bg)); }
+  .ambient::after { content:''; position:absolute; inset:0;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:46px 46px; opacity:.22;
+    -webkit-mask-image:radial-gradient(circle at 50% 32%, #000 0%, transparent 78%);
+            mask-image:radial-gradient(circle at 50% 32%, #000 0%, transparent 78%); }
+  .scanlines { position:fixed; inset:0; z-index:40; pointer-events:none; opacity:.32;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px); }
+
+  .hud { position:relative; z-index:5; display:flex; align-items:center; justify-content:space-between; padding:16px 26px; gap:14px; }
+  .hud-brand { display:flex; align-items:center; gap:11px; }
+  .hud-brand img { height:26px; display:block; }
+  .hud-brand .bt { font-size:14px; font-weight:800; } .hud-brand .bt span { color:var(--acc-2); }
+  .hud-brand .sep { width:1px; height:16px; background:var(--line-2); }
+  .hud-brand .sys { font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.16em; color:var(--ink-3); }
+  .hud-right { display:flex; align-items:center; gap:10px; }
+  .hud-clock { font-family:var(--mono); font-size:13px; font-weight:700; color:var(--ink-2); }
+  .hud-btn { display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:700; color:var(--ink-2);
+    background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:8px 12px; transition:.15s; }
+  .hud-btn:hover { color:var(--ink); border-color:var(--line-2); background:rgba(255,255,255,.08); }
+
+  .stage { position:relative; z-index:5; flex:1; width:100%; max-width:1100px; margin:0 auto; padding:10px 26px 0; }
+  .crumb { display:flex; align-items:center; justify-content:center; gap:8px; font-family:var(--mono);
+    font-size:11.5px; letter-spacing:.14em; color:var(--ink-3); text-transform:uppercase; margin:6px 0 4px; }
+  .crumb b { color:var(--acc-2); }
+  .stage-title { text-align:center; font-size:30px; font-weight:800; letter-spacing:-.02em; margin:0 0 6px; }
+  .stage-title b { color:var(--acc-2); }
+  .stage-lead { text-align:center; font-size:14px; color:var(--ink-2); margin:0 0 14px; }
+
+  /* 공통 진행 흐름 (4 STEP) */
+  .flowbar { display:flex; align-items:center; justify-content:center; gap:0; flex-wrap:wrap; margin:0 0 24px; }
+  .flowbar .fstep { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-2); }
+  .flowbar .fn { width:22px; height:22px; border-radius:50%; display:grid; place-items:center;
+    font-family:var(--mono); font-size:11px; font-weight:700; color:var(--acc-2); background:var(--acc-soft); border:1px solid rgba(255,87,71,.35); }
+  .flowbar .farrow { margin:0 12px; color:var(--ink-3); }
+
+  .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); gap:20px; max-width:880px; margin:0 auto; }
+  .card { position:relative; border-radius:22px; overflow:hidden; text-align:left; padding:0;
+    border:1px solid var(--line); background:#1a1116; min-height:300px;
+    display:flex; flex-direction:column; transition:transform .2s cubic-bezier(.2,.7,.3,1.3), box-shadow .2s, border-color .2s;
+    opacity:0; transform:translateY(20px); }
+  .card.in { opacity:1; transform:none; }
+  .card-art { position:absolute; inset:0; z-index:0;
+    background:radial-gradient(130% 80% at 22% 12%, rgba(255,87,71,.4), transparent 58%), linear-gradient(165deg,#3a1620,#190f13); }
+  .card-art::after { content:''; position:absolute; inset:0; background-image:radial-gradient(rgba(255,255,255,.5) 1px,transparent 1px); background-size:16px 16px; opacity:.05; }
+  .card-body { position:relative; z-index:2; padding:22px 22px 20px; display:flex; flex-direction:column; height:100%; }
+  .card-top { display:flex; align-items:flex-start; justify-content:space-between; }
+  .card-ic { font-size:42px; line-height:1; filter:drop-shadow(0 3px 9px rgba(0,0,0,.5)); }
+  .badge { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.06em; padding:4px 8px; border-radius:7px;
+    color:var(--acc-2); background:var(--acc-soft); border:1px solid rgba(255,87,71,.3); }
+  .card-name { margin-top:auto; font-size:21px; font-weight:800; letter-spacing:-.02em; color:#fff; }
+  .card-model { font-family:var(--mono); font-size:11.5px; color:var(--ink-3); margin-top:3px; }
+  .card-desc { font-size:13px; line-height:1.5; color:var(--ink-2); margin:9px 0 12px; }
+  .pips { display:flex; gap:6px; }
+  .pips span { flex:1; height:5px; border-radius:99px; background:rgba(255,255,255,.10); }
+  .pips span.on { background:linear-gradient(90deg,var(--acc-2),var(--acc)); }
+  .card-play { position:absolute; inset:auto 0 0 0; z-index:3; transform:translateY(101%);
+    display:flex; align-items:center; justify-content:center; gap:8px; padding:12px;
+    font-size:13px; font-weight:800; letter-spacing:.1em; background:rgba(255,255,255,.95); color:#0a0b12; transition:transform .2s; }
+  .card:hover, .card.sel { transform:translateY(-6px); }
+  .card.sel { border-color:transparent; box-shadow:0 0 0 3px var(--acc-2), 0 22px 48px rgba(0,0,0,.5); }
+  .card.sel .card-play, .card:hover .card-play { transform:translateY(0); }
+
+  .legend { position:relative; z-index:5; display:flex; align-items:center; justify-content:center; gap:20px;
+    padding:24px; margin-top:24px; font-size:12.5px; color:var(--ink-3); flex-wrap:wrap; }
+  .legend b { display:inline-flex; align-items:center; gap:7px; font-weight:600; color:var(--ink-2); }
+  .legend kbd { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--ink); background:rgba(255,255,255,.07);
+    border:1px solid var(--line-2); border-bottom-width:2px; border-radius:6px; padding:3px 7px; min-width:22px; text-align:center; }
+
+  @media (max-width:560px){ .stage-title{font-size:24px;} .grid{grid-template-columns:1fr;} .flowbar .farrow{margin:0 6px;} }
+  @media (prefers-reduced-motion:reduce){ .card{opacity:1!important; transform:none!important;} }
+</style>
+</head>
+<body>
+
+<div class="ambient"></div>
+<div class="scanlines"></div>
+
+<header class="hud">
+  <a class="hud-brand" href="/studio.html">
+    <img src="/platform/img/logo-mark.webp" alt="Eduino AI" />
+    <span class="bt">Eduino <span>AI</span></span>
+    <span class="sep"></span><span class="sys">VISION&nbsp;AI</span>
+  </a>
+  <div class="hud-right">
+    <span class="hud-clock" id="clock">--:--</span>
+    <button class="hud-btn" id="sound-toggle">🔊 사운드</button>
+    <a class="hud-btn" href="/studio.html">← 콘솔</a>
+  </div>
+</header>
+
+<main class="stage">
+  <div class="crumb">VISION AI <span>›</span> <b>TRACK 02 · 직접 제작</b></div>
+  <h1 class="stage-title">만들 <b>미션</b>을 선택하세요</h1>
+  <p class="stage-lead">내가 직접 데이터를 모아 AI를 학습시키고 평가해요. 모든 미션은 같은 4단계로 진행됩니다.</p>
+
+  <div class="flowbar">
+    <div class="fstep"><span class="fn">1</span>클래스 만들기</div><span class="farrow">→</span>
+    <div class="fstep"><span class="fn">2</span>데이터 수집</div><span class="farrow">→</span>
+    <div class="fstep"><span class="fn">3</span>모델 학습</div><span class="farrow">→</span>
+    <div class="fstep"><span class="fn">4</span>추론·평가</div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</main>
+
+<footer class="legend">
+  <b><kbd>←</kbd><kbd>→</kbd> 이동</b>
+  <b><kbd>⏎</kbd> 시작</b>
+  <b><kbd>ESC</kbd> 콘솔로</b>
+  <b>🖱 클릭으로도 선택</b>
+</footer>
+
+<script>
+  const FEATURES = [
+    { key:'image', ic:'🖼️', name:'이미지 분류', model:'MobileNet v2',     badge:'전이학습', desc:'카메라로 클래스를 만들어 사진을 분류하는 나만의 AI를 만들어요.' },
+    { key:'audio', ic:'🎙️', name:'음성 분류',   model:'Speech Commands',  badge:'전이학습', desc:'짧은 음성 명령을 녹음해 단어를 분류해요. 예: "켜"/"꺼".' },
+    { key:'pose',  ic:'🤸', name:'동작 분류',   model:'MoveNet',          badge:'지도학습', desc:'자세 키포인트를 수집·학습해 몸 동작을 분류해요.' },
+  ];
+
+  const grid = document.getElementById('grid');
+  grid.innerHTML = FEATURES.map((f,i)=>`
+    <button class="card" data-i="${i}" data-key="${f.key}">
+      <div class="card-art"></div>
+      <div class="card-body">
+        <div class="card-top"><div class="card-ic">${f.ic}</div><span class="badge">${f.badge}</span></div>
+        <div class="card-name">${f.name}</div>
+        <div class="card-model">${f.model}</div>
+        <p class="card-desc">${f.desc}</p>
+        <div class="pips"><span></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="card-play">▶ 미션 시작</div>
+    </button>`).join('');
+  const cards = [...grid.querySelectorAll('.card')];
+  let sel = 0;
+
+  let actx=null, soundOn=true;
+  function beep(freq,dur=0.06,type='triangle',gain=0.045){ if(!soundOn) return;
+    try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+      const o=actx.createOscillator(),g=actx.createGain(); o.type=type; o.frequency.value=freq; g.gain.value=gain;
+      o.connect(g); g.connect(actx.destination); const t=actx.currentTime;
+      g.gain.setValueAtTime(gain,t); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.start(t); o.stop(t+dur);
+    }catch(e){} }
+  const sMove=()=>beep(440,0.06,'triangle',0.04);
+  const sGo=()=>{ beep(560,0.09,'square',0.05); setTimeout(()=>beep(840,0.12,'square',0.05),80); };
+
+  function render(){ cards.forEach((c,i)=>c.classList.toggle('sel', i===sel)); }
+  function move(d){ sel=(sel+d+cards.length)%cards.length; render(); sMove(); cards[sel].scrollIntoView({block:'nearest'}); }
+  function launch(){ sGo(); const key=FEATURES[sel].key;
+    document.body.style.transition='opacity .25s'; document.body.style.opacity='0';
+    setTimeout(()=>{ location.href='/index.html#'+key; },230); }
+
+  cards.forEach((c,i)=>{
+    c.addEventListener('mouseenter',()=>{ sel=i; render(); });
+    c.addEventListener('click',()=>{ sel=i; render(); launch(); });
+  });
+  document.addEventListener('keydown',(e)=>{
+    if(e.key==='ArrowRight'||e.key==='ArrowDown'){e.preventDefault(); move(1);}
+    else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault(); move(-1);}
+    else if(e.key==='Enter'||e.key===' '){e.preventDefault(); launch();}
+    else if(e.key==='Escape'){ location.href='/studio.html'; }
+  });
+
+  const st=document.getElementById('sound-toggle');
+  st.addEventListener('click',()=>{ soundOn=!soundOn; st.textContent=soundOn?'🔊 사운드':'🔇 사운드'; if(soundOn) beep(700,0.08); });
+
+  function tick(){ const d=new Date(); document.getElementById('clock').textContent=
+    String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+  tick(); setInterval(tick,10000);
+
+  render();
+  cards.forEach((c,i)=>setTimeout(()=>c.classList.add('in'), 60+i*80));
+  window.addEventListener('pageshow',()=>{ document.body.style.transition='none'; document.body.style.opacity='1'; });
+</script>
+</body>
+</html>
