@@ -254,7 +254,7 @@
   <div class="tiles" id="tiles">
     <button class="tile explore" data-i="0" data-href="/index.html#explore">
       <div class="tile-art"></div>
-      <img class="tile-thumb" src="/platform/img/console-explore.webp" alt="" onerror="this.remove()" />
+      <img class="tile-thumb" data-base="/platform/img/console-explore" alt="" />
       <div class="tile-scrim"></div>
       <div class="tile-glare"></div>
       <div class="tile-body">
@@ -268,7 +268,7 @@
 
     <button class="tile create" data-i="1" data-href="/index.html#create">
       <div class="tile-art"></div>
-      <img class="tile-thumb" src="/platform/img/console-create.webp" alt="" onerror="this.remove()" />
+      <img class="tile-thumb" data-base="/platform/img/console-create" alt="" />
       <div class="tile-scrim"></div>
       <div class="tile-glare"></div>
       <div class="tile-body">
@@ -454,6 +454,14 @@
       String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
   }
   tick(); setInterval(tick, 10000);
+
+  /* 썸네일 로더 — webp→jpg→png→jpeg 순으로 시도, 다 없으면 그라데이션 폴백 */
+  document.querySelectorAll('.tile-thumb').forEach((img)=>{
+    const base = img.dataset.base, exts = ['webp','jpg','png','jpeg']; let i = 0;
+    const next = () => { if (i >= exts.length) { img.remove(); return; } img.src = base + '.' + exts[i++] + '?v=1'; };
+    img.addEventListener('error', next);
+    next();
+  });
 
   /* 초기화 — 진입할 때마다 인트로(로고 스플래시 → 부팅) 재생 */
   render();
