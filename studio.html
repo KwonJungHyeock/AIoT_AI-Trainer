@@ -5,202 +5,337 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="icon" href="/favicon.png" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-<meta name="theme-color" content="#14161f" />
-<title>비전 스튜디오 · Eduino AI</title>
-<meta name="description" content="영상처리 AI를 직접 체험하고 제작하는 비전 스튜디오. 기본기능 체험하기와 직접 제작하기 두 가지 트랙." />
+<meta name="theme-color" content="#0a0b12" />
+<title>VISION STUDIO · Eduino AI</title>
+<meta name="description" content="비전 스튜디오 콘솔 — 기본기능 체험하기와 직접 제작하기를 게임 콘솔처럼 즐기는 영상처리 AI 학습 공간." />
 
 <link rel="preconnect" href="https://cdn.jsdelivr.net" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
 
 <style>
   :root {
-    --bg:#f6f7fb; --panel:#ffffff; --panel-soft:#f3f5fa;
-    --border:#e9ebf2; --border-strong:#d7dbe7;
-    --ink:#14161f; --ink-2:#3b4254; --ink-3:#6c7488; --ink-4:#9aa1b3;
-    --accent:#f0473a; --accent-2:#ff6a52; --accent-ink:#d4382c;
-    --accent-soft:rgba(240,71,58,.10); --accent-line:#ffd6cd;
-    --blue:#2f6df6; --blue-soft:#eaf1ff; --blue-ink:#2453c4;
-    --green:#11a06f; --green-soft:#e6f6ef;
-    --radius:18px; --radius-sm:12px;
-    --shadow:0 1px 2px rgba(20,22,31,.04), 0 8px 24px rgba(20,22,31,.06);
-    --shadow-lg:0 2px 4px rgba(20,22,31,.05), 0 18px 50px rgba(20,22,31,.12);
+    --bg:#0a0b12; --bg-2:#0f1120;
+    --ink:#f2f4fb; --ink-2:#aeb6cf; --ink-3:#737c9c;
+    --line:rgba(255,255,255,.10); --line-2:rgba(255,255,255,.16);
+    --panel:rgba(255,255,255,.045);
+    --blue:#3b86ff; --blue-2:#6aa6ff;
+    --red:#ff5747; --red-2:#ff8472;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
   }
   * { box-sizing:border-box; }
-  html,body { margin:0; padding:0; }
+  html,body { margin:0; height:100%; }
   body {
     font-family:'Pretendard',system-ui,sans-serif;
     background:var(--bg); color:var(--ink);
-    word-break:keep-all; overflow-wrap:break-word;
+    min-height:100%; overflow-x:hidden; word-break:keep-all;
     -webkit-font-smoothing:antialiased;
+    display:flex; flex-direction:column;
   }
   a { color:inherit; text-decoration:none; }
+  button { font-family:inherit; cursor:pointer; }
 
-  /* ── 상단 바 ── */
-  .topbar { position:sticky; top:0; z-index:20; background:rgba(255,255,255,.82);
-    backdrop-filter:saturate(180%) blur(14px); border-bottom:1px solid var(--border); }
-  .topbar-inner { max-width:1120px; margin:0 auto; padding:13px 22px;
-    display:flex; align-items:center; justify-content:space-between; gap:14px; }
-  .brand { display:flex; align-items:center; gap:10px; }
-  .brand img { height:30px; display:block; }
-  .brand .t { font-size:17px; font-weight:800; letter-spacing:-.02em; }
-  .brand .t span { color:var(--accent); }
-  .top-back { font-size:13.5px; font-weight:600; color:var(--ink-3);
-    padding:8px 13px; border-radius:10px; border:1px solid var(--border);
-    background:var(--panel); transition:.15s; }
-  .top-back:hover { color:var(--ink); border-color:var(--border-strong); }
+  /* 콘솔 앰비언트 배경 — 선택된 트랙 색이 은은하게 번진다 */
+  .ambient {
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(60% 55% at 28% 12%, var(--glow-a,rgba(59,134,255,.20)), transparent 60%),
+      radial-gradient(55% 50% at 80% 80%, var(--glow-b,rgba(255,87,71,.14)), transparent 62%),
+      linear-gradient(180deg, var(--bg-2), var(--bg));
+    transition:--glow-a .5s, --glow-b .5s; transition:background .5s;
+  }
+  .ambient::after {
+    content:''; position:absolute; inset:0;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:44px 44px; opacity:.25;
+    -webkit-mask-image:radial-gradient(circle at 50% 40%, #000 0%, transparent 75%);
+            mask-image:radial-gradient(circle at 50% 40%, #000 0%, transparent 75%);
+  }
 
-  /* ── 히어로 ── */
-  .hero { position:relative; overflow:hidden;
-    background:linear-gradient(155deg,#14161f 0%, #1e1411 60%, #23101a 100%);
-    color:#fff; }
-  .hero::before { content:''; position:absolute; inset:0;
-    background:radial-gradient(120% 90% at 18% 0%, rgba(240,71,58,.28), transparent 55%),
-               radial-gradient(90% 80% at 100% 20%, rgba(124,108,255,.18), transparent 60%);
-    opacity:.9; }
-  .hero-inner { position:relative; max-width:1120px; margin:0 auto; padding:62px 22px 56px; }
-  .eyebrow { display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:700;
-    letter-spacing:.02em; color:#ffd6cd; background:rgba(240,71,58,.16);
-    border:1px solid rgba(240,71,58,.3); padding:6px 12px; border-radius:999px; }
-  .hero h1 { margin:18px 0 12px; font-size:40px; line-height:1.18; font-weight:800; letter-spacing:-.03em; }
-  .hero h1 .g { background:linear-gradient(90deg,#ff8a72,#f0473a); -webkit-background-clip:text; background-clip:text; color:transparent; }
-  .hero p { margin:0; max-width:600px; font-size:16px; line-height:1.65; color:rgba(255,255,255,.74); }
+  /* ── HUD 상단 바 ── */
+  .hud {
+    position:relative; z-index:5;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 26px; gap:14px;
+  }
+  .hud-brand { display:flex; align-items:center; gap:11px; }
+  .hud-brand img { height:28px; display:block; filter:drop-shadow(0 2px 6px rgba(0,0,0,.4)); }
+  .hud-brand .bt { font-size:14px; font-weight:800; letter-spacing:.02em; }
+  .hud-brand .bt span { color:var(--red-2); }
+  .hud-brand .sep { width:1px; height:18px; background:var(--line-2); }
+  .hud-brand .sys { font-family:var(--mono); font-size:11.5px; font-weight:700; letter-spacing:.18em; color:var(--ink-3); }
+  .hud-right { display:flex; align-items:center; gap:10px; }
+  .hud-clock { font-family:var(--mono); font-size:13px; font-weight:700; color:var(--ink-2); letter-spacing:.04em; }
+  .hud-btn {
+    display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:700; color:var(--ink-2);
+    background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:8px 12px; transition:.15s;
+  }
+  .hud-btn:hover { color:var(--ink); border-color:var(--line-2); background:rgba(255,255,255,.08); }
 
-  /* ── 트랙 카드 ── */
-  .tracks { max-width:1120px; margin:-34px auto 0; padding:0 22px 30px;
-    position:relative; z-index:5; display:grid; grid-template-columns:1fr 1fr; gap:22px; }
-  .track { background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
-    box-shadow:var(--shadow-lg); padding:28px 26px 26px; display:flex; flex-direction:column;
-    transition:transform .16s, box-shadow .16s, border-color .16s; }
-  .track:hover { transform:translateY(-4px); box-shadow:0 4px 8px rgba(20,22,31,.06), 0 26px 60px rgba(20,22,31,.16); }
-  .track-top { display:flex; align-items:center; gap:13px; margin-bottom:6px; }
-  .track-ic { width:50px; height:50px; border-radius:14px; display:grid; place-items:center; font-size:24px; flex:none; }
-  .t-explore .track-ic { background:var(--blue-soft); }
-  .t-create  .track-ic { background:var(--accent-soft); }
-  .track-kicker { font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
-  .t-explore .track-kicker { color:var(--blue-ink); }
-  .t-create  .track-kicker { color:var(--accent-ink); }
-  .track h2 { margin:2px 0 0; font-size:23px; font-weight:800; letter-spacing:-.02em; }
-  .track-desc { margin:14px 0 18px; font-size:14.5px; line-height:1.62; color:var(--ink-2); }
-  .feat-list { list-style:none; margin:0 0 22px; padding:0; display:flex; flex-wrap:wrap; gap:8px; }
-  .feat-list li { font-size:12.5px; font-weight:600; color:var(--ink-2);
-    background:var(--panel-soft); border:1px solid var(--border); border-radius:999px; padding:6px 11px; }
-  .feat-list li b { font-weight:700; color:var(--ink); }
-  .track-foot { margin-top:auto; display:flex; align-items:center; justify-content:space-between; gap:12px; }
-  .track-meta { font-size:12.5px; color:var(--ink-3); }
-  .track-go { display:inline-flex; align-items:center; gap:7px; font-size:14.5px; font-weight:700;
-    color:#fff; padding:12px 20px; border-radius:12px; transition:.16s; white-space:nowrap; }
-  .t-explore .track-go { background:linear-gradient(135deg,#4a86ff,#2f6df6); box-shadow:0 6px 16px rgba(47,109,246,.28); }
-  .t-create  .track-go { background:linear-gradient(135deg,var(--accent-2),var(--accent)); box-shadow:0 6px 16px rgba(240,71,58,.28); }
-  .track-go:hover { filter:brightness(1.05); transform:translateX(2px); }
+  /* ── 콘솔 스테이지 ── */
+  .stage {
+    position:relative; z-index:5; flex:1;
+    width:100%; max-width:1080px; margin:0 auto; padding:14px 26px 0;
+    display:flex; flex-direction:column;
+  }
+  .stage-eyebrow {
+    align-self:center; font-family:var(--mono); font-size:11.5px; font-weight:700; letter-spacing:.22em;
+    color:var(--ink-3); text-transform:uppercase; margin:8px 0 2px;
+  }
+  .stage-title {
+    text-align:center; font-size:30px; font-weight:800; letter-spacing:-.02em; margin:0 0 26px;
+  }
+  .stage-title b { background:linear-gradient(90deg,var(--blue-2),var(--red-2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
 
-  /* ── 흐름 안내 ── */
-  .flow { max-width:1120px; margin:8px auto 0; padding:0 22px 64px; }
-  .flow-h { font-size:13px; font-weight:700; color:var(--ink-3); letter-spacing:.02em; margin:0 0 14px; }
-  .flow-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
-  .flow-card { background:var(--panel); border:1px solid var(--border); border-radius:var(--radius-sm);
-    padding:16px 16px 15px; box-shadow:var(--shadow); }
-  .flow-n { font-size:12px; font-weight:800; color:var(--accent); }
-  .flow-card h3 { margin:7px 0 5px; font-size:14.5px; font-weight:700; }
-  .flow-card p { margin:0; font-size:12.5px; line-height:1.55; color:var(--ink-3); }
-  .flow-soon { display:inline-block; margin-top:8px; font-size:10.5px; font-weight:700; color:var(--ink-4);
-    background:var(--panel-soft); border:1px solid var(--border); border-radius:6px; padding:2px 7px; }
+  /* 게임 타일 줄 */
+  .tiles {
+    display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:26px;
+    max-width:760px; width:100%; margin:0 auto;
+  }
+  .tile {
+    position:relative; aspect-ratio:4/3; border-radius:24px; overflow:hidden;
+    border:1px solid var(--line); background:#11131f; text-align:left;
+    padding:0; transition:transform .22s cubic-bezier(.2,.7,.3,1.4), box-shadow .22s, border-color .22s;
+    transform:translateZ(0);
+  }
+  .tile-art { position:absolute; inset:0; }
+  .tile.explore .tile-art { background:radial-gradient(120% 100% at 25% 15%, rgba(59,134,255,.55), transparent 60%), linear-gradient(160deg,#15233f,#0e1424); }
+  .tile.create  .tile-art { background:radial-gradient(120% 100% at 25% 15%, rgba(255,87,71,.5), transparent 60%), linear-gradient(160deg,#3a1620,#1c0f14); }
+  .tile-art::after { content:''; position:absolute; inset:0;
+    background-image:radial-gradient(rgba(255,255,255,.5) 1px, transparent 1px); background-size:18px 18px; opacity:.06; }
+  .tile-body { position:relative; height:100%; padding:22px 22px 20px; display:flex; flex-direction:column; }
+  .tile-ic { font-size:42px; line-height:1; filter:drop-shadow(0 4px 10px rgba(0,0,0,.45)); }
+  .tile-no { position:absolute; top:18px; right:20px; font-family:var(--mono); font-size:13px; font-weight:700; color:rgba(255,255,255,.4); }
+  .tile-name { margin-top:auto; font-size:24px; font-weight:800; letter-spacing:-.02em; }
+  .tile-tag { margin-top:4px; font-size:13px; font-weight:600; color:var(--ink-2); }
+  .tile-play {
+    position:absolute; inset:auto 0 0 0; transform:translateY(101%);
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    padding:11px; font-size:13px; font-weight:800; letter-spacing:.08em;
+    background:rgba(255,255,255,.94); color:#0a0b12; transition:transform .22s;
+  }
+  /* 선택/호버 상태 */
+  .tile:hover, .tile.sel { transform:translateY(-6px) scale(1.025); }
+  .tile.sel { border-color:transparent; box-shadow:0 0 0 3px var(--ring,#fff), 0 22px 50px rgba(0,0,0,.5); }
+  .tile.explore.sel { --ring:var(--blue-2); }
+  .tile.create.sel  { --ring:var(--red-2); }
+  .tile.sel .tile-play { transform:translateY(0); }
 
-  footer { border-top:1px solid var(--border); background:var(--panel); }
-  .foot-inner { max-width:1120px; margin:0 auto; padding:22px; font-size:12.5px; color:var(--ink-4);
-    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  /* ── 선택 상세 패널 ── */
+  .detail {
+    max-width:760px; width:100%; margin:24px auto 0; min-height:118px;
+    background:var(--panel); border:1px solid var(--line); border-radius:18px;
+    padding:18px 22px; display:flex; align-items:center; gap:20px;
+    transition:border-color .3s;
+  }
+  .detail.explore { border-color:rgba(59,134,255,.35); }
+  .detail.create  { border-color:rgba(255,87,71,.32); }
+  .detail-main { flex:1; min-width:0; }
+  .detail-kicker { font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; }
+  .detail.explore .detail-kicker { color:var(--blue-2); }
+  .detail.create  .detail-kicker { color:var(--red-2); }
+  .detail h3 { margin:5px 0 7px; font-size:19px; font-weight:800; letter-spacing:-.02em; }
+  .detail p { margin:0 0 10px; font-size:13.5px; line-height:1.55; color:var(--ink-2); }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chips span { font-size:11.5px; font-weight:600; color:var(--ink-2);
+    background:rgba(255,255,255,.06); border:1px solid var(--line); border-radius:999px; padding:4px 9px; }
+  .detail-go {
+    flex:none; display:inline-flex; align-items:center; gap:9px;
+    font-size:15px; font-weight:800; letter-spacing:.02em; color:#0a0b12;
+    padding:14px 24px; border:0; border-radius:13px; transition:transform .15s, filter .15s;
+    box-shadow:0 10px 26px rgba(0,0,0,.4);
+  }
+  .detail.explore .detail-go { background:linear-gradient(135deg,var(--blue-2),var(--blue)); color:#fff; }
+  .detail.create  .detail-go { background:linear-gradient(135deg,var(--red-2),var(--red)); color:#fff; }
+  .detail-go:hover { transform:translateY(-2px); filter:brightness(1.06); }
+  .detail-go kbd { font-family:var(--mono); font-size:11px; background:rgba(0,0,0,.22); border-radius:5px; padding:2px 6px; }
 
-  @media (max-width:780px) {
-    .hero h1 { font-size:30px; }
-    .tracks { grid-template-columns:1fr; margin-top:-26px; }
-    .flow-grid { grid-template-columns:1fr 1fr; }
+  /* ── 하단 버튼 범례 ── */
+  .legend {
+    position:relative; z-index:5; display:flex; align-items:center; justify-content:center; gap:22px;
+    padding:22px; margin-top:18px; font-size:12.5px; color:var(--ink-3);
+  }
+  .legend b { display:inline-flex; align-items:center; gap:7px; font-weight:600; color:var(--ink-2); }
+  .legend kbd {
+    font-family:var(--mono); font-size:11px; font-weight:700; color:var(--ink);
+    background:rgba(255,255,255,.07); border:1px solid var(--line-2); border-bottom-width:2px;
+    border-radius:6px; padding:3px 7px; min-width:22px; text-align:center;
+  }
+
+  @media (max-width:720px) {
+    .stage-title { font-size:23px; }
+    .tiles { grid-template-columns:1fr; gap:18px; max-width:380px; }
+    .tile { aspect-ratio:16/10; }
+    .detail { flex-direction:column; align-items:stretch; }
+    .detail-go { justify-content:center; }
+    .legend { flex-wrap:wrap; gap:14px; }
   }
 </style>
 </head>
 <body>
 
-<header class="topbar">
-  <div class="topbar-inner">
-    <a class="brand" href="/platform/index.html">
-      <img src="/platform/img/logo-mark.webp" alt="Eduino AI" />
-      <span class="t">Eduino <span>AI</span></span>
-    </a>
-    <a class="top-back" href="/platform/index.html">← 전체 코스</a>
+<div class="ambient" id="ambient"></div>
+
+<header class="hud">
+  <a class="hud-brand" href="/platform/index.html">
+    <img src="/platform/img/logo-mark.webp" alt="Eduino AI" />
+    <span class="bt">Eduino <span>AI</span></span>
+    <span class="sep"></span>
+    <span class="sys">VISION&nbsp;OS</span>
+  </a>
+  <div class="hud-right">
+    <span class="hud-clock" id="clock">--:--</span>
+    <button class="hud-btn" id="sound-toggle" title="효과음 켜기/끄기">🔊 사운드</button>
+    <a class="hud-btn" href="/platform/index.html">⌂ 홈</a>
   </div>
 </header>
 
-<section class="hero">
-  <div class="hero-inner">
-    <span class="eyebrow">🎬 비전 스튜디오 · 영상처리 AI</span>
-    <h1>AI를 <span class="g">보고, 직접 만든다</span></h1>
-    <p>카메라로 AI가 세상을 어떻게 보는지 관찰하고, 내 손으로 나만의 AI를 학습시켜 보세요.
-       두 가지 트랙으로 자유롭게 오갈 수 있어요.</p>
-  </div>
-</section>
+<main class="stage">
+  <p class="stage-eyebrow">VISION STUDIO CONSOLE</p>
+  <h1 class="stage-title">플레이할 <b>모드를 선택</b>하세요</h1>
 
-<section class="tracks">
-  <!-- 체험 트랙 -->
-  <a class="track t-explore" href="/index.html#explore">
-    <div class="track-top">
-      <div class="track-ic">🔍</div>
-      <div>
-        <div class="track-kicker">Track 1 · 관찰</div>
-        <h2>기본기능 체험하기</h2>
+  <div class="tiles" id="tiles">
+    <button class="tile explore" data-i="0" data-href="/index.html#explore">
+      <div class="tile-art"></div>
+      <div class="tile-body">
+        <div class="tile-ic">🔍</div>
+        <span class="tile-no">01</span>
+        <div class="tile-name">기본기능 체험하기</div>
+        <div class="tile-tag">학습 없이 바로 관찰 · 5종</div>
       </div>
-    </div>
-    <p class="track-desc">학습 없이 클릭 한 번으로 AI를 작동시켜, 컴퓨터가 화면 속 세상을
-       어떻게 인식하는지 직접 관찰해요. 수업 도입에 딱 좋아요.</p>
-    <ul class="feat-list">
-      <li><b>객체 탐지</b> COCO-SSD</li>
-      <li><b>얼굴 검출</b> BlazeFace</li>
-      <li><b>뼈대 검출</b> MoveNet</li>
-      <li><b>색상 추적</b></li>
-      <li><b>영상 효과</b></li>
-    </ul>
-    <div class="track-foot">
-      <span class="track-meta">준비물 없이 바로 체험</span>
-      <span class="track-go">체험 시작 →</span>
-    </div>
-  </a>
+      <div class="tile-play">▶ PLAY</div>
+    </button>
 
-  <!-- 제작 트랙 -->
-  <a class="track t-create" href="/index.html#create">
-    <div class="track-top">
-      <div class="track-ic">🛠</div>
-      <div>
-        <div class="track-kicker">Track 2 · 창작</div>
-        <h2>직접 제작하기</h2>
+    <button class="tile create" data-i="1" data-href="/index.html#create">
+      <div class="tile-art"></div>
+      <div class="tile-body">
+        <div class="tile-ic">🛠</div>
+        <span class="tile-no">02</span>
+        <div class="tile-name">직접 제작하기</div>
+        <div class="tile-tag">내 손으로 AI 학습 · 3종</div>
       </div>
-    </div>
-    <p class="track-desc">내가 직접 데이터를 모아 AI를 학습시키고, 결과를 평가해요.
-       클래스 만들기 → 데이터 수집 → 학습 → 추론까지, 나만의 AI를 완성합니다.</p>
-    <ul class="feat-list">
-      <li><b>이미지 분류</b> MobileNet</li>
-      <li><b>음성 분류</b> Speech Commands</li>
-      <li><b>동작 분류</b> MoveNet</li>
-    </ul>
-    <div class="track-foot">
-      <span class="track-meta">내 AI 만들기</span>
-      <span class="track-go">제작 시작 →</span>
-    </div>
-  </a>
-</section>
-
-<section class="flow">
-  <p class="flow-h">직접 제작하기는 이렇게 진행돼요</p>
-  <div class="flow-grid">
-    <div class="flow-card"><div class="flow-n">STEP 1</div><h3>클래스 만들기</h3><p>구분하고 싶은 종류를 정해요. 예: 캔·페트·종이</p></div>
-    <div class="flow-card"><div class="flow-n">STEP 2</div><h3>데이터 수집</h3><p>각 종류마다 사진을 여러 장 모아요. 많을수록 똑똑해져요.</p></div>
-    <div class="flow-card"><div class="flow-n">STEP 3</div><h3>모델 학습</h3><p>모은 데이터로 나만의 AI를 학습시켜요.</p></div>
-    <div class="flow-card"><div class="flow-n">STEP 4</div><h3>추론·평가</h3><p>새 사진으로 정확도를 확인해요. <span class="flow-soon">제출·평가 곧 추가</span></p></div>
+      <div class="tile-play">▶ PLAY</div>
+    </button>
   </div>
-</section>
 
-<footer>
-  <div class="foot-inner">
-    <span>© 2026 Eduino AI · 비전 스튜디오</span>
-    <span>보고 만지며 배우는 AI 수업</span>
+  <div class="detail explore" id="detail">
+    <div class="detail-main">
+      <div class="detail-kicker" id="d-kicker">MODE 01 · 관찰</div>
+      <h3 id="d-title">기본기능 체험하기</h3>
+      <p id="d-desc">학습 없이 클릭 한 번으로 AI를 작동시켜, 컴퓨터가 화면 속 세상을 어떻게 인식하는지 직접 관찰해요.</p>
+      <div class="chips" id="d-chips"></div>
+    </div>
+    <button class="detail-go" id="d-go">▶ 시작 <kbd>ENTER</kbd></button>
   </div>
+</main>
+
+<footer class="legend">
+  <b><kbd>←</kbd><kbd>→</kbd> 이동</b>
+  <b><kbd>⏎</kbd> 시작</b>
+  <b><kbd>ESC</kbd> 홈</b>
+  <b>🖱 클릭으로도 선택</b>
 </footer>
 
+<script>
+  const MODES = [
+    { cls:'explore', kicker:'MODE 01 · 관찰', title:'기본기능 체험하기',
+      desc:'학습 없이 클릭 한 번으로 AI를 작동시켜, 컴퓨터가 화면 속 세상을 어떻게 인식하는지 직접 관찰해요. 수업 도입에 딱 좋아요.',
+      chips:['객체 탐지','얼굴 검출','뼈대 검출','색상 추적','영상 효과'],
+      glowA:'rgba(59,134,255,.28)', glowB:'rgba(59,134,255,.10)',
+      href:'/index.html#explore' },
+    { cls:'create', kicker:'MODE 02 · 창작', title:'직접 제작하기',
+      desc:'내가 직접 데이터를 모아 AI를 학습시키고 결과를 평가해요. 클래스 만들기 → 수집 → 학습 → 추론까지, 나만의 AI를 완성합니다.',
+      chips:['이미지 분류','음성 분류','동작 분류'],
+      glowA:'rgba(255,87,71,.26)', glowB:'rgba(255,132,114,.12)',
+      href:'/index.html#create' },
+  ];
+
+  const tilesEl = document.getElementById('tiles');
+  const tiles = [...tilesEl.querySelectorAll('.tile')];
+  const ambient = document.getElementById('ambient');
+  const detail = document.getElementById('detail');
+  const dGo = document.getElementById('d-go');
+  let sel = 0;
+
+  /* ── 효과음 (Web Audio, 에셋 없이 합성) ── */
+  let actx = null, soundOn = true;
+  function beep(freq, dur=0.07, type='sine', gain=0.05) {
+    if (!soundOn) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = type; o.frequency.value = freq;
+      g.gain.value = gain;
+      o.connect(g); g.connect(actx.destination);
+      const t = actx.currentTime;
+      g.gain.setValueAtTime(gain, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.start(t); o.stop(t + dur);
+    } catch (e) {}
+  }
+  const sMove = () => beep(520, 0.06, 'triangle', 0.045);
+  const sLaunch = () => { beep(660,0.09,'square',0.05); setTimeout(()=>beep(990,0.12,'square',0.05),80); };
+
+  function render() {
+    const m = MODES[sel];
+    tiles.forEach((t,i)=>t.classList.toggle('sel', i===sel));
+    detail.className = 'detail ' + m.cls;
+    document.getElementById('d-kicker').textContent = m.kicker;
+    document.getElementById('d-title').textContent = m.title;
+    document.getElementById('d-desc').textContent = m.desc;
+    document.getElementById('d-chips').innerHTML = m.chips.map(c=>`<span>${c}</span>`).join('');
+    dGo.innerHTML = '▶ 시작 <kbd>ENTER</kbd>';
+    ambient.style.setProperty('background',
+      `radial-gradient(60% 55% at 28% 12%, ${m.glowA}, transparent 60%),`+
+      `radial-gradient(55% 50% at 80% 80%, ${m.glowB}, transparent 62%),`+
+      `linear-gradient(180deg, var(--bg-2), var(--bg))`);
+  }
+  function move(to, sound=true) {
+    to = (to + MODES.length) % MODES.length;
+    if (to === sel && sound) return;
+    sel = to; render(); if (sound) sMove();
+  }
+  function launch() {
+    sLaunch();
+    const href = MODES[sel].href;
+    document.body.style.transition='opacity .25s'; document.body.style.opacity='0';
+    setTimeout(()=>{ location.href = href; }, 230);
+  }
+
+  tiles.forEach((t,i)=>{
+    t.addEventListener('mouseenter', ()=>move(i));
+    t.addEventListener('click', ()=>{ sel=i; render(); launch(); });
+  });
+  dGo.addEventListener('click', launch);
+
+  document.addEventListener('keydown', (e)=>{
+    if (e.key==='ArrowRight'||e.key==='ArrowDown') { e.preventDefault(); move(sel+1); }
+    else if (e.key==='ArrowLeft'||e.key==='ArrowUp') { e.preventDefault(); move(sel-1); }
+    else if (e.key==='Enter'||e.key===' ') { e.preventDefault(); launch(); }
+    else if (e.key==='Escape') { location.href='/platform/index.html'; }
+    else if (/^[12]$/.test(e.key)) { move(parseInt(e.key,10)-1); }
+  });
+
+  /* 사운드 토글 */
+  const st = document.getElementById('sound-toggle');
+  st.addEventListener('click', ()=>{
+    soundOn = !soundOn;
+    st.textContent = soundOn ? '🔊 사운드' : '🔇 사운드';
+    if (soundOn) beep(700,0.08,'triangle',0.05);
+  });
+
+  /* 라이브 시계 */
+  function tick(){
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mm = String(d.getMinutes()).padStart(2,'0');
+    document.getElementById('clock').textContent = `${hh}:${mm}`;
+  }
+  tick(); setInterval(tick, 10000);
+
+  render();
+</script>
 </body>
 </html>
