@@ -99,6 +99,31 @@
     background:rgba(255,255,255,.04); border:1px solid var(--line-2); border-radius:12px; padding:13px; transition:.15s; }
   .stopbtn:hover { color:#fff; border-color:var(--acc-2); }
 
+  /* 개념 도감 모달 */
+  .codex-open { color:var(--acc-2); border-color:rgba(59,134,255,.4); }
+  .codex-open:hover { background:var(--acc-soft); }
+  .codex { position:fixed; inset:0; z-index:80; display:none; align-items:center; justify-content:center; padding:24px;
+    background:rgba(5,6,12,.72); backdrop-filter:blur(6px); }
+  .codex.on { display:flex; animation:codexIn .2s ease; }
+  @keyframes codexIn { from{opacity:0;} to{opacity:1;} }
+  .codex-card { position:relative; width:min(540px,100%); max-height:88vh; overflow:auto;
+    background:linear-gradient(180deg,#12162a,#0d1020); border:1px solid rgba(59,134,255,.35);
+    border-radius:22px; padding:26px; box-shadow:0 0 0 1px rgba(59,134,255,.15), 0 30px 80px rgba(0,0,0,.6);
+    animation:codexUp .25s cubic-bezier(.2,.8,.3,1); }
+  @keyframes codexUp { from{transform:translateY(16px) scale(.98); opacity:0;} to{transform:none; opacity:1;} }
+  .codex-x { position:absolute; top:16px; right:16px; width:34px; height:34px; border-radius:10px;
+    background:rgba(255,255,255,.06); border:1px solid var(--line); color:var(--ink-2); font-size:15px; transition:.15s; }
+  .codex-x:hover { color:#fff; border-color:var(--acc-2); }
+  .codex-head { display:flex; align-items:center; gap:14px; margin-bottom:18px; }
+  .codex-ic { font-size:40px; }
+  .codex-name { font-size:22px; font-weight:800; letter-spacing:-.02em; }
+  .codex-sub { font-family:var(--mono); font-size:12px; color:var(--ink-3); margin-top:3px; }
+  .codex-sec { background:rgba(255,255,255,.035); border:1px solid var(--line); border-radius:14px; padding:15px 16px; margin-bottom:12px; }
+  .codex-h { font-size:13px; font-weight:700; color:var(--acc-2); margin-bottom:7px; }
+  .codex-sec p { margin:0; font-size:14px; line-height:1.7; color:var(--ink-2); }
+  .codex-sec p b { color:var(--ink); }
+  .codex-use { font-size:12.5px; color:var(--ink-3); padding:4px 2px 0; }
+
   @media (max-width:860px){
     .wrap{ flex-direction:column; overflow:auto; }
     .stagecol{ width:100%; }
@@ -119,6 +144,7 @@
     <div class="title"><h1>🎯 객체 탐지</h1><span class="tag">COCO-SSD · 사전학습</span></div>
   </div>
   <div class="hud-r">
+    <button class="back codex-open" id="codexBtn">📖 개념</button>
     <span class="chip idle" id="status">● IDLE</span>
     <span class="chip" id="fps">FPS <b>—</b></span>
   </div>
@@ -151,6 +177,26 @@
     </div>
   </aside>
 </main>
+
+<!-- 개념 도감 (인-페이지 모달) -->
+<div class="codex" id="codex" aria-hidden="true">
+  <div class="codex-card">
+    <button class="codex-x" id="codexX" aria-label="닫기">✕</button>
+    <div class="codex-head">
+      <span class="codex-ic">🎯</span>
+      <div><div class="codex-name">객체 탐지</div><div class="codex-sub">COCO-SSD · 사전학습 추론</div></div>
+    </div>
+    <div class="codex-sec">
+      <div class="codex-h">📊 학습 정보</div>
+      <p>COCO(사물 90종) 데이터로 미리 학습된 모델을 그대로 사용해요. 목표는 “잘 학습된 AI”의 힘을 직접 체험하는 거예요. 자율주행·CCTV 분석처럼 실제로 쓰이는 기술의 축소판이랍니다.</p>
+    </div>
+    <div class="codex-sec">
+      <div class="codex-h">⚙️ 알고리즘 정보</div>
+      <p>COCO-SSD가 화면을 한 번에 훑어 사물의 <b>위치</b>와 <b>종류</b>를 동시에 예측해요. 그 결과를 상자·이름·확률(%)로 함께 표시합니다. ‘민감도’를 낮추면 더 많이, 높이면 확실한 것만 잡아요.</p>
+    </div>
+    <div class="codex-use">💡 이런 곳에 쓰여요 · 자율주행 자동차 · 무인 매장 · 스마트 CCTV</div>
+  </div>
+</div>
 
 <script>
   const $ = (id)=>document.getElementById(id);
@@ -224,7 +270,17 @@
     detect.raf=requestAnimationFrame(loop);
   }
 
-  window.addEventListener('keydown',(e)=>{ if(e.key==='Escape') location.href='/explore.html'; });
+  /* 개념 도감 */
+  const codex = $('codex');
+  const openCodex = ()=>{ codex.classList.add('on'); codex.setAttribute('aria-hidden','false'); };
+  const closeCodex = ()=>{ codex.classList.remove('on'); codex.setAttribute('aria-hidden','true'); };
+  $('codexBtn').addEventListener('click', openCodex);
+  $('codexX').addEventListener('click', closeCodex);
+  codex.addEventListener('click', (e)=>{ if(e.target===codex) closeCodex(); });
+
+  window.addEventListener('keydown',(e)=>{
+    if(e.key==='Escape'){ if(codex.classList.contains('on')) closeCodex(); else location.href='/explore.html'; }
+  });
   window.addEventListener('pagehide', stopCam);
   window.addEventListener('pageshow',()=>{ document.body.style.opacity='1'; });
 </script>
