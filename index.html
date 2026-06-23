@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" href="/favicon.png" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta name="theme-color" content="#f6f7fb" />
 <title>EDUINO · AI 학습·추론 체험</title>
 
 <!-- TensorFlow.js + Models -->
@@ -23,36 +26,35 @@
 
 <style>
   :root {
-    /* ── 라이트 베이스 (SpaceX 콘솔 미학) ── */
-    /* ── 다크 베이스 ── */
-    --bg:           #0d1016;
-    --bg-grid:      rgba(255, 255, 255, 0.035);
-    --panel:        #161b24;
-    --panel-soft:   #1c222d;
-    --border:       #2a313f;
-    --border-strong:#3a4150;
+    /* ── 라이트 베이스 (플랫폼과 동일 톤) ── */
+    --bg:           #f6f7fb;
+    --bg-grid:      rgba(20, 22, 31, 0.028);
+    --panel:        #ffffff;
+    --panel-soft:   #f3f5fa;
+    --border:       #e9ebf2;
+    --border-strong:#d7dbe7;
 
-    /* 텍스트 위계 (다크) */
-    --ink:          #eef1f6;
-    --ink-2:        #c3ccd9;
-    --ink-3:        #8c97a7;
-    --ink-4:        #5f6976;
+    /* 텍스트 위계 (라이트) */
+    --ink:          #14161f;
+    --ink-2:        #3b4254;
+    --ink-3:        #6c7488;
+    --ink-4:        #9aa1b3;
 
     /* 액센트 */
-    --blue:         #4d8dff;     /* 데이터 시각화 */
-    --blue-soft:    rgba(77,141,255,.16);
-    --cyan:         #22c5e0;     /* 라이브/실행 표시 */
-    --green:        #2bb583;     /* 학습완료 */
-    --amber:        #e0913a;     /* 추론 활성 */
-    --rose:         #f0506e;     /* 위험/삭제 */
+    --blue:         #2f6df6;     /* 데이터 시각화 */
+    --blue-soft:    rgba(47,109,246,.12);
+    --cyan:         #0fb5d6;     /* 라이브/실행 표시 */
+    --green:        #11a06f;     /* 학습완료 */
+    --amber:        #d97a16;     /* 추론 활성 */
+    --rose:         #e11d48;     /* 위험/삭제 */
 
-    /* 메인 포인트 — 코랄 레드 */
-    --accent:       #f15a4f;
-    --accent-soft:  rgba(241,90,79,.16);
-    --accent-ink:   #ff9a8f;
+    /* 메인 포인트 — 에듀이노 레드 */
+    --accent:       #f0473a;
+    --accent-soft:  rgba(240,71,58,.10);
+    --accent-ink:   #d4382c;
 
-    --shadow-sm:    0 1px 2px rgba(0,0,0,.35);
-    --shadow:       0 2px 8px rgba(0,0,0,.4), 0 8px 26px rgba(0,0,0,.32);
+    --shadow-sm:    0 1px 2px rgba(20,22,31,.06);
+    --shadow:       0 1px 3px rgba(20,22,31,.06), 0 10px 28px rgba(20,22,31,.07);
 
     --radius:       12px;
     --radius-sm:    8px;
@@ -76,19 +78,21 @@
     font-size: 16px;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+    word-break:keep-all; overflow-wrap:break-word;
     letter-spacing: -0.005em;
   }
 
   /* ───────────────────────────── 헤더 ────────────────────────────── */
   .topbar {
     position: sticky; top: 0; z-index: 50;
-    background: linear-gradient(180deg, #1c2331 0%, #141a25 100%);
-    border-bottom: 1px solid var(--border-strong);
-    box-shadow: 0 4px 20px rgba(0,0,0,.35);
+    background: rgba(255,255,255,.86);
+    backdrop-filter: saturate(180%) blur(10px);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 1px 0 rgba(20,22,31,.02), 0 6px 20px rgba(20,22,31,.04);
   }
   .topbar::after {
     content: ''; display: block; height: 3px;
-    background: linear-gradient(90deg, var(--accent), #ff8a3d 38%, rgba(255,138,61,0) 78%);
+    background: linear-gradient(90deg, var(--accent), #ff6a52 38%, rgba(255,106,82,0) 78%);
   }
   .topbar-inner {
     max-width: none; margin: 0; padding: 18px 26px;
@@ -108,6 +112,7 @@
     color: var(--ink); letter-spacing: -0.02em; line-height: 1.05;
   }
   .logo-title span { color: var(--accent); }
+  .logo-mark-img { height:38px; width:auto; display:block; }
   .logo-tag {
     font-family: var(--sans); font-size: 12.5px; color: var(--ink-3); letter-spacing: 0;
   }
@@ -243,42 +248,48 @@
   /* ─────────── 좌측 사이드바 레이아웃 ─────────── */
   .app-shell { display: grid; grid-template-columns: 248px minmax(0, 1fr); align-items: start; }
   .sidebar {
-    position: sticky; top: 0; align-self: start;
-    border-right: 1px solid var(--border-strong);
-    background: linear-gradient(180deg, #12161e, #0e1219);
-    padding: 20px 12px; min-height: calc(100vh - 81px);
+    position: sticky; top: 0; align-self: start; overflow: hidden;
+    border-right: 1px solid #232734;
+    background: linear-gradient(180deg, #1a1d27 0%, #15171f 100%);
+    box-shadow: inset -1px 0 0 rgba(255,255,255,.03);
+    padding: 22px 13px; min-height: calc(100vh - 81px);
   }
-  .nav-group { margin-bottom: 16px; }
-  .nav-group + .nav-group { border-top: 1px solid var(--border); padding-top: 16px; }
+  .sidebar::before {
+    content: ''; position: absolute; left: 0; right: 0; top: 0; height: 200px; pointer-events: none; opacity: .8;
+    background: radial-gradient(130% 70% at 30% 0%, rgba(240,71,58,.14), transparent 62%), radial-gradient(120% 70% at 95% 4%, rgba(124,108,255,.10), transparent 60%);
+  }
+  .sidebar > * { position: relative; z-index: 1; }
+  .nav-group { margin-bottom: 18px; }
+  .nav-group + .nav-group { border-top: 1px solid rgba(255,255,255,.07); padding-top: 18px; }
   .nav-group-title {
-    font-family: var(--sans); font-size: 13.5px; font-weight: 700; letter-spacing: .01em;
-    color: var(--ink-2); padding: 4px 10px 12px;
+    font-family: var(--sans); font-size: 12.5px; font-weight: 700; letter-spacing: .02em;
+    color: rgba(255,255,255,.5); padding: 4px 10px 11px;
     display: flex; align-items: center; gap: 8px;
   }
   .nav-group-title::before {
-    content: ''; width: 3px; height: 14px; border-radius: 2px; background: var(--accent); flex: none;
+    content: ''; width: 3px; height: 13px; border-radius: 2px; background: linear-gradient(180deg, var(--primary-2, #ff6a52), var(--accent)); flex: none;
   }
   .nav-item {
-    display: flex; align-items: center; gap: 10px; width: 100%;
+    display: flex; align-items: center; gap: 11px; width: 100%;
     text-align: left; background: none; border: none; cursor: pointer;
-    padding: 10px; border-radius: 8px; margin-bottom: 2px;
-    font-family: var(--sans); font-size: 14.5px; font-weight: 500; color: var(--ink-2);
+    padding: 10px 11px; border-radius: 9px; margin-bottom: 3px;
+    font-family: var(--sans); font-size: 14.5px; font-weight: 500; color: rgba(255,255,255,.74);
     transition: .14s;
   }
-  .nav-item:hover:not(.active):not(.disabled) { background: rgba(255,255,255,.05); color: var(--ink); }
+  .nav-item:hover:not(.active):not(.disabled) { background: rgba(255,255,255,.06); color: #fff; }
   .nav-item.active {
-    background: var(--accent-soft); color: var(--accent-ink); font-weight: 600;
-    box-shadow: inset 3px 0 0 var(--accent);
+    background: linear-gradient(150deg, rgba(255,106,82,.18), rgba(240,71,58,.12)); color: #fff; font-weight: 700;
+    box-shadow: inset 2px 0 0 var(--accent);
   }
-  .nav-item.disabled { opacity: .5; cursor: not-allowed; }
+  .nav-item.disabled { opacity: .4; cursor: not-allowed; }
   .nav-item .ni-ic { width: 17px; height: 17px; flex: none; }
   .ni-label { flex: 1; min-width: 0; }
   .nav-badge {
-    font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .03em;
-    padding: 2px 6px; border-radius: 999px; flex: none;
-    background: var(--accent-soft); color: var(--accent-ink); border: 1px solid rgba(241,90,79,.35);
+    font-family: var(--mono); font-size: 9.5px; font-weight: 600; letter-spacing: .03em;
+    padding: 2px 7px; border-radius: 999px; flex: none;
+    background: rgba(240,71,58,.18); color: #ff9a8f; border: 1px solid rgba(240,71,58,.3);
   }
-  .nav-badge.soon { background: var(--panel-soft); color: var(--ink-4); border-color: var(--border); }
+  .nav-badge.soon { background: rgba(255,255,255,.07); color: rgba(255,255,255,.42); border-color: rgba(255,255,255,.13); }
   .content { padding: 20px 24px 56px; min-width: 0; }
   .content main { max-width: none; margin: 0; padding: 0; }
 
@@ -300,16 +311,14 @@
   }
   .step-pill.active .step-pill-num { background: var(--accent); color: #fff; border-color: var(--accent); }
   .step-sep { width: 12px; height: 1px; background: var(--border-strong); flex: none; }
-  /* 기존 패널 내부 단계바는 상단 StepNav 로 대체 */
-  .steps-bar { display: none; }
 
   .feature-info {
-    background: linear-gradient(135deg, var(--panel) 0%, rgba(241,90,79,.12) 100%);
+    background: linear-gradient(135deg, var(--panel) 0%, rgba(240,71,58,.06) 100%);
     border: 1px solid var(--border); border-left: 3px solid var(--accent);
     border-radius: var(--radius); box-shadow: var(--shadow-sm);
     padding: 14px 18px; margin-bottom: 16px;
   }
-  .fi-model { background: var(--accent-soft) !important; color: var(--accent-ink) !important; border-color: rgba(241,90,79,.35) !important; }
+  .fi-model { background: var(--accent-soft) !important; color: var(--accent-ink) !important; border-color: rgba(240,71,58,.30) !important; }
   .fi-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .fi-name { font-size: 19px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; }
   .fi-type, .fi-model {
@@ -320,9 +329,12 @@
   .fi-model { background: rgba(0,102,255,0.08); color: var(--blue); border-color: rgba(0,102,255,0.2); }
   .fi-desc { margin: 8px 0 0; font-size: 14.5px; color: var(--ink-3); line-height: 1.5; }
   .fi-theory { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
-  .fi-tcard { background: rgba(255,255,255,.035); border: 1px solid var(--border); border-radius: 8px; padding: 11px 13px; }
-  .fi-th { font-family: var(--mono); font-size: 11.5px; letter-spacing: .05em; color: var(--accent-ink); margin-bottom: 6px; font-weight: 700; }
-  .fi-tcard p { margin: 0; font-size: 14px; color: var(--ink-2); line-height: 1.55; }
+  .fi-tcard { position: relative; border-radius: 12px; padding: 14px 16px; border: 1px solid var(--border);
+    box-shadow: 0 1px 2px rgba(20,22,31,.04), inset 0 1px 0 rgba(255,255,255,.7); }
+  .fi-theory > .fi-tcard:nth-child(1) { background: linear-gradient(158deg, #fbfdff 0%, #eef3fb 100%); }
+  .fi-theory > .fi-tcard:nth-child(2) { background: linear-gradient(158deg, #fffbfa 0%, #fdf1ed 100%); }
+  .fi-th { font-family: var(--mono); font-size: 11.5px; letter-spacing: .05em; color: var(--accent-ink); margin-bottom: 7px; font-weight: 700; }
+  .fi-tcard p { margin: 0; font-size: 14px; color: var(--ink-2); line-height: 1.6; }
   @media (max-width: 720px) { .fi-theory { grid-template-columns: 1fr; } }
 
   /* 태블릿: 사이드바를 상단 가로 바로 전환(세로 공간 절약) */
@@ -330,7 +342,7 @@
     .app-shell { grid-template-columns: 1fr; }
     .sidebar {
       position: static; min-height: 0; border-right: none;
-      border-bottom: 1px solid var(--border-strong);
+      border-bottom: 1px solid #2a3142;
       display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 16px;
     }
     .nav-group { margin-bottom: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
@@ -390,11 +402,17 @@
 
   /* 포즈 인식 - 키포인트 오버레이 캔버스 */
   .video-wrap canvas.pose-overlay {
-    position: absolute; inset: 0;
+    position: absolute; inset: 0; z-index: 2;
     width: 100%; height: 100%;
     pointer-events: none;
     transform: scaleX(-1);
   }
+  .video-wrap video { position: relative; z-index: 1; }
+  /* 검출 박스를 HTML div로 영상 위에 표시 (캔버스-영상 GPU 레이어 충돌 회피) */
+  .det-boxes { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+  .det-box { position: absolute; border: 3px solid #f0473a; border-radius: 4px; box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
+  .det-box span { position: absolute; top: -21px; left: -1px; background: #f0473a; color: #fff;
+    font-family: var(--mono); font-size: 12px; font-weight: 700; padding: 1px 6px; border-radius: 4px 4px 0 0; white-space: nowrap; }
 
   /* ─────────── 지도학습 placeholder ─────────── */
   .super-hero {
@@ -449,16 +467,16 @@
   }
   /* 좌/우 영역에 은은한 배경 톤을 줘서 영역을 구분 (좌=쿨, 우=웜) */
   .sub-panel.active > aside.card:first-child {
-    background: linear-gradient(180deg, #181d27 0%, #141923 100%);
+    background: linear-gradient(180deg, #fafbff 0%, #f4f7fc 100%);
   }
   .sub-panel.active > aside.card:last-child {
-    background: linear-gradient(180deg, #1d1714 0%, #181311 100%);
+    background: linear-gradient(180deg, #fffaf9 0%, #fdf4f2 100%);
   }
   .card-h {
     padding: 13px 16px 11px;
     display: flex; align-items: center; justify-content: space-between;
     border-bottom: 1px solid var(--border);
-    background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015));
+    background: linear-gradient(180deg, #fafbfe, #f4f6fb);
     border-radius: var(--radius) var(--radius) 0 0;
   }
   .card-h .label {
@@ -504,6 +522,26 @@
     color: var(--ink-4); font-size: 16px; line-height: 1;
   }
   .class-del:hover { color: var(--rose); }
+  /* 클래스별 촬영 버튼 — 버튼형 학습의 핵심 액션 */
+  .cap-btn {
+    margin-top: 10px; width: 100%; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 14px; border-radius: 10px; font-family: var(--sans);
+    font-size: 14.5px; font-weight: 700; color: #fff;
+    background: linear-gradient(150deg, #ff6a52, var(--accent));
+    box-shadow: 0 6px 14px rgba(241,90,79,.32), inset 0 1px 0 rgba(255,255,255,.25);
+    transition: transform .08s, box-shadow .15s, filter .15s; touch-action: none; user-select: none;
+  }
+  .cap-btn .ci { font-size: 16px; line-height: 1; }
+  .cap-btn .cap-count {
+    min-width: 24px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,.25); font-family: var(--mono); font-size: 12px; font-weight: 700;
+  }
+  .cap-btn:hover:not(:disabled) { filter: brightness(1.04); box-shadow: 0 9px 20px rgba(241,90,79,.42), inset 0 1px 0 rgba(255,255,255,.25); }
+  .cap-btn:active:not(:disabled) { transform: scale(.97); box-shadow: 0 0 0 3px var(--accent-soft), 0 4px 10px rgba(241,90,79,.3); }
+  .cap-btn:disabled { background: var(--panel-soft); color: var(--ink-4); box-shadow: none; cursor: not-allowed; }
+  .cap-btn:disabled .cap-count { background: rgba(0,0,0,.06); }
+
   .thumbs { display: flex; gap: 3px; margin-top: 8px; flex-wrap: wrap; }
   .thumbs img {
     width: 26px; height: 26px; border-radius: 4px; object-fit: cover;
@@ -514,15 +552,7 @@
     align-self: center; padding-left: 2px;
   }
 
-  /* ──────────────────────── ② 카메라 / 단계 ───────────────────────── */
-  /* 단계 인디케이터 — 카메라 박스 상단 통합 */
-  .steps-bar {
-    display: none; align-items: center;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
-    background: var(--panel-soft);
-    gap: 0;
-  }
+  /* ──────────────────────── ② 카메라 ───────────────────────── */
   /* 완료 단계 (상단 StepNav) */
   .step-pill.done:not(.active) {
     background: rgba(43,181,131,.14); border-color: var(--green); color: var(--green);
@@ -530,41 +560,6 @@
   .step-pill.done:not(.active) .step-pill-num {
     background: var(--green); color: #fff; border-color: var(--green);
   }
-  .step {
-    display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0;
-    transition: .2s;
-  }
-  .step-num {
-    width: 22px; height: 22px; border-radius: 50%;
-    background: var(--panel); border: 1.5px solid var(--border);
-    display: grid; place-items: center;
-    font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--ink-3);
-    flex: 0 0 auto;
-    transition: .2s;
-  }
-  .step-text { min-width: 0; }
-  .step-label {
-    font-size: 12.5px; font-weight: 500; color: var(--ink-3);
-    transition: .2s; line-height: 1.2;
-  }
-  .step-sub {
-    font-family: var(--mono); font-size: 9.5px; color: var(--ink-4);
-    letter-spacing: 0.04em; text-transform: uppercase; margin-top: 1px;
-  }
-  .step-line {
-    flex: 0 0 24px; height: 1px; background: var(--border); margin: 0 4px;
-  }
-  /* 활성 단계 */
-  .step.active .step-num {
-    background: var(--ink); border-color: var(--ink); color: #fff;
-  }
-  .step.active .step-label { color: var(--ink); font-weight: 600; }
-  /* 완료된 단계 */
-  .step.done .step-num {
-    background: var(--green); border-color: var(--green); color: #fff;
-  }
-  .step.done + .step-line { background: var(--green); }
-  .step.done .step-label { color: var(--ink-2); }
 
   /* 비디오 영역 */
   .stage-card { padding: 0; overflow: hidden; }
@@ -646,7 +641,7 @@
     transform: scaleX(-1);
   }
   .video-overlay {
-    position: absolute; inset: 0; display: grid; place-items: center;
+    position: absolute; inset: 0; z-index: 3; display: grid; place-items: center;
     color: var(--ink-4); font-size: 14px; text-align: center; padding: 24px;
     background: #0a0e1a;
   }
@@ -685,7 +680,7 @@
   /* 카메라 하단 컨트롤 */
   .cam-controls {
     padding: 14px 16px;
-    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    display: grid; grid-template-columns: 1fr; gap: 10px;
     border-top: 1px solid var(--border);
   }
 
@@ -705,7 +700,7 @@
   .btn.primary {
     background: var(--accent); color: #fff; border-color: var(--accent);
   }
-  .btn.primary:hover:not(:disabled) { background: #e04a40; border-color: #e04a40; }
+  .btn.primary:hover:not(:disabled) { background: #d8392c; border-color: #d8392c; }
 
   .btn.blue {
     background: var(--blue); color: #fff; border-color: var(--blue);
@@ -928,9 +923,10 @@
 
   /* footer */
   footer {
-    max-width: 1320px; margin: 0 auto; padding: 16px 24px 24px;
-    color: var(--ink-4); font-family: var(--mono); font-size: 10.5px;
-    letter-spacing: 0.04em; text-align: center; text-transform: uppercase;
+    max-width: 1320px; margin: 0 auto; padding: 22px 24px 28px;
+    border-top: 1px solid var(--border);
+    color: var(--ink-4); font-family: var(--sans); font-size: 12.5px;
+    letter-spacing: 0; text-align: center;
   }
 </style>
 </head>
@@ -940,7 +936,7 @@
 <header class="topbar">
   <div class="topbar-inner">
     <div class="logo">
-      <div class="logo-mark">E</div>
+      <img class="logo-mark-img" src="/platform/img/logo-mark.webp" alt="Eduino AI" />
       <div class="logo-titles">
         <div class="logo-title">Eduino <span>AI</span></div>
         <div class="logo-tag">브라우저로 직접 배우는 AI · 영상처리 실험실</div>
@@ -989,48 +985,13 @@
     <div class="card-b">
       <div id="class-list"></div>
       <button class="btn ghost" id="add-class" style="width:100%;margin-top:6px">+ 클래스 추가</button>
-      <p class="hint">분류할 종류를 만드세요. 클래스를 클릭하면 그 클래스로 사진을 모읍니다.</p>
+      <p class="hint">분류할 종류를 만들고, 각 클래스의 <b>📷 촬영</b>을 누르세요. <b>탭</b>하면 1장, <b>길게</b> 누르면 연속으로 찍힙니다.</p>
     </div>
   </aside>
 
   <!-- 중: 카메라 + 단계 + 학습 -->
   <section style="display:flex;flex-direction:column;gap:14px">
     <div class="card stage-card">
-      <!-- 단계 인디케이터 (카메라 박스 상단 통합) -->
-      <div class="steps-bar">
-        <div class="step active" data-step="1">
-          <div class="step-num">1</div>
-          <div class="step-text">
-            <div class="step-label">클래스 만들기</div>
-            <div class="step-sub">DEFINE</div>
-          </div>
-        </div>
-        <div class="step-line"></div>
-        <div class="step" data-step="2">
-          <div class="step-num">2</div>
-          <div class="step-text">
-            <div class="step-label">데이터 수집</div>
-            <div class="step-sub">CAPTURE</div>
-          </div>
-        </div>
-        <div class="step-line"></div>
-        <div class="step" data-step="3">
-          <div class="step-num">3</div>
-          <div class="step-text">
-            <div class="step-label">모델 학습</div>
-            <div class="step-sub">TRAIN</div>
-          </div>
-        </div>
-        <div class="step-line"></div>
-        <div class="step" data-step="4">
-          <div class="step-num">4</div>
-          <div class="step-text">
-            <div class="step-label">실시간 추론</div>
-            <div class="step-sub">INFER</div>
-          </div>
-        </div>
-      </div>
-
       <!-- 카메라 -->
       <div class="video-wrap">
         <video id="webcam" autoplay playsinline muted></video>
@@ -1046,10 +1007,9 @@
         </div>
       </div>
 
-      <!-- 카메라 컨트롤 -->
+      <!-- 카메라 컨트롤 (촬영은 왼쪽 클래스별 버튼으로) -->
       <div class="cam-controls">
         <button class="btn" id="cam-toggle">카메라 켜기</button>
-        <button class="btn blue" id="capture" disabled>촬영 (꾹 누르면 연속)</button>
       </div>
     </div>
 
@@ -1160,21 +1120,12 @@
         <div class="card-b">
           <div id="p-class-list"></div>
           <button class="btn ghost" id="p-add-class" style="width:100%;margin-top:6px">+ 클래스 추가</button>
-          <p class="hint">동작을 만들고 클래스를 클릭하여 그 동작 자세로 데이터를 모으세요. (예: 팔 들기, 앉기, T자세)</p>
+          <p class="hint">동작을 만들고 각 클래스의 <b>📷 촬영</b>을 누르세요. <b>탭</b>=1장, <b>길게</b>=연속. (예: 팔 들기, 앉기, T자세)</p>
         </div>
       </aside>
 
       <section style="display:flex;flex-direction:column;gap:14px">
         <div class="card stage-card">
-          <div class="steps-bar">
-            <div class="step active" data-step="1"><div class="step-num">1</div><div class="step-text"><div class="step-label">동작 만들기</div><div class="step-sub">DEFINE</div></div></div>
-            <div class="step-line"></div>
-            <div class="step" data-step="2"><div class="step-num">2</div><div class="step-text"><div class="step-label">자세 수집</div><div class="step-sub">CAPTURE</div></div></div>
-            <div class="step-line"></div>
-            <div class="step" data-step="3"><div class="step-num">3</div><div class="step-text"><div class="step-label">모델 학습</div><div class="step-sub">TRAIN</div></div></div>
-            <div class="step-line"></div>
-            <div class="step" data-step="4"><div class="step-num">4</div><div class="step-text"><div class="step-label">실시간 추론</div><div class="step-sub">INFER</div></div></div>
-          </div>
 
           <div class="video-wrap">
             <video id="p-webcam" autoplay playsinline muted></video>
@@ -1193,7 +1144,6 @@
 
           <div class="cam-controls">
             <button class="btn" id="p-cam-toggle">카메라 켜기</button>
-            <button class="btn blue" id="p-capture" disabled>자세 캡처 (꾹 누르면 연속)</button>
           </div>
         </div>
 
@@ -1280,21 +1230,12 @@
         <div class="card-b">
           <div id="a-class-list"></div>
           <button class="btn ghost" id="a-add-class" style="width:100%;margin-top:6px">+ 클래스 추가</button>
-          <p class="hint">클래스를 만들고 선택해 마이크에 1초씩 녹음합니다. (예: 켜, 꺼, 시작)</p>
+          <p class="hint">클래스를 만들고 각 클래스의 <b>🎤 녹음</b>을 누르면 1초씩 녹음됩니다. (예: 켜, 꺼, 시작)</p>
         </div>
       </aside>
 
       <section style="display:flex;flex-direction:column;gap:14px">
         <div class="card stage-card">
-          <div class="steps-bar">
-            <div class="step active" data-step="1"><div class="step-num">1</div><div class="step-text"><div class="step-label">단어 만들기</div><div class="step-sub">DEFINE</div></div></div>
-            <div class="step-line"></div>
-            <div class="step" data-step="2"><div class="step-num">2</div><div class="step-text"><div class="step-label">음성 녹음</div><div class="step-sub">CAPTURE</div></div></div>
-            <div class="step-line"></div>
-            <div class="step" data-step="3"><div class="step-num">3</div><div class="step-text"><div class="step-label">모델 학습</div><div class="step-sub">TRAIN</div></div></div>
-            <div class="step-line"></div>
-            <div class="step" data-step="4"><div class="step-num">4</div><div class="step-text"><div class="step-label">실시간 추론</div><div class="step-sub">INFER</div></div></div>
-          </div>
 
           <div class="video-wrap" style="aspect-ratio:16/8;background:#0a0e1a">
             <canvas id="a-waveform" style="position:absolute;inset:0;width:100%;height:100%;display:block"></canvas>
@@ -1312,7 +1253,6 @@
 
           <div class="cam-controls">
             <button class="btn" id="a-mic-toggle">마이크 켜기</button>
-            <button class="btn blue" id="a-capture" disabled>1초 녹음</button>
           </div>
         </div>
 
@@ -1399,7 +1339,7 @@
         <div class="card stage-card">
           <div class="video-wrap">
             <video id="d-webcam" autoplay playsinline muted></video>
-            <canvas id="d-overlay" class="pose-overlay" style="transform:none"></canvas>
+            <canvas id="d-overlay" class="pose-overlay" style="transform:translateZ(0)"></canvas>
             <div class="video-overlay" id="d-cam-overlay">
               <div><div class="ph">CAMERA · STANDBY</div><div class="ph-msg">카메라를 켜면 객체가 탐지됩니다</div></div>
             </div>
@@ -1577,7 +1517,7 @@
         <div class="card stage-card">
           <div class="video-wrap">
             <video id="fc-webcam" autoplay playsinline muted></video>
-            <canvas id="fc-canvas" class="pose-overlay" style="transform:none"></canvas>
+            <div id="fc-boxes" class="det-boxes"></div>
             <div class="video-overlay" id="fc-cam-overlay">
               <div><div class="ph">CAMERA · STANDBY</div><div class="ph-msg">카메라를 켜면 얼굴이 검출됩니다</div></div>
             </div>
@@ -1693,7 +1633,7 @@
   </div>
 </div>
 
-<footer>EDUINO ML TRAINER · v2 · ALL COMPUTATION ON-DEVICE · NO DATA LEAVES YOUR BROWSER</footer>
+<footer>© 2026 Eduino AI · 보고 만지며 배우는 AI 수업</footer>
 
 <script>
 /* ============================================================
@@ -1721,7 +1661,7 @@ const els = {
   classList: $('class-list'), classCountMeta: $('class-count-meta'),
   addClass: $('add-class'),
   video: $('webcam'), camOverlay: $('cam-overlay'),
-  camToggle: $('cam-toggle'), capture: $('capture'),
+  camToggle: $('cam-toggle'),
   capTargetName: $('cap-target-name'), liveDot: $('live-dot'),
   epochs: $('epochs'), train: $('train'),
   trainBar: $('train-bar'), trainHint: $('train-hint'),
@@ -1736,31 +1676,6 @@ function setStatus(text, kind) {
   els.status.className = 'status ' + (kind || '');
 }
 
-/* 단계 인디케이터 — 활성/완료 처리 */
-function updateSteps() {
-  const hasClass = state.classes.length >= 2;
-  const hasData  = state.classes.some(c => c.embeddings.length > 0) && state.classes.filter(c => c.embeddings.length > 0).length >= 2;
-  const trained  = state.trained;
-  const inferring = state.inferring;
-
-  const steps = document.querySelectorAll('.step');
-  steps.forEach(s => s.classList.remove('active', 'done'));
-
-  // 완료 단계
-  if (hasClass) steps[0].classList.add('done');
-  if (hasData)  steps[1].classList.add('done');
-  if (trained)  steps[2].classList.add('done');
-  if (inferring) steps[3].classList.add('done');
-
-  // 활성(현재) 단계 — 가장 마지막 미완료
-  let active = 0;
-  if (hasClass) active = 1;
-  if (hasData) active = 2;
-  if (trained) active = 3;
-  if (inferring) active = 3;
-  steps[active].classList.add('active');
-  syncStepNav();
-}
 
 /* ── 모델 로드 ───────────────────────────────────────── */
 async function init() {
@@ -1830,6 +1745,15 @@ function renderClassList(cfg) {
 
     div.appendChild(row);
 
+    if (cfg.capture) {
+      const cap = document.createElement('button');
+      cap.className = 'cap-btn'; cap.dataset.id = c.id; cap.type = 'button';
+      cap.disabled = !cfg.capEnabled();
+      cap.innerHTML = `<span class="ci">📷</span><span class="cl">촬영</span><span class="cap-count">${c.embeddings.length}</span>`;
+      cap.onclick = (e) => e.stopPropagation(); // 캡처는 컨테이너 위임으로 처리(롱프레스)
+      div.appendChild(cap);
+    }
+
     if (c.thumbs.length) {
       const t = document.createElement('div'); t.className = 'thumbs';
       if (cfg.onThumbs) { t.style.cursor = 'pointer'; t.title = '클릭해서 갤러리 열기'; }
@@ -1862,6 +1786,7 @@ function renderClasses() {
     onSelect: selectClass, onRemove: removeClass,
     onRename: () => { renderBars(); updateCapTarget(); },
     onThumbs: openGallery,
+    capture: true, capEnabled: () => !!state.stream,
   });
   updateCapTarget();
 }
@@ -1878,7 +1803,7 @@ async function toggleCam() {
     state.stream = null; els.video.srcObject = null;
     els.camOverlay.style.display = 'grid';
     els.camToggle.textContent = '카메라 켜기';
-    els.capture.disabled = true;
+    setCapEnabled(false);
     els.liveDot.classList.remove('on');
     stopInfer();
     return;
@@ -1888,7 +1813,7 @@ async function toggleCam() {
     els.video.srcObject = state.stream;
     els.camOverlay.style.display = 'none';
     els.camToggle.textContent = '카메라 끄기';
-    els.capture.disabled = false;
+    setCapEnabled(true);
     els.liveDot.classList.add('on');
   } catch (e) {
     console.error(e);
@@ -1908,7 +1833,30 @@ function captureSample() {
   cv.getContext('2d').drawImage(els.video, 0, 0, 64, 48);
   sel.thumbs.push(cv.toDataURL('image/jpeg', 0.6));
 
-  renderClasses(); refresh();
+  bumpClassCard(sel); refresh();
+}
+
+/* 촬영 중에는 전체 재렌더(깜빡임·롱프레스 끊김)를 피하고 해당 카드만 갱신 */
+function bumpClassCard(c) {
+  const item = els.classList.querySelector('.class-item[data-id="' + c.id + '"]');
+  if (!item) { renderClasses(); return; }
+  const n = c.embeddings.length;
+  item.querySelectorAll('.class-count').forEach(e => e.textContent = n);
+  const cb = item.querySelector('.cap-count'); if (cb) cb.textContent = n;
+  let t = item.querySelector('.thumbs');
+  if (!t) {
+    t = document.createElement('div'); t.className = 'thumbs';
+    t.style.cursor = 'pointer'; t.title = '클릭해서 갤러리 열기';
+    t.addEventListener('click', (e) => { e.stopPropagation(); selectClass(c.id); openGallery(c.id); });
+    item.appendChild(t);
+  }
+  t.innerHTML = '';
+  c.thumbs.slice(-6).forEach(src => { const im = document.createElement('img'); im.src = src; t.appendChild(im); });
+  if (n > 6) { const m = document.createElement('span'); m.className = 'more'; m.textContent = '+' + (n - 6); t.appendChild(m); }
+}
+
+function setCapEnabled(on) {
+  els.classList.querySelectorAll('.cap-btn').forEach(b => b.disabled = !on);
 }
 
 /* ── 학습 ───────────────────────────────────────────── */
@@ -2173,7 +2121,7 @@ const pEls = {
   video: $('p-webcam'), camOverlay: $('p-cam-overlay'),
   canvas: $('p-pose-overlay'),
   capTargetName: $('p-cap-target-name'), liveDot: $('p-live-dot'),
-  camToggle: $('p-cam-toggle'), capture: $('p-capture'),
+  camToggle: $('p-cam-toggle'),
   epochs: $('p-epochs'), train: $('p-train'),
   trainBar: $('p-train-bar'), trainHint: $('p-train-hint'),
   mEpoch: $('p-m-epoch'), mLoss: $('p-m-loss'), mAcc: $('p-m-acc'),
@@ -2188,8 +2136,12 @@ async function poseInit() {
   pEls.camToggle.addEventListener('click', poseToggleCam);
   pEls.train.addEventListener('click', poseTrain);
   pEls.inferToggle.addEventListener('click', () => pose.inferring ? poseStopInfer() : poseStartInfer());
-  pEls.capture.addEventListener('mousedown', poseStartHold);
-  pEls.capture.addEventListener('touchstart', (e) => { e.preventDefault(); poseStartHold(); });
+  pEls.classList.addEventListener('pointerdown', (e) => {
+    const b = e.target.closest('.cap-btn'); if (!b || b.disabled) return;
+    e.preventDefault(); startPoseClassCapture(+b.dataset.id);
+  });
+  window.addEventListener('pointerup', endPoseClassCapture);
+  window.addEventListener('pointercancel', endPoseClassCapture);
   poseAddClass('클래스 1'); poseAddClass('클래스 2');
 
   if (!window.poseDetection) { console.error('[pose] poseDetection library missing'); return; }
@@ -2226,6 +2178,7 @@ function poseRenderClasses() {
     onSelect: poseSelectClass, onRemove: poseRemoveClass,
     onRename: () => { poseRenderBars(); poseUpdateCapTarget(); },
     onThumbs: null,  // 동작 탭은 갤러리 없음
+    capture: true, capEnabled: () => !!pose.stream,
   });
   poseUpdateCapTarget();
 }
@@ -2241,7 +2194,7 @@ async function poseToggleCam() {
     pose.stream = null; pEls.video.srcObject = null;
     pEls.camOverlay.style.display = 'grid';
     pEls.camToggle.textContent = '카메라 켜기';
-    pEls.capture.disabled = true;
+    poseSetCapEnabled(false);
     pEls.liveDot.classList.remove('on');
     poseStopInfer();
     poseStopOverlayLoop();
@@ -2252,7 +2205,7 @@ async function poseToggleCam() {
     pEls.video.srcObject = pose.stream;
     pEls.camOverlay.style.display = 'none';
     pEls.camToggle.textContent = '카메라 끄기';
-    pEls.capture.disabled = false;
+    poseSetCapEnabled(true);
     pEls.liveDot.classList.add('on');
     poseStartOverlayLoop();
   } catch (e) {
@@ -2335,22 +2288,29 @@ async function poseCaptureSample() {
   const r = await extractKeypoints();
   if (!r) return;
   sel.embeddings.push(r.feat);
-
-  const cv = document.createElement('canvas');
-  cv.width = 64; cv.height = 48;
-  cv.getContext('2d').drawImage(pEls.video, 0, 0, 64, 48);
-  sel.thumbs.push(cv.toDataURL('image/jpeg', 0.6));
-
-  poseRenderClasses(); poseRefresh();
+  poseBumpClassCard(sel); poseRefresh();
+}
+function poseBumpClassCard(c) {
+  const item = pEls.classList.querySelector('.class-item[data-id="' + c.id + '"]');
+  if (!item) { poseRenderClasses(); return; }
+  const n = c.embeddings.length;
+  item.querySelectorAll('.class-count').forEach(e => e.textContent = n);
+  const cb = item.querySelector('.cap-count'); if (cb) cb.textContent = n;
+}
+function poseSetCapEnabled(on) {
+  pEls.classList.querySelectorAll('.cap-btn').forEach(b => b.disabled = !on);
 }
 
+/* 클래스별 촬영 — 카드의 [📷 촬영] 버튼(탭=1장, 길게=연속), 컨테이너 위임 */
 let poseHoldTimer = null;
-function poseStartHold() {
-  if (pEls.capture.disabled) return;
+function startPoseClassCapture(id) {
+  if (!pose.stream) return;
+  poseSelectClass(id);
   poseCaptureSample();
+  clearInterval(poseHoldTimer);
   poseHoldTimer = setInterval(poseCaptureSample, 200);
 }
-function poseEndHold() { clearInterval(poseHoldTimer); poseHoldTimer = null; }
+function endPoseClassCapture() { clearInterval(poseHoldTimer); poseHoldTimer = null; }
 
 async function poseTrain() {
   await trainHead({
@@ -2404,8 +2364,9 @@ async function poseInferLoop() {
   const r = await extractKeypoints();
   if (r) {
     const x = tf.tensor2d([r.feat]);
-    const out = await pose.head.predict(x).data();
-    x.dispose();
+    const yhat = pose.head.predict(x);
+    const out = await yhat.data();
+    x.dispose(); yhat.dispose(); // 추론 텐서 누수 방지(장시간 수업 안정성)
     const names = pose.head._classNames;
     const topI = renderProbResults(out, names, (i) => `p-pct-${i}`, (i) => `p-fill-${i}`);
     pEls.topPred.className = 'top-pred active';
@@ -2459,7 +2420,7 @@ const aEls = {
   addClass: $('a-add-class'),
   waveform: $('a-waveform'), micOverlay: $('a-mic-overlay'),
   capTargetName: $('a-cap-target-name'), liveDot: $('a-live-dot'),
-  micToggle: $('a-mic-toggle'), capture: $('a-capture'),
+  micToggle: $('a-mic-toggle'),
   epochs: $('a-epochs'), train: $('a-train'),
   trainBar: $('a-train-bar'), trainHint: $('a-train-hint'),
   mEpoch: $('a-m-epoch'), mLoss: $('a-m-loss'), mAcc: $('a-m-acc'),
@@ -2470,7 +2431,6 @@ const aEls = {
 async function audioInit() {
   aEls.addClass.addEventListener('click', () => audioAddClass());
   aEls.micToggle.addEventListener('click', audioToggleMic);
-  aEls.capture.addEventListener('click', audioCapture);
   aEls.train.addEventListener('click', audioTrain);
   aEls.inferToggle.addEventListener('click', () => audio.inferring ? audioStopInfer() : audioStartInfer());
   audioAddClass('클래스 1'); audioAddClass('클래스 2');
@@ -2497,6 +2457,9 @@ function audioRemoveClass(id) {
   audioRenderClasses(); audioRefresh();
 }
 function audioSelectClass(id) { audio.selectedId = id; setSelectedItem(aEls.classList, id); audioUpdateCapTarget(); }
+function audioSetCapEnabled(on) {
+  aEls.classList.querySelectorAll('.cap-btn').forEach(b => b.disabled = !on || audio.recording);
+}
 
 function audioRenderClasses() {
   aEls.classList.innerHTML = '';
@@ -2524,6 +2487,17 @@ function audioRenderClasses() {
     del.onclick = (e) => { e.stopPropagation(); audioRemoveClass(c.id); };
     row.appendChild(del);
     div.appendChild(row);
+
+    const rec = document.createElement('button');
+    rec.className = 'cap-btn'; rec.type = 'button';
+    const isRec = audio.recording && audio.recordingId === c.id;
+    rec.disabled = !audio.micStream || audio.recording;
+    rec.innerHTML = isRec
+      ? `<span class="ci">●</span><span class="cl">녹음 중…</span>`
+      : `<span class="ci">🎤</span><span class="cl">녹음</span><span class="cap-count">${c.count}</span>`;
+    rec.onclick = (e) => { e.stopPropagation(); audioCaptureFor(c.id); };
+    div.appendChild(rec);
+
     aEls.classList.appendChild(div);
   });
   aEls.classCountMeta.textContent = audio.classes.length + ' / ' + AUDIO_MAX;
@@ -2543,7 +2517,7 @@ async function audioToggleMic() {
     if (audio.wfRaf) { cancelAnimationFrame(audio.wfRaf); audio.wfRaf = null; }
     aEls.micOverlay.style.display = 'grid';
     aEls.micToggle.textContent = '마이크 켜기';
-    aEls.capture.disabled = true;
+    audioSetCapEnabled(false);
     aEls.liveDot.classList.remove('on');
     audioStopInfer();
     return;
@@ -2557,7 +2531,7 @@ async function audioToggleMic() {
     src.connect(audio.analyser);
     aEls.micOverlay.style.display = 'none';
     aEls.micToggle.textContent = '마이크 끄기';
-    aEls.capture.disabled = false;
+    audioSetCapEnabled(true);
     aEls.liveDot.classList.add('on');
     audioWaveformLoop();
   } catch (e) {
@@ -2584,22 +2558,19 @@ function audioWaveformLoop() {
   audio.wfRaf = requestAnimationFrame(audioWaveformLoop);
 }
 
-async function audioCapture() {
-  const sel = audio.classes.find(c => c.id === audio.selectedId);
-  if (!sel || !audio.base) return;
-  if (!audio.transfer) {
-    audio.transfer = audio.base.createTransfer('eddie-audio');
-  }
-  aEls.capture.disabled = true;
-  const oldText = aEls.capture.textContent;
-  aEls.capture.textContent = '녹음 중...';
+async function audioCaptureFor(id) {
+  const sel = audio.classes.find(c => c.id === id);
+  if (!sel || !audio.base || !audio.micStream || audio.recording) return;
+  if (!audio.transfer) audio.transfer = audio.base.createTransfer('eddie-audio');
+  audioSelectClass(id);
+  audio.recording = true; audio.recordingId = id;
+  audioRenderClasses(); // 버튼 비활성 + '녹음 중…' 표시
   try {
     await audio.transfer.collectExample(String(sel.id));
     sel.count++;
-    audioRenderClasses(); audioRefresh();
   } catch (e) { console.error('[audio] collect fail:', e); }
-  aEls.capture.disabled = !audio.micStream;
-  aEls.capture.textContent = oldText;
+  audio.recording = false; audio.recordingId = null;
+  audioRenderClasses(); audioRefresh();
 }
 
 async function audioTrain() {
@@ -3066,7 +3037,7 @@ async function skelLoop() {
    ============================================================ */
 const face = { model: null, stream: null, raf: null, lastT: 0 };
 const fcEls = {
-  video: $('fc-webcam'), canvas: $('fc-canvas'), camOverlay: $('fc-cam-overlay'),
+  video: $('fc-webcam'), boxes: $('fc-boxes'), camOverlay: $('fc-cam-overlay'),
   camToggle: $('fc-cam-toggle'), status: $('fc-status'), fps: $('fc-fps'),
   count: $('fc-count'), countBar: $('fc-count-bar'),
 };
@@ -3076,7 +3047,7 @@ async function faceToggle() {
     face.stream.getTracks().forEach((t) => t.stop());
     face.stream = null; fcEls.video.srcObject = null;
     if (face.raf) cancelAnimationFrame(face.raf); face.raf = null;
-    fcEls.canvas.getContext('2d').clearRect(0, 0, fcEls.canvas.width, fcEls.canvas.height);
+    fcEls.boxes.innerHTML = '';
     fcEls.camOverlay.style.display = 'grid';
     fcEls.camToggle.textContent = '카메라 켜기 · 검출 시작';
     fcEls.status.textContent = 'IDLE'; fcEls.fps.textContent = '—'; fcEls.count.textContent = '0';
@@ -3101,27 +3072,54 @@ async function faceToggle() {
     fcEls.status.textContent = 'LIVE';
   } catch (e) { console.error('[face] model:', e); fcEls.status.textContent = 'MODEL ERROR'; }
 }
+// BlazeFace 반환 형태가 버전/차원에 따라 제각각(텐서/[x,y]/[[x1,y1,x2,y2]]/빈배열)이라
+// topLeft+bottomRight를 깊게 평탄화해 앞 4개를 [x1,y1,x2,y2]로 사용. 실패 시 landmarks로 박스 생성.
+function faceBox(p) {
+  const flat = (v) => {
+    if (v == null) return [];
+    if (typeof v.arraySync === 'function') { try { v = v.arraySync(); } catch (e) { return []; } }
+    const out = [];
+    (function rec(a) { if (Array.isArray(a)) a.forEach(rec); else if (typeof a === 'number' && Number.isFinite(a)) out.push(a); })(v);
+    return out;
+  };
+  const nums = flat(p.topLeft).concat(flat(p.bottomRight));
+  if (nums.length >= 4) {
+    const [x1, y1, x2, y2] = nums;
+    const w = x2 - x1, h = y2 - y1;
+    if (w > 0 && h > 0) return { x: x1, y: y1, w, h };
+  }
+  let lm = p.landmarks;
+  if (lm && typeof lm.arraySync === 'function') { try { lm = lm.arraySync(); } catch (e) { lm = null; } }
+  if (Array.isArray(lm) && lm.length) {
+    const xs = lm.map(q => q[0]).filter(Number.isFinite), ys = lm.map(q => q[1]).filter(Number.isFinite);
+    if (xs.length && ys.length) {
+      const x0 = Math.min(...xs), y0 = Math.min(...ys), x1 = Math.max(...xs), y1 = Math.max(...ys);
+      return { x: x0 - 25, y: y0 - 45, w: (x1 - x0) + 50, h: (y1 - y0) + 75 };
+    }
+  }
+  return null;
+}
 async function faceLoop() {
-  if (!face.stream) return;
-  if (face.model && fcEls.video.readyState >= 2) {
+  if (!face.stream || !face.model) { face.raf = requestAnimationFrame(faceLoop); return; }
+  if (fcEls.video.readyState >= 2) {
     const vw = fcEls.video.videoWidth, vh = fcEls.video.videoHeight;
-    fcEls.canvas.width = vw; fcEls.canvas.height = vh;
+    // 표시 영역(컨테이너) 크기 기준으로 object-fit:cover 매핑 → HTML div 박스로 영상 위에 그림
+    const W = fcEls.boxes.clientWidth || vw, H = fcEls.boxes.clientHeight || vh;
     try {
-      const preds = await face.model.estimateFaces(fcEls.video, false);
-      const ctx = fcEls.canvas.getContext('2d');
-      ctx.clearRect(0, 0, vw, vh);
-      ctx.font = 'bold 16px JetBrains Mono';
+      const preds = await face.model.estimateFaces(fcEls.video, false, false, true);
+      const scale = Math.max(W / vw, H / vh);
+      const offX = (W - vw * scale) / 2, offY = (H - vh * scale) / 2;
+      let html = '';
       preds.forEach((p) => {
-        const x1 = p.topLeft[0], y1 = p.topLeft[1];
-        const w = p.bottomRight[0] - x1, h = p.bottomRight[1] - y1;
-        const mx = vw - x1 - w; // 비디오가 좌우 반전이므로 박스 X 반전(캔버스는 transform:none)
-        ctx.strokeStyle = '#f15a4f'; ctx.lineWidth = 3;
-        ctx.strokeRect(mx, y1, w, h);
-        const label = 'FACE ' + Math.round((Array.isArray(p.probability) ? p.probability[0] : p.probability) * 100) + '%';
-        const tw = ctx.measureText(label).width;
-        ctx.fillStyle = '#f15a4f'; ctx.fillRect(mx, y1 - 20, tw + 10, 20);
-        ctx.fillStyle = '#fff'; ctx.fillText(label, mx + 5, y1 - 5);
+        const box = faceBox(p);
+        if (!box || !Number.isFinite(box.w) || box.w <= 0) return;
+        const dw = box.w * scale, dh = box.h * scale;
+        const dx = box.x * scale + offX, dy = box.y * scale + offY;
+        const left = W - dx - dw; // 영상이 좌우 반전(scaleX(-1))이므로 X 반전
+        const prob = Array.isArray(p.probability) ? p.probability[0] : (typeof p.probability === 'number' ? p.probability : 1);
+        html += `<div class="det-box" style="left:${left.toFixed(1)}px;top:${dy.toFixed(1)}px;width:${dw.toFixed(1)}px;height:${dh.toFixed(1)}px"><span>FACE ${Math.round(prob * 100)}%</span></div>`;
       });
+      fcEls.boxes.innerHTML = html;
       fcEls.count.textContent = preds.length;
       if (fcEls.countBar) fcEls.countBar.style.width = Math.min(100, preds.length * 25) + '%';
       const now = performance.now();
@@ -3363,7 +3361,7 @@ function refresh() {
   if (canTrain && !state.trained) {
     els.trainHint.textContent = '데이터 준비 완료. [모델 학습 시작]을 누르세요.';
   }
-  updateSteps();
+  syncStepNav();
 }
 
 /* ── 학습 종류 탭 ─────────────────────────────────────── */
@@ -3383,17 +3381,25 @@ els.camToggle.onclick = toggleCam;
 els.train.onclick = train;
 els.inferToggle.onclick = toggleInfer;
 
+/* 클래스별 촬영 — 카드의 [📷 촬영] 버튼: 탭=1장, 길게=연속.
+   컨테이너 위임이라 촬영 중 카드가 갱신돼도 롱프레스가 끊기지 않는다. */
 let holdTimer = null;
-function startHold() {
-  if (els.capture.disabled) return;
+function startClassCapture(id) {
+  if (!state.stream) return;
+  selectClass(id);
   captureSample();
+  clearInterval(holdTimer);
   holdTimer = setInterval(captureSample, 120);
 }
-function endHold() { clearInterval(holdTimer); holdTimer = null; }
-els.capture.addEventListener('mousedown', startHold);
-els.capture.addEventListener('touchstart', (e) => { e.preventDefault(); startHold(); });
-window.addEventListener('mouseup', endHold);
-window.addEventListener('touchend', endHold);
+function endClassCapture() { clearInterval(holdTimer); holdTimer = null; }
+els.classList.addEventListener('pointerdown', (e) => {
+  const b = e.target.closest('.cap-btn');
+  if (!b || b.disabled) return;
+  e.preventDefault();
+  startClassCapture(+b.dataset.id);
+});
+window.addEventListener('pointerup', endClassCapture);
+window.addEventListener('pointercancel', endClassCapture);
 
 /* 탭/서브탭을 떠날 때 활성 카메라·마이크·추론 루프를 일괄 정리.
    각 toggle 함수는 "켜져 있으면 끈다"는 토글 구조이므로,
@@ -3425,8 +3431,6 @@ const FEATURES = {
     panel: 'panel-supervised', sub: 'sub-audio', type: '전이학습', model: 'Speech Commands', desc: '짧은 음성 명령을 녹음해 단어를 분류합니다.' },
   pose:    { name: '동작 분류', icon: IC('<circle cx="12" cy="4" r="2"/><path d="M12 6v6m0 0l-4 6m4-6l4 6M6 9l6 1 6-1"/>'),
     panel: 'panel-supervised', sub: 'sub-pose', type: '지도학습 · 전이학습', model: 'MoveNet', desc: '자세 키포인트(관절 위치)를 수집·학습해 동작을 분류합니다.' },
-  text:    { name: '텍스트 분류', icon: IC('<path d="M4 6h16M4 12h16M4 18h10"/>'), disabled: true, badge: '준비중',
-    type: '전이학습', model: 'USE', desc: '문장 임베딩 + 분류 헤드로 텍스트를 분류합니다. (준비 중)' },
 
   filter:  { name: '영상 효과(필터)', icon: IC('<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/>'), badge: '알고리즘',
     panel: 'panel-pretrained', sub: 'sub-filter', type: '영상처리 알고리즘', model: 'Canvas · 프레임 차분', desc: '흑백·색반전·고대비·블러 필터와 모션 감지를 실시간으로 체험합니다.' },
@@ -3444,7 +3448,7 @@ const FEATURES = {
 
 /* 사이드바 그룹 구성 — 이 배열 순서대로 렌더된다. */
 const NAV_GROUPS = [
-  { title: 'AI 학습·추론 · 만드는 AI', items: ['image', 'audio', 'pose', 'text'] },
+  { title: 'AI 학습·추론 · 만드는 AI', items: ['image', 'audio', 'pose'] },
   { title: 'AI 영상처리 · 체험하는 AI', items: ['filter', 'colortrack', 'face', 'skeleton', 'detect'] },
 ];
 
@@ -3455,22 +3459,22 @@ NAV_GROUPS[0].items.forEach((k) => { if (FEATURES[k]) FEATURES[k].steps = LEARN_
 
 /* 이론 영역 — 학습 정보(데이터·목표·예시) + 알고리즘 정보(원리, K-12 눈높이) */
 const THEORY = {
-  image:   { learn: '내가 찍은 사진들이 데이터셋이 됩니다(보통 2~4종류). 목표는 카메라 사진을 내가 정한 종류로 자동 분류하기. 예: 캔·페트·종이 분리수거 도우미.',
-             algo:  'MobileNet이 사진의 특징을 뽑고, 그 위에 작은 분류기만 새로 학습합니다(전이학습). 적은 사진으로도 빠르게 배웁니다.' },
-  audio:   { learn: '단어마다 짧은 녹음 여러 개를 모읍니다. 목표는 말소리를 단어로 분류하기. 예: "켜"/"꺼"로 무언가 제어.',
-             algo:  '소리를 스펙트로그램(소리 사진)으로 바꿔 사전학습 모델이 특징을 뽑고, 분류기만 새로 학습합니다.' },
-  pose:    { learn: '동작마다 자세 데이터를 모읍니다. 목표는 몸 동작을 분류하기. 예: 만세/앉기 같은 자세 인식 게임.',
-             algo:  'MoveNet이 관절 17곳의 위치를 찾고, 그 좌표를 입력으로 작은 분류기를 학습합니다.' },
-  filter:  { learn: '학습이 필요 없는 고전 영상처리입니다. 목표는 픽셀을 바꾸면 화면이 어떻게 변하는지 체험하기.',
-             algo:  '각 픽셀의 색(R·G·B)을 규칙대로 바꿉니다. 흑백=평균, 색반전=255-값, 모션감지=이전 프레임과의 차이.' },
-  colortrack:{ learn: '학습이 필요 없습니다. 목표는 "특정 색 찾기"의 원리를 체험하기. 색 물체를 들고 움직여 보세요.',
-             algo:  '각 픽셀 색이 고른 색과 얼마나 가까운지(거리) 계산해, 가까우면 남기고 멀면 어둡게 가립니다(임계값).' },
-  face:    { learn: '대규모 얼굴 데이터로 미리 학습된 모델을 그대로 씁니다. 목표는 "검출"과 "인식"의 차이 이해하기.',
-             algo:  'BlazeFace가 화면을 훑어 얼굴이 있을 법한 위치에 상자를 칩니다. 누구인지까지는 알지 못합니다(위치만).' },
-  skeleton:{ learn: '미리 학습된 자세 추정 모델을 그대로 씁니다. 목표는 컴퓨터가 몸을 어떻게 "점과 선"으로 보는지 체험.',
-             algo:  'MoveNet이 관절 17곳을 찾아 점으로 찍고, 정해진 연결 규칙대로 선을 이어 뼈대를 그립니다.' },
-  detect:  { learn: 'COCO(90종 사물) 데이터로 미리 학습된 모델을 그대로 씁니다. 목표는 사전학습 모델의 힘 체험.',
-             algo:  'COCO-SSD가 화면을 한 번에 훑어 사물의 위치와 종류를 동시에 예측하고 상자·이름·확률을 표시합니다.' },
+  image:   { learn: '내가 찍은 사진들이 그대로 데이터(데이터셋)가 됩니다(보통 2~4종류). 목표는 카메라에 비친 것을 내가 정한 종류로 자동 분류하기예요. 예: 캔·페트·종이를 구분하는 분리수거 도우미. 사진이 많고 다양할수록 더 똑똑해집니다.',
+             algo:  'MobileNet(미리 학습된 모델)이 사진에서 중요한 특징을 뽑아내고, 그 위에 작은 분류기만 새로 배웁니다 — 이걸 전이학습이라고 해요. 큰 모델의 “눈”을 빌려 쓰니 적은 사진으로도 빠르게 배웁니다.' },
+  audio:   { learn: '단어마다 짧은 녹음을 여러 개 모읍니다. 목표는 말소리를 단어로 분류하기예요. 예: "켜"/"꺼"로 무언가 제어하기. 조용한 곳에서 같은 단어도 조금씩 다르게 녹음하면 더 잘 배워요.',
+             algo:  '소리를 스펙트로그램(소리를 그림으로 바꾼 것)으로 만든 뒤, 사전학습 모델이 특징을 뽑고 분류기만 새로 학습합니다. 즉 “소리 사진”을 분류하는 셈이에요.' },
+  pose:    { learn: '동작마다 자세 데이터를 모읍니다. 목표는 몸 동작을 분류하기예요. 예: 만세/앉기를 알아맞히는 자세 게임. 몸 전체가 화면에 들어오게 하면 인식이 안정적이에요.',
+             algo:  'MoveNet이 관절 17곳의 위치(좌표)를 찾아내고, 그 좌표만 입력으로 작은 분류기를 학습합니다. 사진 전체가 아니라 “관절 위치”만 보므로 가볍고 빨라요.' },
+  filter:  { learn: '학습이 필요 없는 고전 영상처리예요. 목표는 “픽셀 값을 바꾸면 화면이 어떻게 변하는가”를 직접 체험하는 거예요. AI의 영상 처리도 이런 픽셀 계산에서 시작합니다.',
+             algo:  '화면의 각 픽셀 색(R·G·B)을 규칙대로 바꿉니다. 흑백=세 색의 평균, 색반전=255−값, 모션감지=직전 프레임과의 차이로 “움직인 부분” 찾기.' },
+  colortrack:{ learn: '학습이 필요 없어요. 목표는 “특정 색 찾기”의 원리를 체험하는 거예요. 색이 또렷한 물체를 들고 움직여 보세요. 신호등·과일 선별 같은 곳에 쓰이는 기초 원리예요.',
+             algo:  '각 픽셀의 색이 내가 고른 색과 얼마나 가까운지(거리)를 계산해, 가까우면 남기고 멀면 어둡게 가립니다(임계값). 임계값을 바꾸면 더 넓게/좁게 잡혀요.' },
+  face:    { learn: '대규모 얼굴 데이터로 미리 학습된 모델을 그대로 씁니다. 목표는 “검출”(어디에 있나)과 “인식”(누구인가)의 차이를 이해하는 거예요. 이 코스는 위치만 찾고 신원은 알지 못합니다(개인정보 안전).',
+             algo:  'BlazeFace가 화면을 빠르게 훑어 얼굴이 있을 법한 위치에 상자를 칩니다. 누구인지까지는 판단하지 않고 “위치”만 찾습니다.' },
+  skeleton:{ learn: '미리 학습된 자세 추정 모델을 그대로 씁니다. 목표는 컴퓨터가 사람 몸을 어떻게 “점과 선”으로 보는지 체험하는 거예요. 운동 자세 교정·동작 분석 등에 쓰여요.',
+             algo:  'MoveNet이 관절 17곳을 찾아 점으로 찍고, 정해진 연결 규칙대로 선을 이어 뼈대를 그립니다. 학습 단계 없이 바로 추론만 합니다.' },
+  detect:  { learn: 'COCO(사물 90종) 데이터로 미리 학습된 모델을 그대로 씁니다. 목표는 “잘 학습된 모델”의 힘을 체험하는 거예요. 자율주행·CCTV 분석 등에 쓰이는 기술의 축소판이에요.',
+             algo:  'COCO-SSD가 화면을 한 번에 훑어 사물의 위치와 종류를 동시에 예측하고, 상자·이름·확률(%)을 함께 표시합니다.' },
 };
 
 function buildSidebar() {
@@ -3564,9 +3568,6 @@ function selectFeature(key) {
 }
 
 buildSidebar();
-
-window.addEventListener('mouseup', poseEndHold);
-window.addEventListener('touchend', poseEndHold);
 
 document.getElementById('gallery-close').addEventListener('click', closeGallery);
 document.getElementById('gallery-overlay').addEventListener('click', (e) => {

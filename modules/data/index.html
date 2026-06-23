@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" href="/favicon.png" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta name="theme-color" content="#f6f7fb" />
+<title>데이터 · 예측 AI (AIoT) — Eduino AI</title>
+<meta name="description" content="데이터의 관계를 보고, 예측 AI를 만들고, 비슷한 것끼리 자동으로 무리 짓는 체험형 데이터 AI 수업." />
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root {
+    --bg:#f6f7fb; --bg-soft:#eef1f7; --card:#fff; --card-2:#f9fafd;
+    --line:#e9ebf2; --line-2:#dfe2ec;
+    --ink:#14161f; --ink-2:#50566a; --ink-3:#868da3; --ink-4:#aeb4c6;
+    --primary:#f0473a; --primary-ink:#d12e1e; --primary-2:#ff6a52; --primary-soft:#fff1ee; --primary-line:#ffd6cd;
+    --green:#11a06f; --green-soft:#e6f6ef; --blue:#4d8dff; --blue-soft:#eaf1ff; --amber:#d98a1f; --amber-soft:#fcf3e2;
+    --shadow-sm:0 1px 2px rgba(20,22,31,.05), 0 1px 3px rgba(20,22,31,.05);
+    --shadow:0 2px 6px rgba(20,22,31,.05), 0 12px 30px rgba(20,22,31,.07);
+    --r:16px; --sans:'Pretendard',-apple-system,sans-serif; --mono:'JetBrains Mono','Pretendard',ui-monospace,monospace;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:var(--sans); color:var(--ink); font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;
+    word-break:keep-all; overflow-wrap:break-word;
+    background:radial-gradient(1000px 520px at 88% -8%, rgba(240,71,58,.08), transparent 62%), var(--bg); min-height:100vh; }
+  a { color:inherit; text-decoration:none; } button { font-family:inherit; cursor:pointer; }
+
+  .topbar { position:sticky; top:0; z-index:30; background:rgba(246,247,251,.85); backdrop-filter:blur(14px) saturate(1.4); border-bottom:1px solid var(--line); }
+  .topbar::after { content:''; display:block; height:3px; background:linear-gradient(90deg,var(--primary),#ff8a3d 40%,rgba(255,138,61,0) 80%); }
+  .topbar-inner { max-width:1140px; margin:0 auto; padding:11px 22px; display:flex; align-items:center; gap:13px; }
+  .back { font-size:13px; font-weight:600; color:var(--ink-2); display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border:1px solid var(--line-2); border-radius:10px; background:#fff; box-shadow:var(--shadow-sm); transition:.15s; }
+  .back:hover { color:var(--primary-ink); border-color:var(--primary-line); }
+  .logo-mark { width:38px; height:38px; border-radius:11px; background:linear-gradient(150deg,var(--primary-2),var(--primary)); color:#fff; display:grid; place-items:center; font-weight:800; font-size:20px; box-shadow:0 4px 12px rgba(240,71,58,.4), inset 0 1px 0 rgba(255,255,255,.4); }
+  .logo-title { font-size:18px; font-weight:800; letter-spacing:-.02em; } .logo-title span { color:var(--primary); }
+  .logo-mark-img { height:38px; width:auto; display:block; }
+  .logo-tag { font-size:12px; color:var(--ink-3); }
+  .status { margin-left:auto; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.04em; padding:7px 13px; border-radius:999px; border:1px solid var(--line-2); color:var(--ink-3); background:#fff; }
+  .status.busy { color:var(--amber); border-color:rgba(217,138,31,.4); background:var(--amber-soft); }
+  .status.ready { color:var(--green); border-color:rgba(17,160,111,.4); background:var(--green-soft); }
+  .status.live { color:var(--primary-ink); border-color:var(--primary-line); background:var(--primary-soft); }
+
+  main { max-width:1140px; margin:0 auto; padding:22px; }
+  .cintro { text-align:center; padding:6px 0 16px; }
+  .cintro .eyebrow { display:inline-block; font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.06em; color:var(--primary-ink); background:var(--primary-soft); border:1px solid var(--primary-line); border-radius:999px; padding:5px 12px; margin-bottom:10px; }
+  .cintro h1 { margin:0 0 7px; font-size:26px; font-weight:800; letter-spacing:-.02em; }
+  .cintro p { margin:0 auto; max-width:600px; font-size:14px; color:var(--ink-2); line-height:1.6; }
+  .cintro p b { color:var(--primary-ink); }
+  .steps { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+  .step { flex:1; min-width:200px; text-align:left; background:#fff; border:1px solid var(--line); border-radius:var(--r); padding:13px 16px; transition:.15s; display:flex; gap:12px; align-items:center; box-shadow:var(--shadow-sm); }
+  .step.active { border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-soft), var(--shadow); }
+  .step .n { width:34px; height:34px; border-radius:10px; flex:none; display:grid; place-items:center; font-size:18px; background:var(--bg-soft); border:1px solid var(--line); }
+  .step.active .n { background:var(--primary-soft); border-color:var(--primary-line); }
+  .step .t b { font-size:14.5px; font-weight:700; display:block; }
+  .step .t span { font-size:12px; color:var(--ink-3); }
+
+  .layout { display:grid; grid-template-columns:1.12fr .88fr; gap:18px; align-items:start; }
+  .layout[hidden] { display:none; }
+  .layout > .card:first-child { align-self:start; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:18px; display:flex; flex-direction:column; }
+  .card h2 { margin:0 0 4px; font-size:16px; font-weight:800; display:flex; align-items:center; gap:8px; }
+  .card h2::before { content:''; width:4px; height:16px; border-radius:2px; background:var(--primary); }
+  .card .sub { font-size:13px; color:var(--ink-3); margin:0 0 14px; line-height:1.55; }
+
+  .chart-wrap { position:relative; width:100%; border:1px solid var(--line); border-radius:13px; background:var(--card-2); overflow:hidden; }
+  canvas.chart { width:100%; height:auto; display:block; cursor:crosshair; touch-action:none; }
+  .axis-x { text-align:center; font-size:12px; color:var(--ink-3); margin-top:6px; }
+  .tip { font-size:12px; color:var(--ink-4); margin-top:4px; text-align:center; }
+
+  .ctrl { display:flex; gap:9px; margin-top:12px; flex-wrap:wrap; align-items:center; }
+  .btn { border:1px solid var(--line-2); background:#fff; color:var(--ink); border-radius:11px; padding:10px 15px; font-size:13.5px; font-weight:700; transition:.15s; box-shadow:var(--shadow-sm); display:inline-flex; align-items:center; justify-content:center; gap:7px; }
+  .btn:hover { border-color:var(--primary-line); color:var(--primary-ink); }
+  .btn:disabled { opacity:.45; cursor:not-allowed; box-shadow:none; }
+  .btn.primary { background:linear-gradient(150deg,var(--primary-2),var(--primary)); border-color:transparent; color:#fff; box-shadow:0 5px 16px rgba(240,71,58,.32); }
+  .btn.primary:hover { color:#fff; transform:translateY(-1px); }
+  .btn.block { width:100%; }
+
+  .seg { display:inline-flex; border:1px solid var(--line-2); border-radius:10px; overflow:hidden; }
+  .seg button { border:none; background:#fff; color:var(--ink-2); padding:9px 14px; font-size:13px; font-weight:600; }
+  .seg button.on { background:var(--primary-soft); color:var(--primary-ink); }
+  .seg-label { font-size:13px; color:var(--ink-3); font-weight:600; }
+
+  .dsbtns { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+  .dsbtns button { border:1px solid var(--line-2); background:#fff; color:var(--ink-2); border-radius:999px; padding:7px 13px; font-size:12.5px; font-weight:600; }
+  .dsbtns button.on { background:var(--blue-soft); color:#2c63c4; border-color:rgba(77,141,255,.4); }
+
+  .stat { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:4px 0 12px; }
+  .stat .s { background:var(--card-2); border:1px solid var(--line); border-radius:11px; padding:12px; text-align:center; }
+  .stat .s span { font-size:11.5px; color:var(--ink-3); display:block; }
+  .stat .s b { font-family:var(--mono); font-size:19px; font-weight:700; }
+  .stat .s b.pos { color:var(--green); } .stat .s b.neg { color:var(--primary); }
+
+  .row { display:flex; align-items:center; gap:11px; margin:14px 0 6px; font-size:13.5px; color:var(--ink-2); font-weight:600; }
+  .row input[type=range] { flex:1; accent-color:var(--primary); }
+  .row .val { font-family:var(--mono); font-size:13px; color:var(--ink); min-width:34px; text-align:right; }
+  .metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:12px 0; }
+  .metrics .m { background:var(--card-2); border:1px solid var(--line); border-radius:11px; padding:10px; text-align:center; }
+  .metrics .m span { font-size:11px; color:var(--ink-3); display:block; }
+  .metrics .m b { font-family:var(--mono); font-size:16px; font-weight:700; }
+  .pred-out { background:linear-gradient(180deg,var(--primary-soft),#fff); border:1px solid var(--primary-line); border-radius:12px; padding:14px; text-align:center; margin-top:6px; }
+  .pred-out .po-lab { font-size:12px; color:var(--ink-3); font-weight:700; margin-bottom:4px; }
+  .pred-out .po-lab b { color:var(--ink); }
+  .pred-out .big { font-size:23px; font-weight:800; color:var(--primary-ink); }
+  .pred-out .big small { font-size:13px; color:var(--ink-3); font-weight:600; }
+  .pred-out .po-note { font-size:11.5px; color:var(--ink-4); margin-top:5px; }
+  .pred-out .po-note b { color:var(--primary-ink); }
+
+  .groups { display:flex; flex-direction:column; gap:9px; margin:4px 0 6px; }
+  .group { display:flex; align-items:center; gap:10px; background:var(--card-2); border:1px solid var(--line); border-radius:11px; padding:11px 13px; }
+  .group .dot { width:15px; height:15px; border-radius:50%; flex:none; }
+  .group .gname { font-weight:700; font-size:13.5px; }
+  .group .gcount { margin-left:auto; font-family:var(--mono); font-size:13px; color:var(--ink-3); }
+  .group.empty { color:var(--ink-4); font-size:12.5px; justify-content:center; }
+
+  .proc { display:flex; gap:6px; margin-bottom:12px; }
+  .proc .p { flex:1; font-size:11px; font-weight:700; color:var(--ink-4); background:var(--card-2); border:1px solid var(--line); border-radius:9px; padding:7px 4px; text-align:center; transition:.15s; }
+  .proc .p b { display:block; font-size:13px; font-family:var(--mono); margin-bottom:2px; }
+  .proc .p.on { color:var(--primary-ink); background:var(--primary-soft); border-color:var(--primary-line); }
+  .proc .p.done { color:var(--green); background:var(--green-soft); border-color:rgba(17,160,111,.3); }
+  .proc .p.done b::before { content:'✓ '; }
+  .say { background:#fff; border:1px dashed var(--primary-line); border-radius:11px; padding:11px 13px; font-size:13px; color:var(--ink-2); margin:0 0 12px; display:flex; gap:9px; align-items:flex-start; min-height:46px; line-height:1.5; }
+  .say .ic { flex:none; font-size:16px; }
+  .say b { color:var(--primary-ink); }
+  .eqn { font-family:var(--mono); font-size:14px; background:var(--card-2); border:1px solid var(--line); border-radius:10px; padding:11px 12px; text-align:center; color:var(--ink); margin-top:10px; }
+  .eqn[hidden] { display:none; }
+  .eqn b { color:var(--primary-ink); }
+
+  .learn { background:var(--card-2); border:1px solid var(--line); border-radius:12px; padding:13px 15px; margin-top:14px; font-size:12.5px; color:var(--ink-2); line-height:1.7; }
+  .learn b { color:var(--primary-ink); }
+  .learn .ex { display:block; margin-top:7px; color:var(--ink-3); }
+  .fill { flex:1 1 auto; }
+
+  /* 이론 보강 영역 (인터랙션 카드와 분리) */
+  .theory-sec { grid-column:1 / -1; margin-top:6px; }
+  .thead { display:flex; align-items:baseline; gap:10px; margin:0 0 14px; flex-wrap:wrap; }
+  .thead h2 { margin:0; font-size:18px; font-weight:800; letter-spacing:-.02em; }
+  .thead h2::before { content:''; display:inline-block; width:4px; height:16px; border-radius:2px; background:linear-gradient(180deg,var(--primary-2),var(--primary)); margin-right:9px; vertical-align:-2px; }
+  .thead span { font-size:12.5px; color:var(--ink-3); font-weight:600; }
+  .tgrid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .tcard { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; box-shadow:var(--shadow-sm); transition:.16s; }
+  .tcard:hover { box-shadow:var(--shadow); transform:translateY(-2px); border-color:var(--primary-line); }
+  .tcard .tc-ic { width:38px; height:38px; border-radius:11px; display:grid; place-items:center; font-size:19px; margin-bottom:10px; background:var(--primary-soft); }
+  .tcard:nth-child(1) .tc-ic { background:var(--green-soft); }
+  .tcard:nth-child(2) .tc-ic { background:var(--blue-soft); }
+  .tcard:nth-child(3) .tc-ic { background:var(--amber-soft); }
+  .tcard h3 { margin:0 0 6px; font-size:14.5px; font-weight:800; }
+  .tcard p { margin:0; font-size:13px; color:var(--ink-2); line-height:1.6; }
+  .tcard p b { color:var(--primary-ink); }
+  .tflow { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px; background:var(--card-2); border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
+  .tflow .tf-lab { font-size:11.5px; font-family:var(--mono); font-weight:700; color:var(--ink-3); margin-right:2px; }
+  .tflow .tf { font-size:12.5px; font-weight:700; color:var(--ink-2); background:#fff; border:1px solid var(--line-2); border-radius:8px; padding:6px 11px; }
+  .tflow .tarr { color:var(--ink-4); font-weight:700; }
+  @media (max-width:760px){ .tgrid { grid-template-columns:1fr; } }
+
+  @media (max-width:880px){ .layout{ grid-template-columns:1fr; align-items:start; } }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="back" href="/platform/index.html">← 플랫폼</a>
+    <img class="logo-mark-img" src="/platform/img/logo-mark.webp" alt="Eduino AI" />
+    <div>
+      <div class="logo-title">데이터 · 예측 <span>AI</span></div>
+      <div class="logo-tag">데이터로 보고·예측하고·묶는 AI · Eduino AI</div>
+    </div>
+    <div class="status" id="status">준비됨</div>
+  </div>
+</header>
+
+<main>
+  <div class="cintro">
+    <span class="eyebrow">데이터 · 예측 AI 코스</span>
+    <h1>데이터로 보고·예측하고·묶는 AI</h1>
+    <p>표·데이터로 AI의 핵심을 직접 만져 봐요. 두 값의 <b>관계</b>를 그래프로 읽고(초급), <b>예측 모델</b>을 학습시켜 다음 값을 맞히고(중급), 정답 없이 비슷한 것끼리 <b>무리 짓기</b>까지(심화) 해봅니다.</p>
+  </div>
+
+  <div class="steps">
+    <button class="step active" data-step="explore"><div class="n">🔎</div><div class="t"><b>관계 살펴보기</b><span>두 값이 함께 움직일까?</span></div></button>
+    <button class="step" data-step="predict"><div class="n">📈</div><div class="t"><b>예측해보기</b><span>다음 값을 맞히는 AI 만들기</span></div></button>
+    <button class="step" data-step="cluster"><div class="n">🎨</div><div class="t"><b>무리 짓기</b><span>비슷한 것끼리 자동 분류</span></div></button>
+  </div>
+
+  <!-- 1. 관계 살펴보기 -->
+  <section id="panel-explore" class="layout">
+    <div class="card">
+      <h2>데이터 흩뿌려 보기</h2>
+      <p class="sub">예시를 고르면 점들이 흩어져 나와요. 점이 오른쪽 위로 줄지으면 “함께 늘어나는” 관계예요. 그래프를 눌러 점을 더 찍어볼 수도 있어요.</p>
+      <div class="dsbtns" id="ds-btns"></div>
+      <div class="chart-wrap"><canvas class="chart" id="c-explore" width="600" height="430"></canvas></div>
+      <div class="axis-x" id="ax-explore">X</div>
+      <div class="tip">💡 그래프를 클릭하면 점이 추가돼요</div>
+      <div class="ctrl">
+        <button class="btn" id="ex-trend">흐름선 그리기</button>
+        <button class="btn" id="ex-reset">예시 다시</button>
+        <button class="btn" id="ex-clear">모두 지우기</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>관계 읽기</h2>
+      <p class="sub">점들이 한 방향으로 모일수록 관계가 강해요.</p>
+      <div class="stat">
+        <div class="s"><span>관계 점수 (−1 ~ +1)</span><b id="ex-r">—</b></div>
+        <div class="s"><span>어떤 관계?</span><b id="ex-rel">—</b></div>
+      </div>
+    </div>
+
+    <div class="theory-sec">
+      <div class="thead"><h2>원리와 활용</h2><span>데이터의 ‘관계’를 읽는 법</span></div>
+      <div class="tgrid">
+        <div class="tcard">
+          <span class="tc-ic">🔗</span>
+          <h3>관계(상관)란?</h3>
+          <p>두 값이 함께 움직이는 정도를 <b>관계 점수</b>로 나타내요. <b>+1</b>이면 같이↗, <b>−1</b>이면 반대↘, <b>0</b>이면 무관. 점이 한 방향으로 줄지을수록 관계가 강해요.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">⚠️</span>
+          <h3>관계 ≠ 원인</h3>
+          <p>함께 움직인다고 한쪽이 <b>원인</b>인 건 아니에요. 아이스크림 판매와 물놀이 사고가 같이 늘어도, 진짜 원인은 <b>더위</b>죠. 관계는 ‘힌트’일 뿐 인과는 따로 확인해야 해요.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">📈</span>
+          <h3>어디에 쓰일까?</h3>
+          <p>광고비↔매출, 기온↔전력 사용량, 운동량↔건강처럼 <b>두 값의 연관</b>을 찾는 건 모든 데이터 분석·예측의 첫걸음이에요.</p>
+        </div>
+      </div>
+      <div class="tflow"><span class="tf-lab">분석 흐름</span><span class="tf">데이터 모으기</span><span class="tarr">→</span><span class="tf">흩뿌려 보기</span><span class="tarr">→</span><span class="tf">방향·세기 읽기</span><span class="tarr">→</span><span class="tf">관계 점수</span></div>
+    </div>
+  </section>
+
+  <!-- 2. 예측해보기 -->
+  <section id="panel-predict" class="layout" hidden>
+    <div class="card">
+      <h2>내 데이터로 AI 가르치기</h2>
+      <p class="sub">가로축 <b>X는 입력(원인)</b>, 세로축 <b>Y는 그때의 결과</b>예요. 예: X=공부 시간 → Y=시험 점수. 점을 찍으면 AI가 이 관계를 보고 ‘예측선’을 찾아갑니다.</p>
+      <div class="chart-wrap"><canvas class="chart" id="c-predict" width="600" height="430"></canvas></div>
+      <div class="axis-x">→ 가로축: 입력 X · ↑ 세로축: 결과 Y</div>
+      <div class="tip">💡 그래프를 클릭해 (입력, 결과) 점을 찍어보세요</div>
+      <div class="ctrl">
+        <button class="btn" id="pr-sample">예시 채우기</button>
+        <button class="btn" id="pr-clear">모두 지우기</button>
+        <span class="seg-label" style="margin-left:auto">선 모양</span>
+        <span class="seg" id="model-seg">
+          <button data-model="linear" class="on">직선</button>
+          <button data-model="curve">곡선</button>
+        </span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>AI 학습 &amp; 예측</h2>
+      <p class="sub">[AI 학습시키기]를 누르면 선이 점들에 맞춰 조금씩 움직여요. 그게 ‘학습’이에요.</p>
+      <div class="proc" id="pr-proc">
+        <div class="p"><b>1</b>점 찍기</div><div class="p"><b>2</b>선 모양</div><div class="p"><b>3</b>학습</div><div class="p"><b>4</b>예측</div>
+      </div>
+      <div class="say"><span class="ic">🤖</span><span id="pr-say">그래프에 점을 2개 이상 찍어 주세요.</span></div>
+      <button class="btn primary block" id="pr-train" disabled>AI 학습시키기</button>
+      <div class="metrics">
+        <div class="m"><span>학습 횟수</span><b id="m-epoch">—</b></div>
+        <div class="m"><span>틀린 정도</span><b id="m-loss" style="color:var(--primary)">—</b></div>
+        <div class="m"><span>점 개수</span><b id="m-n">0</b></div>
+      </div>
+      <div class="eqn" id="pr-eqn" hidden>AI가 찾은 예측식 → <b id="pr-eqn-t"></b></div>
+      <div class="row"><span>입력값 X 넣어보기</span><input type="range" id="pr-x" min="0" max="10" step="0.1" value="5" disabled><span class="val" id="pr-xval">5.0</span></div>
+      <div class="pred-out">
+        <div class="po-lab">AI가 예측한 <b>결과값 Y</b></div>
+        <div class="big" id="pr-yhat">먼저 학습시켜 주세요</div>
+        <div class="po-note">입력 X일 때 나올 거라고 AI가 예상한 값이에요. <b>정확도가 아니에요!</b></div>
+      </div>
+    </div>
+
+    <div class="theory-sec">
+      <div class="thead"><h2>원리와 활용</h2><span>AI가 ‘예측’을 배우는 법</span></div>
+      <div class="tgrid">
+        <div class="tcard">
+          <span class="tc-ic">📉</span>
+          <h3>회귀란?</h3>
+          <p>점들 사이를 <b>가장 잘 지나는 선·곡선</b>을 찾아, 새 입력값 X에 대한 결과 Y를 예측하는 방법이에요. 예: 기온(X)→아이스크림 판매량(Y).</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">🔁</span>
+          <h3>경사하강법</h3>
+          <p>처음엔 아무 선이나 긋고, 점들과 <b>얼마나 틀렸는지(오차)</b>를 본 뒤 오차가 줄도록 선을 <b>조금씩 수십 번</b> 옮겨요. 이 반복이 곧 ‘학습’입니다.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">🛰️</span>
+          <h3>어디에 쓰일까? (AIoT)</h3>
+          <p>센서값으로 <b>온도·미세먼지·전력 사용량</b>을 예측하거나, 판매·수요를 미리 짐작하는 등 사물인터넷·산업 현장에서 널리 쓰여요.</p>
+        </div>
+      </div>
+      <div class="tflow"><span class="tf-lab">학습 흐름</span><span class="tf">점 찍기</span><span class="tarr">→</span><span class="tf">오차 측정</span><span class="tarr">→</span><span class="tf">선 조정 반복</span><span class="tarr">→</span><span class="tf">예측</span></div>
+    </div>
+  </section>
+
+  <!-- 3. 무리 짓기 -->
+  <section id="panel-cluster" class="layout" hidden>
+    <div class="card">
+      <h2>데이터 분포 만들기</h2>
+      <p class="sub">[예시 분포 만들기]를 누르거나 그래프를 눌러 점을 흩뿌리세요. 그 다음 AI가 <b>비슷한 위치끼리</b> 색으로 묶어줍니다.</p>
+      <div class="chart-wrap"><canvas class="chart" id="c-cluster" width="600" height="430"></canvas></div>
+      <div class="tip">💡 점을 흩뿌린 뒤 [AI로 무리 짓기]를 눌러보세요</div>
+      <div class="ctrl">
+        <button class="btn" id="cl-sample">예시 분포 만들기</button>
+        <button class="btn" id="cl-clear">모두 지우기</button>
+        <span class="seg-label" style="margin-left:auto">무리 수</span>
+        <span class="seg" id="k-seg">
+          <button data-k="2">2</button><button data-k="3" class="on">3</button><button data-k="4">4</button>
+        </span>
+      </div>
+      <button class="btn primary block" id="cl-run" disabled style="margin-top:12px">🎨 AI로 무리 짓기</button>
+    </div>
+    <div class="card">
+      <h2>무리 짓기 결과</h2>
+      <p class="sub">정답을 알려주지 않아도 AI가 가까운 것끼리 스스로 묶어요. ★는 각 무리의 중심이에요.</p>
+      <div class="proc" id="cl-proc">
+        <div class="p"><b>1</b>점 만들기</div><div class="p"><b>2</b>무리 수</div><div class="p"><b>3</b>AI로 묶기</div>
+      </div>
+      <div class="say"><span class="ic">🤖</span><span id="cl-say">왼쪽에서 점을 흩뿌려 주세요.</span></div>
+      <div class="metrics" style="grid-template-columns:repeat(2,1fr)">
+        <div class="m"><span>반복 횟수</span><b id="cl-it">—</b></div>
+        <div class="m"><span>이번에 바뀐 점</span><b id="cl-changed">—</b></div>
+      </div>
+      <div class="groups" id="cl-groups"><div class="group empty">아직 묶지 않았어요. 왼쪽에서 점을 만들고 [AI로 무리 짓기]를 눌러보세요.</div></div>
+      <button class="btn block" id="cl-redo" disabled style="margin-top:10px">🔁 다른 시작으로 다시 묶기</button>
+    </div>
+
+    <div class="theory-sec">
+      <div class="thead"><h2>원리와 활용</h2><span>정답 없이 스스로 묶는 법</span></div>
+      <div class="tgrid">
+        <div class="tcard">
+          <span class="tc-ic">🎨</span>
+          <h3>군집화(K-means)</h3>
+          <p>정답표 없이 데이터만 보고 <b>비슷한 것끼리 자동으로 묶어요</b>. ① 중심(★)을 놓고 ② 가까운 점을 그 색으로 칠하고 ③ ★를 한가운데로 옮기길 반복하면 무리가 또렷해집니다.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">🧭</span>
+          <h3>지도 vs 비지도</h3>
+          <p>정답(라벨)을 주고 배우면 <b>지도학습</b>, 정답 없이 스스로 규칙을 찾으면 <b>비지도학습</b>이에요. 군집화는 대표적인 비지도학습입니다.</p>
+        </div>
+        <div class="tcard">
+          <span class="tc-ic">🛍️</span>
+          <h3>어디에 쓰일까?</h3>
+          <p>비슷한 손님끼리 묶어 <b>타깃 마케팅</b>, 평소와 다른 데이터를 찾는 <b>이상치 탐지</b>, 이미지·문서 자동 분류 등에 쓰여요.</p>
+        </div>
+      </div>
+      <div class="tflow"><span class="tf-lab">묶기 흐름</span><span class="tf">점 분포</span><span class="tarr">→</span><span class="tf">중심 추측</span><span class="tarr">→</span><span class="tf">가까운 것끼리 묶기 반복</span><span class="tarr">→</span><span class="tf">무리 완성</span></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+function setStatus(t, c) { const s = $('status'); s.textContent = t; s.className = 'status' + (c ? ' ' + c : ''); }
+const CW = 600, CH = 430, PAD = 42, DOM = 10;
+const CLR = ['#f0473a', '#4d8dff', '#11a06f', '#d98a1f', '#7c6cff'];
+
+function toPx(x, y) { return [PAD + (x / DOM) * (CW - 2 * PAD), CH - PAD - (y / DOM) * (CH - 2 * PAD)]; }
+function toData(px, py) { return [(px - PAD) / (CW - 2 * PAD) * DOM, (CH - PAD - py) / (CH - 2 * PAD) * DOM]; }
+function clamp(v) { return Math.max(0, Math.min(DOM, v)); }
+function evtData(e) { const r = e.target.getBoundingClientRect(); return toData((e.clientX - r.left) / r.width * CW, (e.clientY - r.top) / r.height * CH); }
+
+function drawAxes(ctx) {
+  ctx.clearRect(0, 0, CW, CH);
+  ctx.strokeStyle = '#e9ebf2'; ctx.lineWidth = 1;
+  for (let i = 0; i <= DOM; i++) {
+    const [gx] = toPx(i, 0), [, gy] = toPx(0, i);
+    ctx.beginPath(); ctx.moveTo(gx, PAD); ctx.lineTo(gx, CH - PAD); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(PAD, gy); ctx.lineTo(CW - PAD, gy); ctx.stroke();
+  }
+  ctx.strokeStyle = '#c9cedb'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(PAD, PAD); ctx.lineTo(PAD, CH - PAD); ctx.lineTo(CW - PAD, CH - PAD); ctx.stroke();
+}
+function dot(ctx, x, y, r, fill) { const [px, py] = toPx(x, y); ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke(); }
+function drawPoints(ctx, pts, color, assign) { pts.forEach((p, i) => dot(ctx, p.x, p.y, 5.5, assign ? CLR[assign[i] % CLR.length] : color)); }
+function drawStar(ctx, x, y, color) {
+  const [px, py] = toPx(x, y); const R = 11, r = 4.6;
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) { const ang = -Math.PI / 2 + i * Math.PI / 5; const rad = i % 2 ? r : R; const sx = px + Math.cos(ang) * rad, sy = py + Math.sin(ang) * rad; i ? ctx.lineTo(sx, sy) : ctx.moveTo(sx, sy); }
+  ctx.closePath(); ctx.fillStyle = color; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.stroke();
+}
+function drawFn(ctx, fn, color) {
+  ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.beginPath(); let s = false;
+  for (let x = 0; x <= DOM; x += 0.1) { const y = fn(x); if (!isFinite(y)) continue; const [px, py] = toPx(x, Math.max(-2, Math.min(DOM + 2, y))); s ? ctx.lineTo(px, py) : ctx.moveTo(px, py); s = true; }
+  ctx.stroke();
+}
+function linreg(pts) {
+  const n = pts.length; if (n < 2) return null;
+  let sx = 0, sy = 0, sxy = 0, sxx = 0, syy = 0;
+  pts.forEach(p => { sx += p.x; sy += p.y; sxy += p.x * p.y; sxx += p.x * p.x; syy += p.y * p.y; });
+  const mx = sx / n, my = sy / n, cov = sxy / n - mx * my, vx = sxx / n - mx * mx, vy = syy / n - my * my;
+  if (vx < 1e-9) return null;
+  return { m: cov / vx, b: my - (cov / vx) * mx, r: (vy < 1e-9) ? 0 : cov / Math.sqrt(vx * vy) };
+}
+function sample(f, noise, n) {
+  const a = []; n = n || 12;
+  for (let i = 0; i < n; i++) { const x = clamp(0.7 + Math.random() * 8.6); const y = clamp(f(x) + (Math.random() - 0.5) * 2 * noise); a.push({ x: +x.toFixed(2), y: +y.toFixed(2) }); }
+  return a;
+}
+if (typeof module !== 'undefined') { module.exports = { linreg, kmeans }; }
+
+/* ════ 1. 관계 살펴보기 ════ */
+const PRESETS = {
+  study: { name: '공부시간 → 점수', x: '공부 시간', gen: () => sample((x) => x + 0.5, 1.3) },
+  ice: { name: '기온 → 아이스크림', x: '기온', gen: () => sample((x) => 0.9 * x + 0.8, 1.4) },
+  game: { name: '게임시간 → 성적', x: '게임 시간', gen: () => sample((x) => 10 - x, 1.3) },
+};
+let exPts = [], exTrend = false, curPreset = 'study';
+const exCtx = $('c-explore').getContext('2d');
+$('ds-btns').innerHTML = Object.entries(PRESETS).map(([k, v]) => `<button data-ds="${k}" class="${k === 'study' ? 'on' : ''}">${v.name}</button>`).join('');
+function loadPreset(k) { curPreset = k; exPts = PRESETS[k].gen(); exTrend = false; $('ex-trend').textContent = '흐름선 그리기'; $('ax-explore').textContent = PRESETS[k].x + ' →'; document.querySelectorAll('#ds-btns button').forEach(b => b.classList.toggle('on', b.dataset.ds === k)); renderExplore(); }
+function renderExplore() {
+  drawAxes(exCtx);
+  if (exTrend) { const r = linreg(exPts); if (r) drawFn(exCtx, (x) => r.m * x + r.b, '#f0473a'); }
+  drawPoints(exCtx, exPts, '#4d8dff');
+  const r = linreg(exPts);
+  $('ex-r').textContent = r ? (r.r >= 0 ? '+' : '') + r.r.toFixed(2) : '—';
+  let rel = '—', cls = ''; if (r) { if (r.r > 0.3) { rel = '함께 늘어요 ↗'; cls = 'pos'; } else if (r.r < -0.3) { rel = '반대로 움직여요 ↘'; cls = 'neg'; } else rel = '관계가 약해요'; }
+  const el = $('ex-rel'); el.textContent = rel; el.className = cls;
+}
+$('ds-btns').addEventListener('click', (e) => { const k = e.target.dataset.ds; if (k) loadPreset(k); });
+$('ex-trend').onclick = () => { exTrend = !exTrend; $('ex-trend').textContent = exTrend ? '흐름선 숨기기' : '흐름선 그리기'; renderExplore(); };
+$('ex-reset').onclick = () => loadPreset(curPreset);
+$('ex-clear').onclick = () => { exPts = []; renderExplore(); };
+$('c-explore').addEventListener('pointerdown', (e) => { const [x, y] = evtData(e); if (x < 0 || x > DOM || y < 0 || y > DOM) return; exPts.push({ x: +x.toFixed(2), y: +y.toFixed(2) }); renderExplore(); });
+
+/* ════ 2. 예측해보기 ════ */
+let prPts = [], modelType = 'linear', training = false, raf = null, W1 = null, W2 = null, B = null, trained = false;
+const prCtx = $('c-predict').getContext('2d');
+function predFn(x) { if (!trained) return null; const xn = x / DOM; return (modelType === 'curve' ? (W2 * xn * xn + W1 * xn + B) : (W1 * xn + B)) * DOM; }
+function renderPredict() {
+  drawAxes(prCtx);
+  if (trained) drawFn(prCtx, (x) => predFn(x), '#f0473a');
+  drawPoints(prCtx, prPts, '#4d8dff');
+  if (trained) {
+    const x = +$('pr-x').value, y = predFn(x);
+    if (isFinite(y)) {
+      const [px, py] = toPx(x, Math.max(0, Math.min(DOM, y)));
+      prCtx.strokeStyle = '#11a06f'; prCtx.lineWidth = 1.5; prCtx.setLineDash([5, 4]);
+      prCtx.beginPath(); prCtx.moveTo(px, CH - PAD); prCtx.lineTo(px, py); prCtx.lineTo(PAD, py); prCtx.stroke(); prCtx.setLineDash([]);
+      dot(prCtx, x, Math.max(0, Math.min(DOM, y)), 6.5, '#11a06f');
+    }
+  }
+  $('m-n').textContent = prPts.length; $('pr-train').disabled = prPts.length < 2 || training;
+}
+function updatePred() { const x = +$('pr-x').value; $('pr-xval').textContent = x.toFixed(1); const y = trained ? predFn(x) : null; $('pr-yhat').innerHTML = (y == null) ? '먼저 학습시켜 주세요' : `예측 Y = ${y.toFixed(2)} <small>(X=${x.toFixed(1)})</small>`; renderPredict(); updatePredProc(); updateEqn(); predSayAuto(); }
+function procState(el, s) { el.className = 'p' + (s ? ' ' + s : ''); }
+function updatePredProc() {
+  const ps = [...$('pr-proc').children], has = prPts.length >= 2;
+  const active = !has ? 0 : training ? 2 : trained ? 3 : 2;
+  ps.forEach((el, i) => procState(el, i < active ? 'done' : i === active ? 'on' : ''));
+}
+function updateEqn() {
+  const e = $('pr-eqn'); if (!trained) { e.hidden = true; return; } e.hidden = false;
+  const b10 = B * 10;
+  $('pr-eqn-t').textContent = (modelType === 'curve')
+    ? `Y = ${(W2 / 10).toFixed(3)} × X² + ${W1.toFixed(2)} × X + ${b10.toFixed(2)}`
+    : `Y = ${W1.toFixed(2)} × X + ${b10.toFixed(2)}`;
+}
+function predSayAuto() {
+  if (training) return;
+  const has = prPts.length >= 2;
+  $('pr-say').innerHTML = !has ? '그래프에 점을 <b>2개 이상</b> 찍어 주세요.'
+    : !trained ? '준비됐어요! <b>[AI 학습시키기]</b>를 눌러보세요.'
+    : '완성! <b>X 슬라이더</b>를 움직여 새 값을 예측해 보세요.';
+}
+$('model-seg').addEventListener('click', (e) => { const m = e.target.dataset.model; if (!m) return; modelType = m; $('model-seg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.model === m)); trained = false; $('pr-x').disabled = true; updatePred(); });
+$('pr-x').addEventListener('input', updatePred);
+$('pr-sample').onclick = () => { prPts = sample((x) => 0.7 * x + 1.5, 1.1); trained = false; $('pr-x').disabled = true; updatePred(); };
+$('pr-clear').onclick = () => { prPts = []; trained = false; training = false; if (raf) cancelAnimationFrame(raf); $('pr-x').disabled = true; $('m-epoch').textContent = '—'; $('m-loss').textContent = '—'; updatePred(); };
+$('c-predict').addEventListener('pointerdown', (e) => { if (training) return; const [x, y] = evtData(e); if (x < 0 || x > DOM || y < 0 || y > DOM) return; prPts.push({ x: +x.toFixed(2), y: +y.toFixed(2) }); trained = false; $('pr-x').disabled = true; updatePred(); });
+$('pr-train').onclick = () => {
+  if (prPts.length < 2 || training) return;
+  training = true; setStatus('AI 학습 중…', 'busy'); $('pr-train').disabled = true; $('pr-x').disabled = true;
+  $('pr-say').innerHTML = 'AI가 선을 이리저리 옮기며 <b>틀린 정도</b>를 줄이는 중이에요…'; updatePredProc();
+  const xs = tf.tensor1d(prPts.map(p => p.x / DOM)), ys = tf.tensor1d(prPts.map(p => p.y / DOM));
+  const w1 = tf.variable(tf.scalar(Math.random() * 0.4)), b = tf.variable(tf.scalar(0.3)), w2 = tf.variable(tf.scalar(0));
+  const opt = tf.train.adam(0.08), curve = modelType === 'curve';
+  const pred = (xt) => curve ? w2.mul(xt.square()).add(w1.mul(xt)).add(b) : w1.mul(xt).add(b);
+  const TOTAL = 240; let ep = 0;
+  function stepFn() {
+    let lossV = 0;
+    for (let k = 0; k < 4 && ep < TOTAL; k++, ep++) { const l = opt.minimize(() => tf.losses.meanSquaredError(ys, pred(xs)), true); lossV = l.dataSync()[0]; l.dispose(); }
+    W1 = w1.dataSync()[0]; W2 = w2.dataSync()[0]; B = b.dataSync()[0]; trained = true;
+    $('m-epoch').textContent = ep + ' / ' + TOTAL; $('m-loss').textContent = (lossV * DOM * DOM).toFixed(2); renderPredict(); updateEqn(); updatePredProc();
+    if (ep < TOTAL) raf = requestAnimationFrame(stepFn);
+    else { xs.dispose(); ys.dispose(); w1.dispose(); w2.dispose(); b.dispose(); training = false; $('pr-x').disabled = false; $('pr-train').disabled = false; setStatus('학습 완료 · READY', 'ready'); updatePred(); }
+  }
+  stepFn();
+};
+
+/* ════ 3. 무리 짓기 (K-means) ════ */
+function kmeans(pts, K, centroids, assign) {
+  // 한 번의 반복: 배정 → 중심 이동. 무리가 바뀐 점 개수 반환
+  let changed = 0;
+  pts.forEach((p, i) => { let best = 0, bd = Infinity; centroids.forEach((c, k) => { const d = (p.x - c.x) ** 2 + (p.y - c.y) ** 2; if (d < bd) { bd = d; best = k; } }); if (assign[i] !== best) { assign[i] = best; changed++; } });
+  const sum = centroids.map(() => ({ x: 0, y: 0, n: 0 }));
+  pts.forEach((p, i) => { const s = sum[assign[i]]; s.x += p.x; s.y += p.y; s.n++; });
+  centroids.forEach((c, k) => { if (sum[k].n) { c.x = sum[k].x / sum[k].n; c.y = sum[k].y / sum[k].n; } });
+  return changed;
+}
+let clPts = [], clK = 3, clAssign = [], clCents = [], clTimer = null, clustered = false;
+const clCtx = $('c-cluster').getContext('2d');
+function makeBlobs() {
+  const centers = [{ x: 2.5, y: 7.5 }, { x: 7.5, y: 7 }, { x: 5, y: 2.5 }, { x: 8, y: 3 }];
+  const a = []; const k = clK;
+  for (let g = 0; g < k; g++) { const c = centers[g]; for (let i = 0; i < 9; i++) a.push({ x: +clamp(c.x + (Math.random() - 0.5) * 3).toFixed(2), y: +clamp(c.y + (Math.random() - 0.5) * 3).toFixed(2) }); }
+  return a;
+}
+function renderCluster() {
+  drawAxes(clCtx);
+  drawPoints(clCtx, clPts, '#8c97a7', clustered ? clAssign : null);
+  if (clustered) clCents.forEach((c, k) => drawStar(clCtx, c.x, c.y, CLR[k % CLR.length]));
+  $('cl-run').disabled = clPts.length < clK || !!clTimer;
+  renderGroups(); updateClProc();
+}
+function renderGroups() {
+  if (!clustered) { $('cl-groups').innerHTML = '<div class="group empty">아직 묶지 않았어요. 왼쪽에서 점을 만들고 [AI로 무리 짓기]를 눌러보세요.</div>'; return; }
+  const counts = clCents.map(() => 0); clAssign.forEach(a => counts[a]++);
+  $('cl-groups').innerHTML = counts.map((n, k) => `<div class="group"><span class="dot" style="background:${CLR[k % CLR.length]}"></span><span class="gname">${k + 1}번 무리</span><span class="gcount">${n}개</span></div>`).join('');
+}
+function updateClProc() {
+  const ps = [...$('cl-proc').children];
+  const active = clPts.length < clK ? 0 : (clTimer || clustered) ? 2 : 1;
+  ps.forEach((el, i) => procState(el, i < active ? 'done' : i === active ? 'on' : ''));
+}
+function clSay(msg) { $('cl-say').innerHTML = msg; }
+function stopCluster() { if (clTimer) { clearInterval(clTimer); clTimer = null; } }
+function resetClUI() { $('cl-it').textContent = '—'; $('cl-changed').textContent = '—'; $('cl-redo').disabled = true; }
+$('k-seg').addEventListener('click', (e) => { const k = +e.target.dataset.k; if (!k) return; clK = k; $('k-seg').querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.k === k)); clustered = false; stopCluster(); resetClUI(); clSay('무리 수를 ' + k + '개로 정했어요. 점을 만들고 [AI로 무리 짓기]를 눌러보세요.'); renderCluster(); });
+$('cl-sample').onclick = () => { clPts = makeBlobs(); clustered = false; stopCluster(); resetClUI(); clSay('점을 흩뿌렸어요. 이제 <b>[AI로 무리 짓기]</b>를 눌러보세요.'); renderCluster(); };
+$('cl-clear').onclick = () => { clPts = []; clustered = false; stopCluster(); resetClUI(); clSay('왼쪽에서 점을 흩뿌려 주세요.'); renderCluster(); };
+$('c-cluster').addEventListener('pointerdown', (e) => { if (clTimer) return; const [x, y] = evtData(e); if (x < 0 || x > DOM || y < 0 || y > DOM) return; clPts.push({ x: +x.toFixed(2), y: +y.toFixed(2) }); clustered = false; clSay('점 ' + clPts.length + '개. 충분히 흩뿌린 뒤 [AI로 무리 짓기]를 눌러요.'); renderCluster(); });
+function runCluster() {
+  if (clPts.length < clK) return;
+  stopCluster();
+  const idx = []; while (idx.length < clK) { const r = Math.floor(Math.random() * clPts.length); if (!idx.includes(r)) idx.push(r); }
+  clCents = idx.map(i => ({ x: clPts[i].x, y: clPts[i].y }));
+  clAssign = new Array(clPts.length).fill(-1); clustered = true;
+  setStatus('무리 짓는 중…', 'busy'); $('cl-run').disabled = true; $('cl-redo').disabled = true;
+  let it = 0;
+  clTimer = setInterval(() => {
+    const changed = kmeans(clPts, clK, clCents, clAssign);
+    it++; renderCluster();
+    $('cl-it').textContent = it; $('cl-changed').textContent = changed + '개';
+    if (it === 1) clSay('① 무리 중심 <b>★</b>을 무작위로 놓고, 각 점을 <b>가장 가까운 ★ 색</b>으로 칠했어요.');
+    else clSay('②③ ★를 무리 한가운데로 옮기고 다시 칠하는 중… 이번엔 <b>' + changed + '개</b>가 무리를 바꿨어요.');
+    setStatus('무리 짓는 중… (' + it + '번째)', 'busy');
+    if (changed === 0 || it >= 12) {
+      stopCluster(); clustered = true; renderCluster();
+      clSay('✓ 더 이상 안 바뀌어요 — <b>무리가 완성</b>됐어요! 무리 수를 바꾸거나 [다시 묶기]로 다른 시작도 해보세요.');
+      setStatus('무리 짓기 완료 · READY', 'ready'); $('cl-run').disabled = false; $('cl-redo').disabled = false;
+    }
+  }, 480);
+}
+$('cl-run').onclick = runCluster;
+$('cl-redo').onclick = runCluster;
+
+/* ── 단계 전환 ── */
+document.querySelectorAll('.step').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.step').forEach(b => b.classList.toggle('active', b === btn));
+    const s = btn.dataset.step;
+    $('panel-explore').hidden = s !== 'explore'; $('panel-predict').hidden = s !== 'predict'; $('panel-cluster').hidden = s !== 'cluster';
+    if (s === 'explore') renderExplore(); else if (s === 'predict') updatePred(); else { stopCluster(); renderCluster(); }
+    setStatus('준비됨');
+  };
+});
+
+loadPreset('study'); updatePred(); renderCluster(); setStatus('준비됨');
+</script>
+</body>
+</html>

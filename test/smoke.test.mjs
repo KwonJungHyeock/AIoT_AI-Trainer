@@ -116,10 +116,11 @@ test('추론 1틱이 막대와 최상위 예측을 갱신한다 (이미지 탭)'
 test('음성 녹음 관리 모달: 목록 표시 + 개별 삭제', async () => {
   const { window, doc } = await loadApp();
   doc.querySelector('.nav-item[data-feature="audio"]').click();
-  // 첫 음성 클래스 선택 후 2회 녹음
-  doc.querySelectorAll('#a-class-list .class-item')[0].click();
-  await window.audioCapture();
-  await window.audioCapture();
+  await window.audioToggleMic(); // 마이크 켜기(스텁) → 클래스별 녹음 버튼 활성
+  // 첫 음성 클래스에 2회 녹음 (클래스 카드의 녹음 버튼 경로)
+  const aId = +doc.querySelectorAll('#a-class-list .class-item')[0].dataset.id;
+  await window.audioCaptureFor(aId);
+  await window.audioCaptureFor(aId);
   // 카운트 배지 클릭 → 녹음 모달 열림
   doc.querySelector('#a-class-list .class-item .class-count').click();
   assert.equal(doc.getElementById('audio-rec-overlay').classList.contains('on'), true);
@@ -129,13 +130,12 @@ test('음성 녹음 관리 모달: 목록 표시 + 개별 삭제', async () => {
   assert.equal(doc.querySelectorAll('#audio-rec-grid .gallery-item').length, 1, '삭제 후 1개');
 });
 
-test('사이드바가 config 기반 2그룹으로 생성되고 준비중 항목은 비활성', async () => {
+test('사이드바가 config 기반 2그룹으로 생성된다 (텍스트 분류 제거됨)', async () => {
   const { doc } = await loadApp();
   assert.equal(doc.querySelectorAll('#sidebar .nav-group').length, 2);
-  assert.equal(doc.querySelectorAll('#sidebar .nav-item').length, 9);
-  const text = doc.querySelector('.nav-item[data-feature="text"]');
-  assert.equal(text.classList.contains('disabled'), true);
-  assert.match(text.querySelector('.nav-badge').textContent, /준비중/);
+  assert.equal(doc.querySelectorAll('#sidebar .nav-item').length, 8);
+  // 텍스트 분류 항목은 제거됨
+  assert.equal(doc.querySelector('.nav-item[data-feature="text"]'), null);
   // 사전학습 뱃지
   assert.match(doc.querySelector('.nav-item[data-feature="detect"] .nav-badge').textContent, /사전학습/);
 });
