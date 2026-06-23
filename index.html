@@ -98,6 +98,13 @@
     max-width: none; margin: 0; padding: 18px 26px;
     display: flex; align-items: center; justify-content: space-between; gap: 16px;
   }
+  .studio-back {
+    flex: none; font-size: 13.5px; font-weight: 700; color: var(--ink-2);
+    text-decoration: none; padding: 9px 15px; border-radius: 11px;
+    border: 1px solid var(--border); background: var(--panel);
+    transition: .15s;
+  }
+  .studio-back:hover { color: var(--accent-ink); border-color: var(--accent-line); background: var(--accent-soft); }
   .logo { display: flex; align-items: center; gap: 13px; }
   .logo-mark {
     width: 44px; height: 44px; border-radius: 13px;
@@ -942,6 +949,7 @@
         <div class="logo-tag">브라우저로 직접 배우는 AI · 영상처리 실험실</div>
       </div>
     </div>
+    <a class="studio-back" href="/studio.html">🎬 비전 스튜디오</a>
   </div>
 </header>
 
@@ -3592,7 +3600,14 @@ skelInit();
 faceInit();
 // depthInit(); // 깊이 추정(ARPortraitDepth)은 실험적·불안정으로 탭 숨김 처리 (JS는 휴면)
 
-selectFeature('image'); // 좌측 사이드바 초기 선택
+/* 비전 스튜디오 트랙 진입 — studio.html 에서 #explore / #create 해시로 들어온다.
+   #explore → 체험 트랙 첫 기능(객체 탐지), #create → 제작 트랙 첫 기능(이미지 분류) */
+(function entryFromStudio() {
+  const h = (location.hash || '').replace('#', '');
+  if (h === 'explore') selectFeature('detect');
+  else if (h === 'create') selectFeature('image');
+  else selectFeature('image'); // 기본
+})();
 
 // 비보안 컨텍스트(예: LAN IP + HTTP)에서는 getUserMedia 가 권한 창 없이 차단됨 → 안내 배너
 if (!window.isSecureContext) {

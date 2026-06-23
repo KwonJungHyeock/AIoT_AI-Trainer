@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" href="/favicon.png" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta name="theme-color" content="#14161f" />
+<title>비전 스튜디오 · Eduino AI</title>
+<meta name="description" content="영상처리 AI를 직접 체험하고 제작하는 비전 스튜디오. 기본기능 체험하기와 직접 제작하기 두 가지 트랙." />
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+<style>
+  :root {
+    --bg:#f6f7fb; --panel:#ffffff; --panel-soft:#f3f5fa;
+    --border:#e9ebf2; --border-strong:#d7dbe7;
+    --ink:#14161f; --ink-2:#3b4254; --ink-3:#6c7488; --ink-4:#9aa1b3;
+    --accent:#f0473a; --accent-2:#ff6a52; --accent-ink:#d4382c;
+    --accent-soft:rgba(240,71,58,.10); --accent-line:#ffd6cd;
+    --blue:#2f6df6; --blue-soft:#eaf1ff; --blue-ink:#2453c4;
+    --green:#11a06f; --green-soft:#e6f6ef;
+    --radius:18px; --radius-sm:12px;
+    --shadow:0 1px 2px rgba(20,22,31,.04), 0 8px 24px rgba(20,22,31,.06);
+    --shadow-lg:0 2px 4px rgba(20,22,31,.05), 0 18px 50px rgba(20,22,31,.12);
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    font-family:'Pretendard',system-ui,sans-serif;
+    background:var(--bg); color:var(--ink);
+    word-break:keep-all; overflow-wrap:break-word;
+    -webkit-font-smoothing:antialiased;
+  }
+  a { color:inherit; text-decoration:none; }
+
+  /* ── 상단 바 ── */
+  .topbar { position:sticky; top:0; z-index:20; background:rgba(255,255,255,.82);
+    backdrop-filter:saturate(180%) blur(14px); border-bottom:1px solid var(--border); }
+  .topbar-inner { max-width:1120px; margin:0 auto; padding:13px 22px;
+    display:flex; align-items:center; justify-content:space-between; gap:14px; }
+  .brand { display:flex; align-items:center; gap:10px; }
+  .brand img { height:30px; display:block; }
+  .brand .t { font-size:17px; font-weight:800; letter-spacing:-.02em; }
+  .brand .t span { color:var(--accent); }
+  .top-back { font-size:13.5px; font-weight:600; color:var(--ink-3);
+    padding:8px 13px; border-radius:10px; border:1px solid var(--border);
+    background:var(--panel); transition:.15s; }
+  .top-back:hover { color:var(--ink); border-color:var(--border-strong); }
+
+  /* ── 히어로 ── */
+  .hero { position:relative; overflow:hidden;
+    background:linear-gradient(155deg,#14161f 0%, #1e1411 60%, #23101a 100%);
+    color:#fff; }
+  .hero::before { content:''; position:absolute; inset:0;
+    background:radial-gradient(120% 90% at 18% 0%, rgba(240,71,58,.28), transparent 55%),
+               radial-gradient(90% 80% at 100% 20%, rgba(124,108,255,.18), transparent 60%);
+    opacity:.9; }
+  .hero-inner { position:relative; max-width:1120px; margin:0 auto; padding:62px 22px 56px; }
+  .eyebrow { display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:700;
+    letter-spacing:.02em; color:#ffd6cd; background:rgba(240,71,58,.16);
+    border:1px solid rgba(240,71,58,.3); padding:6px 12px; border-radius:999px; }
+  .hero h1 { margin:18px 0 12px; font-size:40px; line-height:1.18; font-weight:800; letter-spacing:-.03em; }
+  .hero h1 .g { background:linear-gradient(90deg,#ff8a72,#f0473a); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .hero p { margin:0; max-width:600px; font-size:16px; line-height:1.65; color:rgba(255,255,255,.74); }
+
+  /* ── 트랙 카드 ── */
+  .tracks { max-width:1120px; margin:-34px auto 0; padding:0 22px 30px;
+    position:relative; z-index:5; display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+  .track { background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+    box-shadow:var(--shadow-lg); padding:28px 26px 26px; display:flex; flex-direction:column;
+    transition:transform .16s, box-shadow .16s, border-color .16s; }
+  .track:hover { transform:translateY(-4px); box-shadow:0 4px 8px rgba(20,22,31,.06), 0 26px 60px rgba(20,22,31,.16); }
+  .track-top { display:flex; align-items:center; gap:13px; margin-bottom:6px; }
+  .track-ic { width:50px; height:50px; border-radius:14px; display:grid; place-items:center; font-size:24px; flex:none; }
+  .t-explore .track-ic { background:var(--blue-soft); }
+  .t-create  .track-ic { background:var(--accent-soft); }
+  .track-kicker { font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
+  .t-explore .track-kicker { color:var(--blue-ink); }
+  .t-create  .track-kicker { color:var(--accent-ink); }
+  .track h2 { margin:2px 0 0; font-size:23px; font-weight:800; letter-spacing:-.02em; }
+  .track-desc { margin:14px 0 18px; font-size:14.5px; line-height:1.62; color:var(--ink-2); }
+  .feat-list { list-style:none; margin:0 0 22px; padding:0; display:flex; flex-wrap:wrap; gap:8px; }
+  .feat-list li { font-size:12.5px; font-weight:600; color:var(--ink-2);
+    background:var(--panel-soft); border:1px solid var(--border); border-radius:999px; padding:6px 11px; }
+  .feat-list li b { font-weight:700; color:var(--ink); }
+  .track-foot { margin-top:auto; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .track-meta { font-size:12.5px; color:var(--ink-3); }
+  .track-go { display:inline-flex; align-items:center; gap:7px; font-size:14.5px; font-weight:700;
+    color:#fff; padding:12px 20px; border-radius:12px; transition:.16s; white-space:nowrap; }
+  .t-explore .track-go { background:linear-gradient(135deg,#4a86ff,#2f6df6); box-shadow:0 6px 16px rgba(47,109,246,.28); }
+  .t-create  .track-go { background:linear-gradient(135deg,var(--accent-2),var(--accent)); box-shadow:0 6px 16px rgba(240,71,58,.28); }
+  .track-go:hover { filter:brightness(1.05); transform:translateX(2px); }
+
+  /* ── 흐름 안내 ── */
+  .flow { max-width:1120px; margin:8px auto 0; padding:0 22px 64px; }
+  .flow-h { font-size:13px; font-weight:700; color:var(--ink-3); letter-spacing:.02em; margin:0 0 14px; }
+  .flow-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  .flow-card { background:var(--panel); border:1px solid var(--border); border-radius:var(--radius-sm);
+    padding:16px 16px 15px; box-shadow:var(--shadow); }
+  .flow-n { font-size:12px; font-weight:800; color:var(--accent); }
+  .flow-card h3 { margin:7px 0 5px; font-size:14.5px; font-weight:700; }
+  .flow-card p { margin:0; font-size:12.5px; line-height:1.55; color:var(--ink-3); }
+  .flow-soon { display:inline-block; margin-top:8px; font-size:10.5px; font-weight:700; color:var(--ink-4);
+    background:var(--panel-soft); border:1px solid var(--border); border-radius:6px; padding:2px 7px; }
+
+  footer { border-top:1px solid var(--border); background:var(--panel); }
+  .foot-inner { max-width:1120px; margin:0 auto; padding:22px; font-size:12.5px; color:var(--ink-4);
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+
+  @media (max-width:780px) {
+    .hero h1 { font-size:30px; }
+    .tracks { grid-template-columns:1fr; margin-top:-26px; }
+    .flow-grid { grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/platform/index.html">
+      <img src="/platform/img/logo-mark.webp" alt="Eduino AI" />
+      <span class="t">Eduino <span>AI</span></span>
+    </a>
+    <a class="top-back" href="/platform/index.html">← 전체 코스</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow">🎬 비전 스튜디오 · 영상처리 AI</span>
+    <h1>AI를 <span class="g">보고, 직접 만든다</span></h1>
+    <p>카메라로 AI가 세상을 어떻게 보는지 관찰하고, 내 손으로 나만의 AI를 학습시켜 보세요.
+       두 가지 트랙으로 자유롭게 오갈 수 있어요.</p>
+  </div>
+</section>
+
+<section class="tracks">
+  <!-- 체험 트랙 -->
+  <a class="track t-explore" href="/index.html#explore">
+    <div class="track-top">
+      <div class="track-ic">🔍</div>
+      <div>
+        <div class="track-kicker">Track 1 · 관찰</div>
+        <h2>기본기능 체험하기</h2>
+      </div>
+    </div>
+    <p class="track-desc">학습 없이 클릭 한 번으로 AI를 작동시켜, 컴퓨터가 화면 속 세상을
+       어떻게 인식하는지 직접 관찰해요. 수업 도입에 딱 좋아요.</p>
+    <ul class="feat-list">
+      <li><b>객체 탐지</b> COCO-SSD</li>
+      <li><b>얼굴 검출</b> BlazeFace</li>
+      <li><b>뼈대 검출</b> MoveNet</li>
+      <li><b>색상 추적</b></li>
+      <li><b>영상 효과</b></li>
+    </ul>
+    <div class="track-foot">
+      <span class="track-meta">준비물 없이 바로 체험</span>
+      <span class="track-go">체험 시작 →</span>
+    </div>
+  </a>
+
+  <!-- 제작 트랙 -->
+  <a class="track t-create" href="/index.html#create">
+    <div class="track-top">
+      <div class="track-ic">🛠</div>
+      <div>
+        <div class="track-kicker">Track 2 · 창작</div>
+        <h2>직접 제작하기</h2>
+      </div>
+    </div>
+    <p class="track-desc">내가 직접 데이터를 모아 AI를 학습시키고, 결과를 평가해요.
+       클래스 만들기 → 데이터 수집 → 학습 → 추론까지, 나만의 AI를 완성합니다.</p>
+    <ul class="feat-list">
+      <li><b>이미지 분류</b> MobileNet</li>
+      <li><b>음성 분류</b> Speech Commands</li>
+      <li><b>동작 분류</b> MoveNet</li>
+    </ul>
+    <div class="track-foot">
+      <span class="track-meta">내 AI 만들기</span>
+      <span class="track-go">제작 시작 →</span>
+    </div>
+  </a>
+</section>
+
+<section class="flow">
+  <p class="flow-h">직접 제작하기는 이렇게 진행돼요</p>
+  <div class="flow-grid">
+    <div class="flow-card"><div class="flow-n">STEP 1</div><h3>클래스 만들기</h3><p>구분하고 싶은 종류를 정해요. 예: 캔·페트·종이</p></div>
+    <div class="flow-card"><div class="flow-n">STEP 2</div><h3>데이터 수집</h3><p>각 종류마다 사진을 여러 장 모아요. 많을수록 똑똑해져요.</p></div>
+    <div class="flow-card"><div class="flow-n">STEP 3</div><h3>모델 학습</h3><p>모은 데이터로 나만의 AI를 학습시켜요.</p></div>
+    <div class="flow-card"><div class="flow-n">STEP 4</div><h3>추론·평가</h3><p>새 사진으로 정확도를 확인해요. <span class="flow-soon">제출·평가 곧 추가</span></p></div>
+  </div>
+</section>
+
+<footer>
+  <div class="foot-inner">
+    <span>© 2026 Eduino AI · 비전 스튜디오</span>
+    <span>보고 만지며 배우는 AI 수업</span>
+  </div>
+</footer>
+
+</body>
+</html>
