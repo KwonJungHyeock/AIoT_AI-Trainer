@@ -41,11 +41,26 @@
   /* ════════ 부팅 인트로 ════════ */
   .boot {
     position:fixed; inset:0; z-index:90; background:#06070d;
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
-    text-align:center; transition:opacity .5s ease; overflow:hidden;
+    display:grid; place-items:center; text-align:center;
+    transition:opacity .5s ease; overflow:hidden;
   }
   .boot.hide { opacity:0; pointer-events:none; }
-  .boot-logo { display:flex; align-items:center; gap:13px; }
+
+  /* 두 페이즈를 같은 칸에 겹쳐두고 토글 */
+  .splash, .bootseq { grid-area:1/1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:24px; }
+  .splash { transition:opacity .5s ease, transform .6s ease; }
+  .splash.out { opacity:0; transform:scale(1.08); pointer-events:none; }
+  .splash-mark { width:104px; height:104px; filter:drop-shadow(0 0 34px rgba(255,87,71,.55));
+    animation:splashMark 1s cubic-bezier(.2,.85,.25,1.1) both; }
+  @keyframes splashMark { 0%{opacity:0; transform:scale(.55) translateY(14px);} 60%{opacity:1;} 100%{opacity:1; transform:none;} }
+  .splash-word { font-size:44px; font-weight:800; letter-spacing:-.01em; color:#fff; animation:fadeUp .7s .28s both; }
+  .splash-word b { background:linear-gradient(90deg,var(--blue-2),var(--red-2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .splash-sub { font-family:var(--mono); font-size:13px; letter-spacing:.26em; color:var(--ink-3); animation:fadeUp .7s .46s both; }
+  @keyframes fadeUp { from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:none;} }
+
+  .bootseq { opacity:0; transform:translateY(10px); pointer-events:none; transition:opacity .5s ease, transform .5s ease; }
+  .bootseq.in { opacity:1; transform:none; pointer-events:auto; }
+  .boot-logo { display:flex; align-items:center; gap:13px; margin-bottom:4px; }
   .boot-logo img { height:42px; filter:drop-shadow(0 0 18px rgba(255,87,71,.6)); animation:bpulse 2.4s ease-in-out infinite; }
   .boot-logo .bw { font-size:30px; font-weight:800; letter-spacing:.04em; }
   .boot-logo .bw b { background:linear-gradient(90deg,var(--blue-2),var(--red-2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
@@ -116,21 +131,28 @@
   body.ready .tile { animation:tileIn .5s cubic-bezier(.2,.8,.3,1) forwards; }
   body.ready .tile:nth-child(2) { animation-delay:.09s; }
   @keyframes tileIn { from{opacity:0; transform:translateY(26px) scale(.96);} to{opacity:1; transform:none;} }
-  .tile-art { position:absolute; inset:0; }
+  .tile-art { position:absolute; inset:0; z-index:0; }
   .tile.explore .tile-art { background:radial-gradient(120% 100% at 25% 15%, rgba(59,134,255,.55), transparent 60%), linear-gradient(160deg,#15233f,#0e1424); }
   .tile.create  .tile-art { background:radial-gradient(120% 100% at 25% 15%, rgba(255,87,71,.5), transparent 60%), linear-gradient(160deg,#3a1620,#1c0f14); }
   .tile-art::after { content:''; position:absolute; inset:0; background-image:radial-gradient(rgba(255,255,255,.5) 1px, transparent 1px); background-size:18px 18px; opacity:.06; }
-  .tile-glare { position:absolute; inset:0; opacity:0; transition:opacity .2s;
-    background:radial-gradient(220px 220px at var(--mx,50%) var(--my,50%), rgba(255,255,255,.18), transparent 60%); }
+  /* 썸네일 이미지 (없으면 onerror로 제거 → 그라데이션 폴백) */
+  .tile-thumb { position:absolute; inset:0; z-index:1; width:100%; height:100%; object-fit:cover;
+    transition:transform .35s ease; }
+  .tile:hover .tile-thumb, .tile.sel .tile-thumb { transform:scale(1.06); }
+  /* 하단 어둡게 → 글자 가독성 확보 (썸네일 위에서도 또렷) */
+  .tile-scrim { position:absolute; inset:0; z-index:2;
+    background:linear-gradient(180deg, rgba(8,9,15,.05) 30%, rgba(8,9,15,.55) 62%, rgba(8,9,15,.9) 100%); }
+  .tile-glare { position:absolute; inset:0; z-index:3; opacity:0; transition:opacity .2s;
+    background:radial-gradient(240px 240px at var(--mx,50%) var(--my,50%), rgba(255,255,255,.20), transparent 60%); }
   .tile:hover .tile-glare { opacity:1; }
-  .tile-body { position:relative; height:100%; padding:30px 30px 56px; display:flex; flex-direction:column; transform:translateZ(36px); }
-  .tile-ic { font-size:58px; line-height:1; filter:drop-shadow(0 4px 12px rgba(0,0,0,.45)); }
-  .tile-no { position:absolute; top:24px; right:26px; font-family:var(--mono); font-size:17px; font-weight:700; color:rgba(255,255,255,.4); }
-  .tile-name { margin-top:auto; font-size:31px; font-weight:800; letter-spacing:-.02em; }
-  .tile-tag { margin-top:6px; font-size:15.5px; font-weight:600; color:var(--ink-2); }
+  .tile-body { position:relative; z-index:4; height:100%; padding:30px 30px 56px; display:flex; flex-direction:column; transform:translateZ(36px); }
+  .tile-ic { font-size:58px; line-height:1; filter:drop-shadow(0 4px 12px rgba(0,0,0,.55)); }
+  .tile-no { position:absolute; top:24px; right:26px; font-family:var(--mono); font-size:17px; font-weight:700; color:rgba(255,255,255,.55); }
+  .tile-name { margin-top:auto; font-size:31px; font-weight:800; letter-spacing:-.02em; color:#fff; text-shadow:0 2px 14px rgba(0,0,0,.6); }
+  .tile-tag { margin-top:6px; font-size:15.5px; font-weight:600; color:#e2e8f8; text-shadow:0 1px 8px rgba(0,0,0,.55); }
   .tile-play { position:absolute; inset:auto 0 0 0; transform:translateY(101%);
     display:flex; align-items:center; justify-content:center; gap:9px; padding:15px;
-    font-size:15px; font-weight:800; letter-spacing:.1em; background:rgba(255,255,255,.94); color:#0a0b12; transition:transform .22s; z-index:3; }
+    font-size:15px; font-weight:800; letter-spacing:.1em; background:rgba(255,255,255,.94); color:#0a0b12; transition:transform .22s; z-index:5; }
   .tile:hover, .tile.sel { transform:translateY(-8px) scale(1.03); }
   .tile.sel { border-color:transparent; box-shadow:0 0 0 4px var(--ring,#fff), 0 30px 64px rgba(0,0,0,.55); }
   .tile.explore.sel { --ring:var(--blue-2); }
@@ -174,7 +196,8 @@
     .detail-go { justify-content:center; }
   }
   @media (prefers-reduced-motion:reduce) {
-    .boot-logo img, .boot-scan::after, .boot-start .ps { animation:none !important; }
+    .boot-logo img, .boot-scan::after, .boot-start .ps,
+    .splash-mark, .splash-word, .splash-sub { animation:none !important; }
     body.ready .tile, body.ready .detail { animation:none !important; opacity:1 !important; }
   }
 </style>
@@ -183,18 +206,28 @@
 
 <!-- ════════ 부팅 인트로 ════════ -->
 <div class="boot" id="boot">
-  <div class="boot-logo">
-    <img src="/platform/img/logo-mark.webp" alt="" />
-    <span class="bw">VISION <b>AI</b></span>
-  </div>
-  <div class="boot-ver">v1.0 · Eduino AI Vision Console</div>
-  <pre class="boot-log" id="bootlog"></pre>
-  <div class="boot-bar"><i id="bootbar"></i></div>
-  <div class="boot-start" id="bootstart">
-    <span class="ps">▶ PRESS START</span>
-    <span class="hint">아무 키나 누르거나 화면을 클릭하세요</span>
-  </div>
   <div class="boot-scan"></div>
+
+  <!-- Phase 1 · 플랫폼 로고 스플래시 -->
+  <div class="splash" id="splash">
+    <img class="splash-mark" src="/platform/img/logo-mark.webp" alt="Eduino AI" />
+    <div class="splash-word">Eduino <b>AI</b></div>
+    <div class="splash-sub">VISION&nbsp;AI&nbsp;CONSOLE · v1.0</div>
+  </div>
+
+  <!-- Phase 2 · 부팅 시퀀스 -->
+  <div class="bootseq" id="bootseq">
+    <div class="boot-logo">
+      <img src="/platform/img/logo-mark.webp" alt="" />
+      <span class="bw">VISION <b>AI</b></span>
+    </div>
+    <pre class="boot-log" id="bootlog"></pre>
+    <div class="boot-bar"><i id="bootbar"></i></div>
+    <div class="boot-start" id="bootstart">
+      <span class="ps">▶ PRESS START</span>
+      <span class="hint">아무 키나 누르거나 화면을 클릭하세요</span>
+    </div>
+  </div>
 </div>
 
 <div class="ambient" id="ambient"></div>
@@ -220,7 +253,10 @@
 
   <div class="tiles" id="tiles">
     <button class="tile explore" data-i="0" data-href="/index.html#explore">
-      <div class="tile-art"></div><div class="tile-glare"></div>
+      <div class="tile-art"></div>
+      <img class="tile-thumb" src="/platform/img/console-explore.webp" alt="" onerror="this.remove()" />
+      <div class="tile-scrim"></div>
+      <div class="tile-glare"></div>
       <div class="tile-body">
         <div class="tile-ic">🔍</div>
         <span class="tile-no">01</span>
@@ -231,7 +267,10 @@
     </button>
 
     <button class="tile create" data-i="1" data-href="/index.html#create">
-      <div class="tile-art"></div><div class="tile-glare"></div>
+      <div class="tile-art"></div>
+      <img class="tile-thumb" src="/platform/img/console-create.webp" alt="" onerror="this.remove()" />
+      <div class="tile-scrim"></div>
+      <div class="tile-glare"></div>
       <div class="tile-body">
         <div class="tile-ic">🛠</div>
         <span class="tile-no">02</span>
@@ -309,23 +348,35 @@
   ];
   function runBoot() {
     const boot = document.getElementById('boot');
+    const splash = document.getElementById('splash');
+    const bootseq = document.getElementById('bootseq');
     const log = document.getElementById('bootlog');
     const bar = document.getElementById('bootbar');
     const start = document.getElementById('bootstart');
-    let i = 0; log.innerHTML = '';
-    const step = () => {
-      if (i < BOOT_LINES.length) {
-        log.innerHTML += (i?'\n':'') + BOOT_LINES[i];
-        bar.style.width = Math.round(((i+1)/BOOT_LINES.length)*100) + '%';
-        beep(300+i*70, 0.03, 'square', 0.025);
-        i++; setTimeout(step, 230);
-      } else {
-        start.classList.add('on');
-        document.addEventListener('keydown', powerOn, {once:true});
-        boot.addEventListener('click', powerOn, {once:true});
-      }
-    };
-    setTimeout(step, 380);
+
+    /* Phase 1 → Phase 2 전환 (로고 스플래시 약 2초) */
+    setTimeout(() => {
+      splash.classList.add('out');
+      bootseq.classList.add('in');
+      runLog();
+    }, 2000);
+
+    function runLog() {
+      let i = 0; log.innerHTML = '';
+      const step = () => {
+        if (i < BOOT_LINES.length) {
+          log.innerHTML += (i?'\n':'') + BOOT_LINES[i];
+          bar.style.width = Math.round(((i+1)/BOOT_LINES.length)*100) + '%';
+          beep(300+i*70, 0.03, 'square', 0.025);
+          i++; setTimeout(step, 230);
+        } else {
+          start.classList.add('on');
+          document.addEventListener('keydown', powerOn, {once:true});
+          boot.addEventListener('click', powerOn, {once:true});
+        }
+      };
+      setTimeout(step, 280);
+    }
   }
   function powerOn() {
     if (booted) return; booted = true;
@@ -333,7 +384,6 @@
     const boot = document.getElementById('boot');
     boot.classList.add('hide');
     document.body.classList.add('ready');
-    sessionStorage.setItem('vos_booted','1');
     setTimeout(()=>{ boot.remove(); }, 600);
   }
 
@@ -405,15 +455,9 @@
   }
   tick(); setInterval(tick, 10000);
 
-  /* 초기화 — 같은 세션에서 재방문이면 부팅 건너뛰기 */
+  /* 초기화 — 진입할 때마다 인트로(로고 스플래시 → 부팅) 재생 */
   render();
-  if (sessionStorage.getItem('vos_booted')) {
-    document.getElementById('boot').remove();
-    document.body.classList.add('ready');
-    booted = true;
-  } else {
-    runBoot();
-  }
+  runBoot();
 </script>
 </body>
 </html>
