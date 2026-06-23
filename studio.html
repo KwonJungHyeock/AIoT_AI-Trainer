@@ -50,7 +50,7 @@
   .splash, .bootseq { grid-area:1/1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:24px; }
   .splash { transition:opacity .5s ease, transform .6s ease; }
   .splash.out { opacity:0; transform:scale(1.08); pointer-events:none; }
-  .splash-mark { width:104px; height:104px; filter:drop-shadow(0 0 34px rgba(255,87,71,.55));
+  .splash-mark { height:108px; width:auto; filter:drop-shadow(0 0 34px rgba(255,87,71,.55));
     animation:splashMark 1s cubic-bezier(.2,.85,.25,1.1) both; }
   @keyframes splashMark { 0%{opacity:0; transform:scale(.55) translateY(14px);} 60%{opacity:1;} 100%{opacity:1; transform:none;} }
   .splash-word { font-size:44px; font-weight:800; letter-spacing:-.01em; color:#fff; animation:fadeUp .7s .28s both; }
@@ -61,6 +61,8 @@
   .bootseq { opacity:0; transform:translateY(10px); pointer-events:none; transition:opacity .5s ease, transform .5s ease; }
   .bootseq.in { opacity:1; transform:none; pointer-events:auto; }
   .boot-logo { display:flex; align-items:center; gap:13px; margin-bottom:4px; }
+  .boot-logo-txt { display:flex; flex-direction:column; align-items:flex-start; gap:1px; }
+  .boot-sub { font-family:var(--mono); font-size:11px; letter-spacing:.16em; color:var(--ink-3); }
   .boot-logo img { height:42px; filter:drop-shadow(0 0 18px rgba(255,87,71,.6)); animation:bpulse 2.4s ease-in-out infinite; }
   .boot-logo .bw { font-size:30px; font-weight:800; letter-spacing:.04em; }
   .boot-logo .bw b { background:linear-gradient(90deg,var(--blue-2),var(--red-2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
@@ -219,7 +221,10 @@
   <div class="bootseq" id="bootseq">
     <div class="boot-logo">
       <img src="/platform/img/logo-mark.webp" alt="" />
-      <span class="bw">VISION <b>AI</b></span>
+      <div class="boot-logo-txt">
+        <span class="bw">Eduino <b>AI</b></span>
+        <span class="boot-sub">AIoT 학습 플랫폼</span>
+      </div>
     </div>
     <pre class="boot-log" id="bootlog"></pre>
     <div class="boot-bar"><i id="bootbar"></i></div>
