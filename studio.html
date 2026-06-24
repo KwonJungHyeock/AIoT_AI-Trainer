@@ -248,7 +248,7 @@
   <div class="hud-right">
     <span class="hud-clock" id="clock">--:--</span>
     <button class="hud-btn" id="sound-toggle" title="효과음 켜기/끄기">🔊 사운드</button>
-    <a class="hud-btn" href="/teacher.html" title="교사 확인함">👩‍🏫 교사</a>
+    <button class="hud-btn" id="boardBtn" title="제출 게시판">📋 게시판</button>
     <a class="hud-btn" href="/platform/index.html">⌂ 홈</a>
   </div>
 </header>
@@ -306,6 +306,7 @@
   <span class="ver">VISION AI v1.0</span>
 </footer>
 
+<script src="/stages/board.js"></script>
 <script>
   const MODES = [
     { cls:'explore', kicker:'MODE 01 · 관찰', title:'기본기능 체험하기',
@@ -457,6 +458,10 @@
     st.textContent = soundOn ? '🔊 사운드' : '🔇 사운드';
     if (soundOn) beep(700,0.08,'triangle',0.05);
   });
+
+  /* 제출 게시판 — 페이지 이동 없이 오버레이로 */
+  const bb = document.getElementById('boardBtn');
+  if (bb) bb.addEventListener('click', ()=>{ if(window.Board) Board.open(); });
 
   /* 라이브 시계 */
   function tick(){

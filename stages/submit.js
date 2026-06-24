@@ -95,14 +95,16 @@
       <div class="sub-done">
         <div class="ic">✅</div>
         <h3>제출 완료!</h3>
-        <p>제출함에 저장됐어요 (현재 ${cnt}건). 선생님께 파일로도 전달할 수 있어요.</p>
+        <p>게시판에 올라갔어요 (현재 ${cnt}건). 선생님께 파일로도 전달할 수 있어요.</p>
         <div class="sub-row">
-          <button class="sub-btn sub-ghost" id="subFile">📄 제출 파일 저장</button>
+          <button class="sub-btn sub-ghost" id="subFile">📄 파일 저장</button>
+          ${window.Board?'<button class="sub-btn sub-ghost" id="subBoard">📋 게시판</button>':''}
           <button class="sub-btn sub-go" id="subClose">확인</button>
         </div>
       </div>`;
     card().querySelector('#subClose').onclick=close;
     card().querySelector('#subFile').onclick=()=>exportFile(rec);
+    const sb=card().querySelector('#subBoard'); if(sb) sb.onclick=()=>{ close(); window.Board.open(); };
   }
 
   function exportFile(rec){
