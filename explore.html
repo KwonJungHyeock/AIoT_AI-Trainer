@@ -73,7 +73,11 @@
   .pack.center .pack-inner { box-shadow:0 0 0 3px var(--acc-2), 0 30px 70px rgba(0,0,0,.6); }
   .pack-art { position:absolute; inset:0; background:radial-gradient(120% 70% at 30% 12%, var(--c1), transparent 60%), linear-gradient(165deg, var(--c2), #0c1120); }
   .pack-art::after { content:''; position:absolute; inset:0; background-image:radial-gradient(rgba(255,255,255,.5) 1px,transparent 1px); background-size:18px 18px; opacity:.06; }
-  .pack-body { position:absolute; inset:0; padding:22px; display:flex; flex-direction:column; }
+  .pack-thumb { position:absolute; inset:0; z-index:1; width:100%; height:100%; object-fit:cover; }
+  .pack-scrim { position:absolute; inset:0; z-index:2;
+    background:linear-gradient(180deg, rgba(8,9,15,.15) 28%, rgba(8,9,15,.5) 58%, rgba(8,9,15,.92) 100%); }
+  .pack.has-thumb .pack-ic { display:none; }
+  .pack-body { position:absolute; inset:0; z-index:3; padding:22px; display:flex; flex-direction:column; }
   .pack-no { font-family:var(--mono); font-size:13px; font-weight:700; color:rgba(255,255,255,.5); }
   .pack-ic { font-size:72px; line-height:1; margin:auto; filter:drop-shadow(0 6px 18px rgba(0,0,0,.55)); }
   .pack-name { font-size:23px; font-weight:800; letter-spacing:-.02em; color:#fff; text-shadow:0 2px 12px rgba(0,0,0,.6); }
@@ -163,6 +167,8 @@
     <button class="pack" data-i="${i}" style="--c1:${s.c1};--c2:${s.c2}">
       <div class="pack-inner">
         <div class="pack-art"></div>
+        <img class="pack-thumb" data-base="/platform/img/stage-${s.key}" alt="" />
+        <div class="pack-scrim"></div>
         ${s.ready?'':'<span class="pack-soon">준비중</span>'}
         <div class="pack-body">
           <div class="pack-no">STAGE ${String(i+1).padStart(2,'0')}</div>
@@ -173,6 +179,15 @@
       </div>
     </button>`).join('');
   const packs = [...track.querySelectorAll('.pack')];
+  /* 포스터 썸네일 로더 — webp→jpg→png 순 시도, 없으면 그라데이션 폴백 */
+  packs.forEach(p=>{
+    const img=p.querySelector('.pack-thumb'); if(!img) return;
+    const base=img.dataset.base, exts=['webp','jpg','png','jpeg']; let k=0;
+    const next=()=>{ if(k>=exts.length){ img.remove(); return; } img.src=base+'.'+exts[k++]; };
+    img.addEventListener('error', next);
+    img.addEventListener('load', ()=>p.classList.add('has-thumb'));
+    next();
+  });
   const dotsEl = document.getElementById('dots');
   dotsEl.innerHTML = STAGES.map((_,i)=>`<i data-i="${i}"></i>`).join('');
   const dots = [...dotsEl.querySelectorAll('i')];
