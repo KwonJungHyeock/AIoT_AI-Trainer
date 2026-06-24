@@ -55,8 +55,20 @@
       <div class="metric"><div class="v" id="count">0</div><div class="u">명 검출 중</div></div>
       <div class="gauge" style="margin-top:16px"><div class="gauge-fill" id="bar" style="width:0%"></div></div>
     </div>
+    <div class="card">
+      <h2>📊 실시간 수치</h2>
+      <div class="telem">
+        <div class="t"><span class="tl">추론 시간</span><span class="tv acc" id="tInfer">— <small>ms</small></span></div>
+        <div class="t"><span class="tl">FPS</span><span class="tv" id="tFps">—</span></div>
+        <div class="t"><span class="tl">최고 신뢰도</span><span class="tv acc" id="tMax">—</span></div>
+        <div class="t"><span class="tl">평균 신뢰도</span><span class="tv" id="tAvg">—</span></div>
+        <div class="t"><span class="tl">처리 해상도</span><span class="tv" id="tRes" style="font-size:14px">—</span></div>
+        <div class="t"><span class="tl">처리 프레임</span><span class="tv" id="tFrames">0</span></div>
+      </div>
+    </div>
     <div class="card ctrl">
       <p style="font-size:12.5px;color:var(--ink-2);line-height:1.65;margin:0 0 12px">얼굴의 <b>위치</b>만 찾는 ‘검출’이에요. 누구인지 알아내는 ‘인식’과는 달라서 개인정보에 안전해요.</p>
+      <button class="submitbtn" id="submitBtn">📤 미션 제출</button>
       <button class="stopbtn" id="stop">⏹ 카메라 끄기</button>
     </div>
   </aside>
@@ -83,6 +95,9 @@
   </div>
 </div>
 
+<script src="/stages/cert.js"></script>
+<script src="/stages/board.js"></script>
+<script src="/stages/submit.js"></script>
 <script>
   const $ = (id)=>document.getElementById(id);
   const els = { video:$('video'), boxes:$('boxes'), cover:$('cover'), start:$('start'), stop:$('stop'),
@@ -126,6 +141,8 @@
     els.boxes.innerHTML=''; els.cover.classList.remove('hide');
     els.start.classList.remove('loading'); els.start.textContent='▶ 카메라 켜기 · 검출 시작';
     setStatus('IDLE','idle'); els.fps.innerHTML='FPS <b>—</b>'; els.count.textContent='0'; els.bar.style.width='0%';
+    face.frames=0; ['tFps','tMax','tAvg','tRes'].forEach(id=>$(id).textContent='—');
+    $('tInfer').innerHTML='— <small>ms</small>'; $('tFrames').textContent='0';
   }
   async function loop(){
     if(!face.stream){ return; }
@@ -133,15 +150,23 @@
       const vw=els.video.videoWidth, vh=els.video.videoHeight; setAR();
       const W=els.boxes.clientWidth||vw, H=els.boxes.clientHeight||vh, sx=W/vw, sy=H/vh;
       try{
+        const t0=performance.now();
         const preds=await face.model.estimateFaces(els.video,false,false,true);
-        let html='';
+        const inferMs=performance.now()-t0;
+        face.lastPreds=preds; face.frames=(face.frames||0)+1;
+        let html='', probs=[];
         preds.forEach(p=>{ const box=faceBox(p); if(!box||!Number.isFinite(box.w)||box.w<=0) return;
           const dw=box.w*sx, dh=box.h*sy, dx=box.x*sx, dy=box.y*sy, left=W-dx-dw;
-          const prob=Array.isArray(p.probability)?p.probability[0]:(typeof p.probability==='number'?p.probability:1);
+          const prob=Array.isArray(p.probability)?p.probability[0]:(typeof p.probability==='number'?p.probability:1); probs.push(prob);
           html+=`<div class="det-box" style="left:${left.toFixed(1)}px;top:${dy.toFixed(1)}px;width:${dw.toFixed(1)}px;height:${dh.toFixed(1)}px"><span>FACE ${Math.round(prob*100)}%</span></div>`; });
         els.boxes.innerHTML=html;
         els.count.textContent=preds.length; els.bar.style.width=Math.min(100,preds.length*25)+'%';
-        const now=performance.now(); els.fps.innerHTML='FPS <b>'+(1000/(now-face.lastT)).toFixed(1)+'</b>'; face.lastT=now;
+        const now=performance.now(), fps=1000/(now-face.lastT); face.lastT=now;
+        els.fps.innerHTML='FPS <b>'+fps.toFixed(1)+'</b>';
+        $('tInfer').innerHTML=inferMs.toFixed(0)+' <small>ms</small>'; $('tFps').textContent=fps.toFixed(1);
+        $('tMax').textContent=probs.length?Math.round(Math.max(...probs)*100)+'%':'—';
+        $('tAvg').textContent=probs.length?Math.round(probs.reduce((a,b)=>a+b,0)/probs.length*100)+'%':'—';
+        $('tRes').textContent=vw+'×'+vh; $('tFrames').textContent=face.frames;
       }catch(e){ /* skip */ }
     }
     face.raf=requestAnimationFrame(loop);
@@ -149,6 +174,23 @@
 
   els.start.addEventListener('click', startCam);
   els.stop.addEventListener('click', stopCam);
+
+  /* 미션 제출 — 영상+얼굴 박스 스냅샷 */
+  function captureFrame(){
+    if(!face.stream) return null;
+    const vw=els.video.videoWidth||640, vh=els.video.videoHeight||480;
+    const sc=Math.min(1,480/vw), W=Math.round(vw*sc), H=Math.round(vh*sc);
+    const c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
+    x.save(); x.translate(W,0); x.scale(-1,1); x.drawImage(els.video,0,0,W,H); x.restore();
+    x.strokeStyle='#00e0a4'; x.lineWidth=Math.max(2,W/170);
+    (face.lastPreds||[]).forEach(p=>{ const b=faceBox(p); if(!b||b.w<=0) return;
+      const dw=b.w*sc, dh=b.h*sc, dx=b.x*sc, dy=b.y*sc, left=W-dx-dw; x.strokeRect(left,dy,dw,dh); });
+    return c.toDataURL('image/jpeg',0.8);
+  }
+  function summary(){ return ['얼굴 '+(els.count.textContent||'0')+'명']; }
+  if(window.Submit) Submit.init({ feature:'face', label:'얼굴 검출', capture:captureFrame, summary });
+  $('submitBtn').addEventListener('click', ()=>{ if(!face.stream){ alert('카메라를 켜고 제출해 주세요!'); return; } Submit.open(); });
+
   const codex=$('codex'); const openC=()=>codex.classList.add('on'), closeC=()=>codex.classList.remove('on');
   $('codexBtn').addEventListener('click',openC); $('codexX').addEventListener('click',closeC);
   codex.addEventListener('click',e=>{ if(e.target===codex) closeC(); });

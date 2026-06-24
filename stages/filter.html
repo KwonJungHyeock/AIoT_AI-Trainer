@@ -57,6 +57,17 @@
         <div class="gauge" style="margin-top:12px"><div class="gauge-fill" id="motionBar" style="width:0%"></div></div>
       </div>
     </div>
+    <div class="card">
+      <h2>📊 실시간 수치</h2>
+      <div class="telem">
+        <div class="t"><span class="tl">현재 효과</span><span class="tv acc" id="tMode" style="font-size:15px">원본</span></div>
+        <div class="t"><span class="tl">FPS</span><span class="tv" id="tFps">—</span></div>
+        <div class="t"><span class="tl">밝기</span><span class="tv" id="tBright">100%</span></div>
+        <div class="t"><span class="tl">대비</span><span class="tv" id="tContrast">100%</span></div>
+        <div class="t"><span class="tl">블러</span><span class="tv" id="tBlur">0px</span></div>
+        <div class="t"><span class="tl">움직임</span><span class="tv acc" id="tMove">—</span></div>
+      </div>
+    </div>
     <div class="card ctrl">
       <label>밝기 <span id="brightv">100%</span></label>
       <input type="range" id="bright" min="40" max="180" value="100" />
@@ -64,6 +75,7 @@
       <input type="range" id="contrast" min="40" max="220" value="100" />
       <label style="margin-top:14px">블러 <span id="blurv">0px</span></label>
       <input type="range" id="blur" min="0" max="12" value="0" />
+      <button class="submitbtn" id="submitBtn">📤 미션 제출</button>
       <button class="stopbtn" id="stop">⏹ 카메라 끄기</button>
     </div>
   </aside>
@@ -90,6 +102,9 @@
   </div>
 </div>
 
+<script src="/stages/cert.js"></script>
+<script src="/stages/board.js"></script>
+<script src="/stages/submit.js"></script>
 <script>
   const $ = (id)=>document.getElementById(id);
   const els = { video:$('video'), overlay:$('overlay'), cover:$('cover'), start:$('start'), stop:$('stop'),
@@ -110,16 +125,18 @@
     return `${preset} brightness(${p.bright}%) contrast(${p.contrast}%) blur(${p.blur}px)`.trim(); }
   function apply(){ if(ff.mode!=='motion') els.video.style.filter=buildCSS(); }
   function clearCanvas(){ const c=els.overlay.getContext('2d'); c.clearRect(0,0,els.overlay.width,els.overlay.height); }
-  const bind=(id,key,unit)=>{ const el=$(id), v=$(id+'v'); el.addEventListener('input',()=>{ ff.params[key]=+el.value; if(v) v.textContent=el.value+unit; apply(); }); };
+  const TEL={bright:'tBright',contrast:'tContrast',blur:'tBlur'};
+  const bind=(id,key,unit)=>{ const el=$(id), v=$(id+'v'); el.addEventListener('input',()=>{ ff.params[key]=+el.value; if(v) v.textContent=el.value+unit; if(TEL[key]) $(TEL[key]).textContent=el.value+unit; apply(); }); };
   bind('bright','bright','%'); bind('contrast','contrast','%'); bind('blur','blur','px');
 
   function setMode(m){
     if(!FF_LABEL[m]) return; ff.mode=m;
     [...els.modes.children].forEach(b=>b.classList.toggle('active',b.dataset.m===m));
-    els.modeName.textContent=FF_LABEL[m];
+    els.modeName.textContent=FF_LABEL[m]; $('tMode').textContent=FF_LABEL[m];
     els.motionRow.style.display = (m==='motion')?'':'none';
     if(m==='motion'){ els.video.style.filter=''; clearCanvas(); if(ff.stream){ if(ff.raf) cancelAnimationFrame(ff.raf); motionLoop(); } }
-    else { if(ff.raf) cancelAnimationFrame(ff.raf); ff.raf=null; els.video.style.filter=buildCSS(); clearCanvas(); ff.prev=null; }
+    else { if(ff.raf) cancelAnimationFrame(ff.raf); ff.raf=null; els.video.style.filter=buildCSS(); clearCanvas(); ff.prev=null;
+      $('tFps').textContent='—'; $('tMove').textContent='—'; }
   }
 
   async function startCam(){
@@ -139,6 +156,7 @@
     els.video.style.filter=''; clearCanvas(); ff.prev=null;
     els.cover.classList.remove('hide'); els.start.classList.remove('loading'); els.start.textContent='▶ 카메라 켜기 · 효과 시작';
     setStatus('IDLE','idle'); els.fps.innerHTML='FPS <b>—</b>'; els.motion.textContent='0%'; els.motionBar.style.width='0%';
+    $('tFps').textContent='—'; $('tMove').textContent='—';
   }
   async function motionLoop(){
     if(ff.mode!=='motion'||!ff.stream) return;
@@ -154,9 +172,11 @@
             img.data[o]=255; img.data[o+1]=40; img.data[o+2]=70; img.data[o+3]=170; } }
           ctx.putImageData(img,0,0);
           const pct=moved*100/cur.length; els.motion.textContent=pct.toFixed(1)+'%'; els.motionBar.style.width=Math.min(100,pct*3).toFixed(0)+'%';
+          $('tMove').textContent=pct.toFixed(1)+'%';
         }
         ff.prev=cur;
-        const now=performance.now(); els.fps.innerHTML='FPS <b>'+(1000/(now-ff.lastT)).toFixed(1)+'</b>'; ff.lastT=now;
+        const now=performance.now(), fps=1000/(now-ff.lastT); ff.lastT=now;
+        els.fps.innerHTML='FPS <b>'+fps.toFixed(1)+'</b>'; $('tFps').textContent=fps.toFixed(1);
       }catch(e){ /* skip */ }
     }
     ff.raf=requestAnimationFrame(motionLoop);
@@ -164,6 +184,21 @@
 
   els.start.addEventListener('click', startCam);
   els.stop.addEventListener('click', stopCam);
+
+  /* 미션 제출 — 적용된 효과 그대로 스냅샷(미러+CSS필터 재현) */
+  function captureFrame(){
+    if(!ff.stream) return null;
+    const vw=els.video.videoWidth||640, vh=els.video.videoHeight||480;
+    const sc=Math.min(1,480/vw), W=Math.round(vw*sc), H=Math.round(vh*sc);
+    const c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
+    x.save(); x.filter = ff.mode==='motion'?'none':buildCSS(); x.translate(W,0); x.scale(-1,1); x.drawImage(els.video,0,0,W,H); x.restore();
+    if(ff.mode==='motion'){ x.save(); x.translate(W,0); x.scale(-1,1); x.imageSmoothingEnabled=false; x.drawImage(els.overlay,0,0,W,H); x.restore(); }
+    return c.toDataURL('image/jpeg',0.85);
+  }
+  function summary(){ const s=['효과 '+FF_LABEL[ff.mode]]; if(ff.mode==='motion') s.push('움직임 '+(els.motion.textContent||'0%')); return s; }
+  if(window.Submit) Submit.init({ feature:'filter', label:'영상 효과', capture:captureFrame, summary });
+  $('submitBtn').addEventListener('click', ()=>{ if(!ff.stream){ alert('카메라를 켜고 제출해 주세요!'); return; } Submit.open(); });
+
   const codex=$('codex'); const openC=()=>codex.classList.add('on'), closeC=()=>codex.classList.remove('on');
   $('codexBtn').addEventListener('click',openC); $('codexX').addEventListener('click',closeC);
   codex.addEventListener('click',e=>{ if(e.target===codex) closeC(); });
