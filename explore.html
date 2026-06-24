@@ -177,7 +177,7 @@
     <button class="pack" data-i="${i}" style="--c1:${s.c1};--c2:${s.c2}">
       <div class="pack-inner">
         <div class="pack-art"></div>
-        <img class="pack-thumb" data-base="/platform/img/stage-${s.key}" alt="" />
+        <img class="pack-thumb" data-base="/platform/img/stage-${s.key}" alt="" decoding="async" />
         <div class="pack-scrim"></div>
         ${s.ready?'':'<span class="pack-soon">준비중</span>'}
         <div class="pack-body">
@@ -223,8 +223,8 @@
       p.style.setProperty('--gap', g+'px');
       p.style.setProperty('--off', off);
       p.style.setProperty('--sc', off===0 ? 1 : (a===1?0.82:0.66));
-      p.style.setProperty('--op', a>2 ? 0 : (off===0?1:0.5));
-      p.style.setProperty('--bl', off===0 ? 'none' : 'blur(1.5px)');
+      p.style.setProperty('--op', a>2 ? 0 : (off===0?1:0.48));
+      p.style.setProperty('--bl', 'none'); /* blur 제거 — GPU 부담↓ */
       p.style.setProperty('--z', 10 - a);
       p.style.setProperty('--pe', a<=2 ? 'auto' : 'none');
       p.classList.toggle('center', off===0);
