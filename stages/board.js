@@ -62,10 +62,12 @@
   const ov=document.createElement('div'); ov.className='bd-ov';
   ov.innerHTML=`<div class="bd-wrap">
     <div class="bd-bar">
-      <div class="bd-title"><h2>📋 제출 게시판</h2>
+      <div class="bd-title"><h2 id="bdTitle">📋 제출 게시판</h2>
         <div class="bd-stats"><span class="bd-stat">전체 <b id="bdTotal">0</b></span><span class="bd-stat">미평가 <b id="bdWait">0</b></span></div>
       </div>
       <div class="bd-tools">
+        <button class="bd-b" id="bdRoster" style="display:none">🖨 명단 PDF</button>
+        <button class="bd-b" id="bdAll" style="display:none">전체 보기</button>
         <button class="bd-b" id="bdImport">📥 가져오기</button>
         <input type="file" id="bdFile" accept="application/json" multiple style="display:none" />
         <button class="bd-b" id="bdExport">📤 내보내기</button>
@@ -78,8 +80,16 @@
   </div>`;
 
   function ensure(){ if(!document.body.contains(ov)) document.body.appendChild(ov); }
+  let filterCode=null;
   function render(){
-    const list=load();
+    const all=load();
+    const list = filterCode ? all.filter(s=>s.classCode===filterCode) : all;
+    const cls = (filterCode && window.Session) ? Session.getClass(filterCode) : null;
+    ov.querySelector('#bdTitle').innerHTML = filterCode
+      ? '📋 '+esc(cls?cls.name:'수업')+' <span style="font-family:\'JetBrains Mono\',monospace;color:#6aa6ff;font-size:14px">['+esc(filterCode)+']</span>'
+      : '📋 제출 게시판';
+    ov.querySelector('#bdRoster').style.display = filterCode ? '' : 'none';
+    ov.querySelector('#bdAll').style.display = filterCode ? '' : 'none';
     ov.querySelector('#bdTotal').textContent=list.length;
     ov.querySelector('#bdWait').textContent=list.filter(s=>s.status!=='평가완료').length;
     const grid=ov.querySelector('#bdGrid');
@@ -131,5 +141,16 @@
   ov.addEventListener('click',e=>{ if(e.target===ov) ov.classList.remove('on'); });
   window.addEventListener('keydown',e=>{ if(e.key==='Escape'&&ov.classList.contains('on')) ov.classList.remove('on'); });
 
-  window.Board={ open(){ ensure(); render(); ov.classList.add('on'); }, close(){ ov.classList.remove('on'); } };
+  ov.querySelector('#bdRoster').addEventListener('click',()=>{ if(!window.Cert) return;
+    const cls=(window.Session&&Session.getClass(filterCode))||{name:'수업',code:filterCode};
+    Cert.roster(cls, load().filter(s=>s.classCode===filterCode)); });
+  ov.querySelector('#bdAll').addEventListener('click',()=>{ filterCode=null; render(); });
+
+  window.Board={
+    open(opts){ filterCode=(opts&&opts.code) || (window.Session&&Session.getMode&&(Session.getMode()||{}).code) || null;
+      ensure(); render(); ov.classList.add('on'); },
+    close(){ ov.classList.remove('on'); }
+  };
+  /* 어떤 페이지든 [data-board] 요소를 누르면 게시판이 열린다 (per-page 코드 불필요) */
+  document.addEventListener('click', (e)=>{ const t=e.target.closest&&e.target.closest('[data-board]'); if(t){ e.preventDefault(); Board.open(); } });
 })();

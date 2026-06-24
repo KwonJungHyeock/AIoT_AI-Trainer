@@ -246,9 +246,11 @@
     <span class="sys">VISION&nbsp;AI</span>
   </a>
   <div class="hud-right">
+    <span class="hud-btn" id="modeChip" style="cursor:default">🎮 체험 모드</span>
     <span class="hud-clock" id="clock">--:--</span>
     <button class="hud-btn" id="sound-toggle" title="효과음 켜기/끄기">🔊 사운드</button>
     <button class="hud-btn" id="boardBtn" title="제출 게시판">📋 게시판</button>
+    <a class="hud-btn" href="/entry.html" title="입장 화면">🚪 입장</a>
     <a class="hud-btn" href="/platform/index.html">⌂ 홈</a>
   </div>
 </header>
@@ -306,6 +308,7 @@
   <span class="ver">VISION AI v1.0</span>
 </footer>
 
+<script src="/stages/session.js"></script>
 <script src="/stages/cert.js"></script>
 <script src="/stages/board.js"></script>
 <script>
@@ -463,6 +466,14 @@
   /* 제출 게시판 — 페이지 이동 없이 오버레이로 */
   const bb = document.getElementById('boardBtn');
   if (bb) bb.addEventListener('click', ()=>{ if(window.Board) Board.open(); });
+
+  /* 현재 진입 모드 배너 */
+  (function(){ const m=(window.Session&&Session.getMode&&Session.getMode())||{mode:'free'}; const chip=document.getElementById('modeChip');
+    if(!chip) return;
+    if(m.mode==='class') chip.textContent='🧑‍🎓 '+(m.name||'수업')+' 참여중';
+    else if(m.mode==='teach') chip.innerHTML='👩‍🏫 '+(m.name||'수업')+' 운영 · <b style="color:#6aa6ff">'+(m.code||'')+'</b>';
+    else chip.textContent='🎮 체험 모드';
+  })();
 
   /* 라이브 시계 */
   function tick(){
