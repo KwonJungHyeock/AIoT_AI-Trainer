@@ -45,7 +45,7 @@
   .hud { position:relative; z-index:6; display:flex; align-items:center; justify-content:space-between; padding:16px 26px; gap:14px; flex:none; }
   .hud-brand { display:flex; align-items:center; gap:11px; }
   .hud-brand img { height:26px; display:block; }
-  .hud-brand .bt { font-size:14px; font-weight:800; } .hud-brand .bt span { color:var(--acc-2); }
+  .hud-brand .bt { font-size:14px; font-weight:800; } .hud-brand .bt span { color:#f0473a; }
   .hud-brand .sep { width:1px; height:16px; background:var(--line-2); }
   .hud-brand .sys { font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.16em; color:var(--ink-3); }
   .hud-right { display:flex; align-items:center; gap:10px; }
@@ -85,9 +85,11 @@
   .pack-ic { font-size:72px; line-height:1; margin:auto; filter:drop-shadow(0 6px 18px rgba(0,0,0,.55)); }
   .pack-name { font-size:23px; font-weight:800; letter-spacing:-.02em; color:#fff; text-shadow:0 2px 12px rgba(0,0,0,.6); }
   .pack-badge { font-family:var(--mono); font-size:10.5px; font-weight:700; color:#fff; opacity:.85; margin-top:4px; }
-  .pack-brand { margin-top:11px; padding-top:11px; border-top:1px solid rgba(255,255,255,.12);
-    font-size:12px; font-weight:800; letter-spacing:.02em; color:rgba(255,255,255,.42); text-shadow:0 1px 6px rgba(0,0,0,.6); }
-  .pack-brand b { color:rgba(255,255,255,.72); }
+  /* 캐러셀 하단 통합 브랜딩 */
+  .cbrand { display:flex; align-items:center; justify-content:center; gap:9px; margin-top:6px;
+    font-size:20px; font-weight:800; letter-spacing:.01em; color:rgba(255,255,255,.6); }
+  .cbrand img { height:19px; opacity:.85; }
+  .cbrand b { color:#f0473a; }
   .pack-soon { position:absolute; top:16px; right:16px; font-family:var(--mono); font-size:10px; font-weight:700;
     color:#ffd36a; background:rgba(255,180,60,.16); border:1px solid rgba(255,180,60,.4); border-radius:6px; padding:3px 7px; }
 
@@ -156,6 +158,7 @@
   <button class="enter" id="enter">▶ 입장하기</button>
   <div class="dots" id="dots"></div>
   <div class="legend"><kbd>←</kbd> <kbd>→</kbd> 넘기기 · <kbd>⏎</kbd> 입장 · <kbd>ESC</kbd> 콘솔로</div>
+  <div class="cbrand"><img src="/platform/img/logo-mark.webp" alt="" />Eduino <b>AI</b></div>
 </footer>
 
 <script>
@@ -185,7 +188,6 @@
           <div class="pack-ic">${s.ic}</div>
           <div class="pack-name">${s.name}</div>
           <div class="pack-badge">${s.badge}</div>
-          <div class="pack-brand">Eduino <b>AI</b></div>
         </div>
       </div>
     </button>`).join('');
