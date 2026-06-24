@@ -89,7 +89,7 @@
         ${s.img?`<img class="bd-img" src="${s.img}" alt="제출 스냅샷" />`:'<div class="bd-noimg">스냅샷 없음</div>'}
         <div class="bd-bd">
           <div class="bd-top"><span class="bd-name">${esc(s.name)||'이름없음'}</span><span class="bd-feat">${esc(s.label)}</span></div>
-          <div class="bd-meta">${fmt(s.time)} · ${s.status==='평가완료'?'평가완료':'미평가'}</div>
+          <div class="bd-meta">${s.klass?esc(s.klass)+' · ':''}${fmt(s.time)} · ${s.status==='평가완료'?'평가완료':'미평가'}</div>
           <div class="bd-chips">${(s.summary||[]).map(c=>`<span>${esc(c)}</span>`).join('')}</div>
           <div class="bd-note${s.note?'':' em'}">${s.note?esc(s.note):'소감 없음'}</div>
         </div>
@@ -99,7 +99,12 @@
             <button class="bd-ev redo${s.result==='redo'?' on':''}" data-r="redo">↻ 재도전</button>
           </div>
           <input class="bd-fb" placeholder="한 줄 피드백…" value="${esc(s.feedback)}" />
-          <div class="bd-erow2"><button class="bd-del">삭제</button><button class="bd-save">평가 저장</button></div>
+          <div class="bd-erow2"><button class="bd-del">삭제</button>
+            <div style="display:flex;gap:7px">
+              <button class="bd-b bd-pdf" style="padding:8px 11px">🖨 PDF</button>
+              <button class="bd-save">평가 저장</button>
+            </div>
+          </div>
         </div>
       </div>`).join('');
     grid.querySelectorAll('.bd-card').forEach(c=>{
@@ -109,6 +114,7 @@
         const sel=c.querySelector('.bd-ev.on'); r.result=sel?sel.dataset.r:(r.result||null);
         r.feedback=c.querySelector('.bd-fb').value.trim(); r.status=r.result?'평가완료':'제출됨'; saveAll(l); render(); });
       c.querySelector('.bd-del').addEventListener('click',()=>{ if(confirm('이 제출물을 삭제할까요?')){ saveAll(load().filter(x=>x.id!==id)); render(); } });
+      const pdf=c.querySelector('.bd-pdf'); if(pdf) pdf.addEventListener('click',()=>{ const r=load().find(x=>x.id===id); if(r&&window.Cert) Cert.print(r); });
     });
   }
 

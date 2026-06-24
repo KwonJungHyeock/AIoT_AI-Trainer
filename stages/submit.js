@@ -5,7 +5,7 @@
    ║  저장: localStorage 'vision_submissions' + .json 내보내기  ║
    ╚══════════════════════════════════════════════════════════╝ */
 (function(){
-  const KEY='vision_submissions', NAMEKEY='vision_student_name';
+  const KEY='vision_submissions', NAMEKEY='vision_student_name', CLASSKEY='vision_student_class';
   const load=()=>{ try{ return JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(e){ return []; } };
   const saveAll=(l)=>localStorage.setItem(KEY, JSON.stringify(l));
 
@@ -56,15 +56,19 @@
   function esc(s){ return (s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); }
 
   function renderForm(capture, summary){
-    const name=localStorage.getItem(NAMEKEY)||'';
+    const name=localStorage.getItem(NAMEKEY)||'', klass=localStorage.getItem(CLASSKEY)||'';
     card().innerHTML=`
       <button class="sub-x" id="subX">✕</button>
       <h2 class="sub-h">📤 미션 제출</h2>
       <p class="sub-sub">${esc(cfg.label)} 체험 결과를 선생님께 제출해요</p>
       ${capture?`<img class="sub-prev" src="${capture}" alt="제출 스냅샷" />`:''}
       <div class="sub-chips">${(summary||[]).map(s=>`<span>${esc(s)}</span>`).join('')}</div>
-      <label class="sub-l">이름 / 번호</label>
-      <input class="sub-in" id="subName" placeholder="예: 3학년 2반 김에듀" value="${esc(name)}" />
+      <div style="display:flex;gap:10px">
+        <div style="flex:1.4"><label class="sub-l">이름 / 번호</label>
+          <input class="sub-in" id="subName" placeholder="예: 김에듀" value="${esc(name)}" /></div>
+        <div style="flex:1"><label class="sub-l">반</label>
+          <input class="sub-in" id="subClass" placeholder="예: 3학년 2반" value="${esc(klass)}" /></div>
+      </div>
       <label class="sub-l">한 줄 소감 (선택)</label>
       <textarea class="sub-ta" id="subNote" placeholder="무엇을 발견했나요? 어떤 점이 신기했나요?"></textarea>
       <div class="sub-row">
@@ -79,12 +83,13 @@
 
   function doSubmit(capture, summary){
     const name=(card().querySelector('#subName').value||'').trim();
+    const klass=(card().querySelector('#subClass').value||'').trim();
     const note=(card().querySelector('#subNote').value||'').trim();
     if(!name){ card().querySelector('#subName').focus(); card().querySelector('#subName').style.borderColor='#ff6a52'; return; }
-    localStorage.setItem(NAMEKEY,name);
+    localStorage.setItem(NAMEKEY,name); localStorage.setItem(CLASSKEY,klass);
     const rec={ id:'s'+Date.now()+'_'+Math.floor(Math.random()*1e4),
-      feature:cfg.feature, label:cfg.label, name, note, summary:summary||[], img:capture||'',
-      time:new Date().toISOString(), status:'제출됨', score:null, feedback:'' };
+      feature:cfg.feature, label:cfg.label, name, klass, note, summary:summary||[], img:capture||'',
+      topic:cfg.topic||'', time:new Date().toISOString(), status:'제출됨', score:null, feedback:'' };
     const list=load(); list.unshift(rec); saveAll(list);
     renderDone(rec);
   }
@@ -97,13 +102,13 @@
         <h3>제출 완료!</h3>
         <p>게시판에 올라갔어요 (현재 ${cnt}건). 선생님께 파일로도 전달할 수 있어요.</p>
         <div class="sub-row">
-          <button class="sub-btn sub-ghost" id="subFile">📄 파일 저장</button>
+          ${window.Cert?'<button class="sub-btn sub-ghost" id="subPdf">📄 PDF로 저장</button>':''}
           ${window.Board?'<button class="sub-btn sub-ghost" id="subBoard">📋 게시판</button>':''}
           <button class="sub-btn sub-go" id="subClose">확인</button>
         </div>
       </div>`;
     card().querySelector('#subClose').onclick=close;
-    card().querySelector('#subFile').onclick=()=>exportFile(rec);
+    const pb=card().querySelector('#subPdf'); if(pb) pb.onclick=()=>window.Cert.print(rec);
     const sb=card().querySelector('#subBoard'); if(sb) sb.onclick=()=>{ close(); window.Board.open(); };
   }
 
