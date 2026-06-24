@@ -246,11 +246,10 @@
     <span class="sys">VISION&nbsp;AI</span>
   </a>
   <div class="hud-right">
-    <span class="hud-btn" id="modeChip" style="cursor:default">🎮 체험 모드</span>
+    <a class="hud-btn" id="modeChip" href="/entry.html" title="입장 화면 / 모드 변경">🎮 체험 모드</a>
     <span class="hud-clock" id="clock">--:--</span>
     <button class="hud-btn" id="sound-toggle" title="효과음 켜기/끄기">🔊 사운드</button>
     <button class="hud-btn" id="boardBtn" title="제출 게시판">📋 게시판</button>
-    <a class="hud-btn" href="/entry.html" title="입장 화면">🚪 입장</a>
     <a class="hud-btn" href="/platform/index.html">⌂ 홈</a>
   </div>
 </header>
@@ -312,6 +311,9 @@
 <script src="/stages/cert.js"></script>
 <script src="/stages/board.js"></script>
 <script>
+  /* 진입단 가드 — 역할 선택(입장)을 거치지 않고 직접 들어오면 입장 화면으로 */
+  if (!(window.Session && Session.getMode && Session.getMode())) { location.replace('/entry.html'); }
+
   const MODES = [
     { cls:'explore', kicker:'MODE 01 · 관찰', title:'기본기능 체험하기',
       desc:'학습 없이 클릭 한 번으로 AI를 작동시켜, 컴퓨터가 화면 속 세상을 어떻게 인식하는지 직접 관찰해요. 수업 도입에 딱 좋아요.',
