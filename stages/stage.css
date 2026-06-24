@@ -87,6 +87,14 @@ button { font-family:inherit; cursor:pointer; } a { color:inherit; text-decorati
 .gauge { height:9px; border-radius:99px; background:rgba(255,255,255,.08); overflow:hidden; }
 .gauge-fill { height:100%; border-radius:99px; background:linear-gradient(90deg,var(--acc),var(--acc-2)); transition:width .2s; }
 
+/* 실시간 텔레메트리 (영상처리 수치) */
+.telem { display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; }
+.telem .t { display:flex; flex-direction:column; gap:3px; min-width:0; }
+.telem .tl { font-size:10.5px; color:var(--ink-3); white-space:nowrap; }
+.telem .tv { font-family:var(--mono); font-size:17px; font-weight:700; color:var(--ink); line-height:1.1; }
+.telem .tv.acc { color:var(--acc-2); }
+.telem .tv small { font-size:11px; color:var(--ink-3); font-weight:500; }
+
 /* 큰 수치 표시 */
 .metric { text-align:center; padding:8px 0 4px; }
 .metric .v { font-family:var(--mono); font-size:38px; font-weight:700; color:var(--acc-2); line-height:1; }

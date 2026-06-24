@@ -55,6 +55,17 @@
       <h2>탐지된 사물 <span class="cnt" id="count">0</span></h2>
       <div class="det-list" id="list"><div class="empty">아직 없어요 — 카메라를 켜보세요</div></div>
     </div>
+    <div class="card">
+      <h2>📊 실시간 수치</h2>
+      <div class="telem">
+        <div class="t"><span class="tl">추론 시간</span><span class="tv acc" id="tInfer">— <small>ms</small></span></div>
+        <div class="t"><span class="tl">FPS</span><span class="tv" id="tFps">—</span></div>
+        <div class="t"><span class="tl">최고 신뢰도</span><span class="tv acc" id="tMax">—</span></div>
+        <div class="t"><span class="tl">평균 신뢰도</span><span class="tv" id="tAvg">—</span></div>
+        <div class="t"><span class="tl">처리 해상도</span><span class="tv" id="tRes" style="font-size:14px">—</span></div>
+        <div class="t"><span class="tl">처리 프레임</span><span class="tv" id="tFrames">0</span></div>
+      </div>
+    </div>
     <div class="card ctrl">
       <label>탐지 민감도 <span id="thrv">50%</span></label>
       <input type="range" id="thr" min="10" max="90" value="50" />
@@ -130,6 +141,9 @@
     els.start.classList.remove('loading'); els.start.textContent='▶ 카메라 켜기 · 탐지 시작';
     setStatus('IDLE','idle'); els.fps.innerHTML='FPS <b>—</b>';
     els.count.textContent='0'; els.list.innerHTML='<div class="empty">아직 없어요 — 카메라를 켜보세요</div>';
+    detect.frames=0;
+    ['tFps','tMax','tAvg','tRes'].forEach(id=>$(id).textContent='—');
+    $('tInfer').innerHTML='— <small>ms</small>'; $('tFrames').textContent='0';
   }
 
   async function loop(){
@@ -138,8 +152,10 @@
       const vw=els.video.videoWidth, vh=els.video.videoHeight;
       els.overlay.width=vw; els.overlay.height=vh; setAR();
       try {
+        const t0=performance.now();
         const preds = (await detect.model.detect(els.video)).filter(p=>p.score>=detect.threshold);
-        detect.lastPreds = preds;
+        const inferMs=performance.now()-t0;
+        detect.lastPreds = preds; detect.frames=(detect.frames||0)+1;
         const ctx=els.overlay.getContext('2d'); ctx.clearRect(0,0,vw,vh);
         ctx.font='bold 16px JetBrains Mono';
         preds.forEach(p=>{
@@ -157,6 +173,14 @@
         }).join('') : '<div class="empty">사물이 안 보여요 — 카메라 앞에 물건을 비춰보세요</div>';
         const now=performance.now(), fps=1000/(now-detect.lastT); detect.lastT=now;
         els.fps.innerHTML='FPS <b>'+fps.toFixed(1)+'</b>';
+        /* 실시간 수치 텔레메트리 */
+        const sc=preds.map(p=>p.score);
+        $('tInfer').innerHTML=inferMs.toFixed(0)+' <small>ms</small>';
+        $('tFps').textContent=fps.toFixed(1);
+        $('tMax').textContent=sc.length?Math.round(Math.max(...sc)*100)+'%':'—';
+        $('tAvg').textContent=sc.length?Math.round(sc.reduce((a,b)=>a+b,0)/sc.length*100)+'%':'—';
+        $('tRes').textContent=vw+'×'+vh;
+        $('tFrames').textContent=detect.frames;
       } catch(e){ /* skip frame */ }
     }
     detect.raf=requestAnimationFrame(loop);
