@@ -58,6 +58,7 @@
     <div class="card ctrl">
       <label>탐지 민감도 <span id="thrv">50%</span></label>
       <input type="range" id="thr" min="10" max="90" value="50" />
+      <button class="submitbtn" id="submitBtn">📤 미션 제출</button>
       <button class="stopbtn" id="stop">⏹ 카메라 끄기</button>
     </div>
   </aside>
@@ -85,6 +86,7 @@
   </div>
 </div>
 
+<script src="/stages/submit.js"></script>
 <script>
   const $ = (id)=>document.getElementById(id);
   const els = { video:$('video'), overlay:$('overlay'), cover:$('cover'), start:$('start'), stop:$('stop'),
@@ -135,6 +137,7 @@
       els.overlay.width=vw; els.overlay.height=vh; setAR();
       try {
         const preds = (await detect.model.detect(els.video)).filter(p=>p.score>=detect.threshold);
+        detect.lastPreds = preds;
         const ctx=els.overlay.getContext('2d'); ctx.clearRect(0,0,vw,vh);
         ctx.font='bold 16px JetBrains Mono';
         preds.forEach(p=>{
@@ -156,6 +159,27 @@
     }
     detect.raf=requestAnimationFrame(loop);
   }
+
+  /* 미션 제출 — 현재 화면(영상+탐지박스)을 스냅샷으로 캡처 */
+  function captureFrame(){
+    if(!detect.stream) return null;
+    const vw=els.video.videoWidth||640, vh=els.video.videoHeight||480;
+    const sc=Math.min(1,480/vw), W=Math.round(vw*sc), H=Math.round(vh*sc);
+    const c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
+    x.save(); x.translate(W,0); x.scale(-1,1); x.drawImage(els.video,0,0,W,H); x.restore();
+    x.drawImage(els.overlay,0,0,W,H);
+    return c.toDataURL('image/jpeg',0.8);
+  }
+  function summary(){
+    const n=els.count.textContent||'0';
+    const cls=[...new Set((detect.lastPreds||[]).map(p=>p.class))].slice(0,3);
+    return [`탐지 ${n}개`, ...cls];
+  }
+  if(window.Submit) Submit.init({ feature:'detect', label:'객체 탐지', capture:captureFrame, summary });
+  $('submitBtn').addEventListener('click', ()=>{
+    if(!detect.stream){ alert('카메라를 켜고 사물을 탐지한 뒤 제출해 주세요!'); return; }
+    Submit.open();
+  });
 
   /* 개념 도감 */
   const codex = $('codex');
