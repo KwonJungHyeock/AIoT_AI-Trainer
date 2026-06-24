@@ -55,15 +55,18 @@
   .hud-btn:hover { color:var(--ink); border-color:var(--line-2); background:rgba(255,255,255,.08); }
 
   .stage { position:relative; z-index:5; flex:1; display:flex; flex-direction:column; align-items:center; min-height:0; }
-  .crumb { font-family:var(--mono); font-size:11.5px; letter-spacing:.14em; color:var(--ink-3); text-transform:uppercase; margin:4px 0 2px; }
+  .crumb { display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:11px; letter-spacing:.18em;
+    color:var(--ink-3); text-transform:uppercase; background:rgba(255,255,255,.04); border:1px solid var(--line);
+    border-radius:999px; padding:6px 14px; margin:2px 0 0; }
   .crumb b { color:var(--acc-2); }
-  .stage-title { font-size:24px; font-weight:800; letter-spacing:-.02em; margin:0 0 6px; }
+  .stage-title { font-size:29px; font-weight:800; letter-spacing:-.02em; margin:12px 0 4px;
+    text-shadow:0 2px 26px rgba(59,134,255,.4); }
   .stage-title b { color:var(--acc-2); }
 
   /* ── 게임팩 캐러셀 ── */
   .carousel { position:relative; width:100%; flex:1; min-height:0; }
   .track { position:absolute; inset:0; }
-  .pack { position:absolute; top:50%; left:50%; width:min(260px,62vw); aspect-ratio:3/4;
+  .pack { position:absolute; top:50%; left:50%; width:min(330px,66vw); aspect-ratio:3/4;
     transform:translate(calc(-50% + var(--off,0) * var(--gap,230px)), -50%) scale(var(--sc,.8));
     opacity:var(--op,0); filter:var(--bl,none); z-index:var(--z,1);
     transition:transform .45s cubic-bezier(.2,.7,.2,1), opacity .45s, filter .45s;
@@ -82,6 +85,9 @@
   .pack-ic { font-size:72px; line-height:1; margin:auto; filter:drop-shadow(0 6px 18px rgba(0,0,0,.55)); }
   .pack-name { font-size:23px; font-weight:800; letter-spacing:-.02em; color:#fff; text-shadow:0 2px 12px rgba(0,0,0,.6); }
   .pack-badge { font-family:var(--mono); font-size:10.5px; font-weight:700; color:#fff; opacity:.85; margin-top:4px; }
+  .pack-brand { margin-top:11px; padding-top:11px; border-top:1px solid rgba(255,255,255,.12);
+    font-size:12px; font-weight:800; letter-spacing:.02em; color:rgba(255,255,255,.42); text-shadow:0 1px 6px rgba(0,0,0,.6); }
+  .pack-brand b { color:rgba(255,255,255,.72); }
   .pack-soon { position:absolute; top:16px; right:16px; font-family:var(--mono); font-size:10px; font-weight:700;
     color:#ffd36a; background:rgba(255,180,60,.16); border:1px solid rgba(255,180,60,.4); border-radius:6px; padding:3px 7px; }
 
@@ -93,8 +99,12 @@
 
   /* ── 하단 정보 + 입장 ── */
   .foot { position:relative; z-index:6; flex:none; display:flex; flex-direction:column; align-items:center; gap:12px; padding:6px 20px 22px; }
-  .infobar { display:inline-flex; align-items:center; gap:12px; background:var(--panel); border:1px solid var(--line);
-    border-radius:999px; padding:9px 18px; font-size:13.5px; }
+  .infobar { display:inline-flex; align-items:center; gap:13px; font-size:14px;
+    background:linear-gradient(180deg, rgba(22,27,44,.78), rgba(10,12,20,.78));
+    border:1px solid rgba(106,166,255,.32); border-radius:13px; padding:9px 16px 9px 11px;
+    box-shadow:0 0 0 1px rgba(59,134,255,.10), 0 12px 34px rgba(0,0,0,.45); backdrop-filter:blur(4px); }
+  .infobar .ib-tag { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--acc-2);
+    background:var(--acc-soft); border:1px solid rgba(59,134,255,.3); border-radius:8px; padding:5px 9px; letter-spacing:.04em; }
   .infobar .nm { font-weight:800; } .infobar .tg { color:var(--ink-3); font-family:var(--mono); font-size:11.5px; }
   .infobar .ok { font-size:11px; font-weight:700; color:var(--green); background:rgba(66,226,155,.14); border:1px solid rgba(66,226,155,.3); border-radius:7px; padding:3px 8px; }
   .infobar .soon { font-size:11px; font-weight:700; color:#ffd36a; background:rgba(255,180,60,.14); border:1px solid rgba(255,180,60,.3); border-radius:7px; padding:3px 8px; }
@@ -175,6 +185,7 @@
           <div class="pack-ic">${s.ic}</div>
           <div class="pack-name">${s.name}</div>
           <div class="pack-badge">${s.badge}</div>
+          <div class="pack-brand">Eduino <b>AI</b></div>
         </div>
       </div>
     </button>`).join('');
@@ -204,7 +215,7 @@
   const sMove=()=>beep(520,0.05,'triangle',0.04);
   const sGo=()=>{ beep(660,0.09,'square',0.05); setTimeout(()=>beep(990,0.12,'square',0.05),80); };
 
-  function gap(){ return Math.min(230, window.innerWidth*0.5); }
+  function gap(){ return Math.min(300, window.innerWidth*0.48); }
   function render(){
     const g = gap();
     packs.forEach((p,i)=>{
@@ -221,6 +232,7 @@
     dots.forEach((d,i)=>d.classList.toggle('on', i===cur));
     const s = STAGES[cur];
     document.getElementById('infobar').innerHTML =
+      `<span class="ib-tag">STAGE ${String(cur+1).padStart(2,'0')}</span>` +
       `<span class="nm">${s.name}</span><span class="tg">${s.badge}</span>` +
       (s.ready?`<span class="ok">게임 화면</span>`:`<span class="soon">클래식 화면</span>`);
     document.getElementById('enter').innerHTML = s.ready ? '▶ 입장하기' : '▶ 입장하기 (클래식)';
