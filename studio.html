@@ -149,6 +149,7 @@
   .tile:hover .tile-glare { opacity:1; }
   .tile-body { position:relative; z-index:4; height:100%; padding:30px 30px 56px; display:flex; flex-direction:column; transform:translateZ(36px); }
   .tile-ic { font-size:58px; line-height:1; filter:drop-shadow(0 4px 12px rgba(0,0,0,.55)); }
+  .tile.has-thumb .tile-ic { display:none; }
   .tile-no { position:absolute; top:24px; right:26px; font-family:var(--mono); font-size:17px; font-weight:700; color:rgba(255,255,255,.55); }
   .tile-name { margin-top:auto; font-size:31px; font-weight:800; letter-spacing:-.02em; color:#fff; text-shadow:0 2px 14px rgba(0,0,0,.6); }
   .tile-tag { margin-top:6px; font-size:15.5px; font-weight:600; color:#e2e8f8; text-shadow:0 1px 8px rgba(0,0,0,.55); }
@@ -490,6 +491,7 @@
     const base = img.dataset.base, exts = ['webp','jpg','png','jpeg']; let i = 0;
     const next = () => { if (i >= exts.length) { img.remove(); return; } img.src = base + '.' + exts[i++] + '?v=1'; };
     img.addEventListener('error', next);
+    img.addEventListener('load', ()=>{ const t=img.closest('.tile'); if(t) t.classList.add('has-thumb'); });
     next();
   });
 
