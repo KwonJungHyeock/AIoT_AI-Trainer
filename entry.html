@@ -180,7 +180,7 @@
     else if(e.key==='Enter') act(); else if(e.key==='Escape') location.href='/platform/index.html';
   });
   function act(){ const r=ROLES[cur];
-    if(r.key==='free'){ Session.setMode({mode:'free'}); location.href='/studio.html'; }
+    if(r.key==='free'){ Session.setMode({mode:'free'}); Session.arm(); location.href='/studio.html'; }
     else if(r.key==='create') openCreate();
     else openJoin();
   }
@@ -210,7 +210,7 @@
           <button class="btn" id="cEnter">콘솔 입장</button>
         </div>
         <p class="sub" style="text-align:center;margin:0">수업명: <b>${esc(rec.name)}</b>${rec.capacity?` · 정원 ${rec.capacity}명`:''}</p>`;
-      $('cEnter').onclick=()=>location.href='/studio.html';
+      $('cEnter').onclick=()=>{ Session.arm(); location.href='/studio.html'; };
       $('cBoard').onclick=()=>{ closeAll(); if(window.Board) Board.open({code:rec.code}); };
     };
   }
@@ -239,7 +239,7 @@
       if(!cls){ $('jCode').style.borderColor='#ff6a52'; alert('일치하는 수업 코드가 없어요. 코드를 확인해 주세요.'); return; }
       if(!name){ $('jName').focus(); $('jName').style.borderColor='#ff6a52'; return; }
       Session.setMode({mode:'class', code:cls.code, name:cls.name, student:name});
-      location.href='/studio.html';
+      Session.arm(); location.href='/studio.html';
     };
   }
 

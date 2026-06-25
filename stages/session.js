@@ -22,6 +22,9 @@
     setMode(m){ try{ sessionStorage.setItem(MKEY, JSON.stringify(m)); }catch(e){} },
     getMode(){ try{ return JSON.parse(sessionStorage.getItem(MKEY)||'null'); }catch(e){ return null; } },
     clearMode(){ try{ sessionStorage.removeItem(MKEY); }catch(e){} },
+    /* 진입 토큰 — 역할 선택을 거쳐 콘솔로 들어올 때만 1회 통과(새로고침 시 소진→재선택) */
+    arm(){ try{ sessionStorage.setItem('vos_pass','1'); }catch(e){} },
+    pass(){ try{ const ok=sessionStorage.getItem('vos_pass')==='1'; sessionStorage.removeItem('vos_pass'); return ok; }catch(e){ return true; } },
     /* 수업별 제출물 집계 */
     submissionsFor(code){ try{ return JSON.parse(localStorage.getItem('vision_submissions')||'[]').filter(s=>s.classCode===code); }catch(e){ return []; } },
   };

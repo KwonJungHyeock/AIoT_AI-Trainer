@@ -250,7 +250,8 @@
     <span class="sys">VISION&nbsp;AI</span>
   </a>
   <div class="hud-right">
-    <a class="hud-btn" id="modeChip" href="/entry.html" title="입장 화면 / 모드 변경">체험 모드</a>
+    <a class="hud-btn" href="/entry.html" title="모드 선택으로 돌아가기">← 모드 선택</a>
+    <span class="hud-btn" id="modeChip" style="cursor:default">체험 모드</span>
     <span class="hud-clock" id="clock">--:--</span>
     <button class="hud-btn" id="sound-toggle" title="효과음 켜기/끄기">🔊 사운드</button>
     <button class="hud-btn" id="boardBtn" title="제출 게시판"><i data-ic="board"></i> 게시판</button>
@@ -316,8 +317,12 @@
 <script src="/stages/cert.js"></script>
 <script src="/stages/board.js"></script>
 <script>
-  /* 진입단 가드 — 역할 선택(입장)을 거치지 않고 직접 들어오면 입장 화면으로 */
-  if (!(window.Session && Session.getMode && Session.getMode())) { location.replace('/entry.html'); }
+  /* 진입단 가드 — 역할 선택(입장)을 거쳐 들어온 1회만 통과. 새로고침/직접진입은 입장 화면으로 */
+  (function guard(){
+    const m = window.Session && Session.getMode && Session.getMode();
+    const armed = window.Session && Session.pass && Session.pass();
+    if (!m || !armed) { location.replace('/entry.html'); }
+  })();
 
   const MODES = [
     { cls:'explore', kicker:'MODE 01 · 관찰', title:'기본기능 체험하기',
