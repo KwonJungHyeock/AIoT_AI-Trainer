@@ -32,6 +32,7 @@
   .hbtn{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--ink-2);
     background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;transition:.15s;}
   .hbtn:hover{color:var(--ink);border-color:var(--acc-2);}
+  [data-ic]{display:inline-flex;align-items:center;justify-content:center;line-height:0;} [data-ic] svg{width:1em;height:1em;display:block;} .hbtn [data-ic]{font-size:14px;}
   .stage{position:relative;z-index:5;flex:1;display:flex;flex-direction:column;align-items:center;min-height:0;}
   .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--ink-3);text-transform:uppercase;margin:6px 0 2px;}
   .title{font-size:27px;font-weight:800;letter-spacing:-.02em;margin:6px 0 2px;text-shadow:0 2px 26px rgba(59,134,255,.35);}
@@ -96,7 +97,7 @@
     <img src="/platform/img/logo-mark.webp" alt="Eduino AI" />
     <span class="t">Eduino <span>AI</span></span><span class="sep"></span><span class="sys">VISION&nbsp;AI</span>
   </a>
-  <a class="hbtn" href="/platform/index.html">⌂ 플랫폼 홈</a>
+  <a class="hbtn" href="/platform/index.html"><i data-ic="home"></i> 플랫폼 홈</a>
 </header>
 
 <main class="stage">
@@ -123,6 +124,7 @@
   <div class="modal" id="joinCard"></div>
 </div>
 
+<script src="/stages/icons.js"></script>
 <script src="/stages/session.js"></script>
 <script src="/stages/cert.js"></script>
 <script src="/stages/board.js"></script>
@@ -204,8 +206,8 @@
         <h2>✅ 수업 개설 완료</h2><p class="sub">학생들에게 아래 <b>입장 코드</b>를 알려주세요.</p>
         <div class="codebig">${rec.code}</div>
         <div class="row" style="margin-bottom:9px">
-          <button class="btn ghost" id="cBoard">📋 수업 게시판</button>
-          <button class="btn" id="cEnter">🎮 콘솔 입장</button>
+          <button class="btn ghost" id="cBoard">수업 게시판</button>
+          <button class="btn" id="cEnter">콘솔 입장</button>
         </div>
         <p class="sub" style="text-align:center;margin:0">수업명: <b>${esc(rec.name)}</b>${rec.capacity?` · 정원 ${rec.capacity}명`:''}</p>`;
       $('cEnter').onclick=()=>location.href='/studio.html';

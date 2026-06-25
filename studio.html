@@ -116,6 +116,9 @@
   .hud-btn { display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:700; color:var(--ink-2);
     background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:8px 12px; transition:.15s; }
   .hud-btn:hover { color:var(--ink); border-color:var(--line-2); background:rgba(255,255,255,.08); }
+  [data-ic]{ display:inline-flex; align-items:center; justify-content:center; line-height:0; }
+  [data-ic] svg{ width:1em; height:1em; display:block; }
+  .hud-btn [data-ic]{ font-size:15px; }
 
   /* ── 스테이지 ── */
   .stage { position:relative; z-index:5; flex:1; width:100%; max-width:1080px; margin:0 auto; padding:14px 26px 0; display:flex; flex-direction:column; }
@@ -247,11 +250,11 @@
     <span class="sys">VISION&nbsp;AI</span>
   </a>
   <div class="hud-right">
-    <a class="hud-btn" id="modeChip" href="/entry.html" title="입장 화면 / 모드 변경">🎮 체험 모드</a>
+    <a class="hud-btn" id="modeChip" href="/entry.html" title="입장 화면 / 모드 변경">체험 모드</a>
     <span class="hud-clock" id="clock">--:--</span>
     <button class="hud-btn" id="sound-toggle" title="효과음 켜기/끄기">🔊 사운드</button>
-    <button class="hud-btn" id="boardBtn" title="제출 게시판">📋 게시판</button>
-    <a class="hud-btn" href="/platform/index.html">⌂ 홈</a>
+    <button class="hud-btn" id="boardBtn" title="제출 게시판"><i data-ic="board"></i> 게시판</button>
+    <a class="hud-btn" href="/platform/index.html"><i data-ic="home"></i> 홈</a>
   </div>
 </header>
 
@@ -308,6 +311,7 @@
   <span class="ver">VISION AI v1.0</span>
 </footer>
 
+<script src="/stages/icons.js"></script>
 <script src="/stages/session.js"></script>
 <script src="/stages/cert.js"></script>
 <script src="/stages/board.js"></script>
@@ -473,9 +477,9 @@
   /* 현재 진입 모드 배너 */
   (function(){ const m=(window.Session&&Session.getMode&&Session.getMode())||{mode:'free'}; const chip=document.getElementById('modeChip');
     if(!chip) return;
-    if(m.mode==='class') chip.textContent='🧑‍🎓 '+(m.name||'수업')+' 참여중';
-    else if(m.mode==='teach') chip.innerHTML='👩‍🏫 '+(m.name||'수업')+' 운영 · <b style="color:#6aa6ff">'+(m.code||'')+'</b>';
-    else chip.textContent='🎮 체험 모드';
+    if(m.mode==='class') chip.textContent=(m.name||'수업')+' 참여중';
+    else if(m.mode==='teach') chip.innerHTML=(m.name||'수업')+' 운영 · <b style="color:#6aa6ff">'+(m.code||'')+'</b>';
+    else chip.textContent='체험 모드';
   })();
 
   /* 라이브 시계 */
