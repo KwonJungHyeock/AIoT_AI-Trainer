@@ -66,7 +66,7 @@
   /* ── 게임팩 캐러셀 ── */
   .carousel { position:relative; width:100%; flex:1; min-height:0; }
   .track { position:absolute; inset:0; }
-  .pack { position:absolute; top:50%; left:50%; width:min(330px,66vw); aspect-ratio:3/4;
+  .pack { position:absolute; top:50%; left:50%; width:min(430px,76vw); aspect-ratio:3/4;
     transform:translate(calc(-50% + var(--off,0) * var(--gap,230px)), -50%) scale(var(--sc,.8));
     opacity:var(--op,0); filter:var(--bl,none); z-index:var(--z,1);
     transition:transform .45s cubic-bezier(.2,.7,.2,1), opacity .45s, filter .45s;
@@ -217,7 +217,7 @@
   const sMove=()=>beep(520,0.05,'triangle',0.04);
   const sGo=()=>{ beep(660,0.09,'square',0.05); setTimeout(()=>beep(990,0.12,'square',0.05),80); };
 
-  function gap(){ return Math.min(300, window.innerWidth*0.48); }
+  function gap(){ return Math.min(400, window.innerWidth*0.4); }
   function render(){
     const g = gap();
     packs.forEach((p,i)=>{

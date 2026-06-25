@@ -39,21 +39,20 @@
   /* 캐러셀 */
   .carousel{position:relative;width:100%;flex:1;min-height:0;}
   .track{position:absolute;inset:0;}
-  .pack{position:absolute;top:50%;left:50%;width:min(300px,72vw);aspect-ratio:3/3.4;
-    transform:translate(calc(-50% + var(--off,0)*var(--gap,300px)),-50%) scale(var(--sc,.82));
-    opacity:var(--op,0);z-index:var(--z,1);transition:transform .45s cubic-bezier(.2,.7,.2,1),opacity .45s;
+  .pack{position:absolute;top:50%;left:50%;width:min(470px,84vw);aspect-ratio:3/4;
+    transform:translate(calc(-50% + var(--off,0)*var(--gap,450px)),-50%) scale(var(--sc,.82));
+    opacity:var(--op,0);z-index:var(--z,1);transition:transform .5s cubic-bezier(.2,.7,.2,1),opacity .5s;
     border:0;padding:0;background:none;pointer-events:var(--pe,none);}
-  .pi{position:relative;width:100%;height:100%;border-radius:24px;overflow:hidden;border:1px solid var(--line);
-    box-shadow:0 24px 60px rgba(0,0,0,.5);}
-  .pack.center .pi{box-shadow:0 0 0 3px var(--c,var(--acc-2)),0 30px 70px rgba(0,0,0,.6);}
-  .pa{position:absolute;inset:0;background:radial-gradient(120% 70% at 30% 14%,var(--c1),transparent 60%),linear-gradient(165deg,var(--c2),#0c1120);}
+  .pi{position:relative;width:100%;height:100%;border-radius:22px;overflow:hidden;border:1px solid var(--line);box-shadow:0 26px 70px rgba(0,0,0,.55);}
+  .pack.center .pi{box-shadow:0 0 0 3px var(--c,var(--acc-2)),0 36px 90px rgba(0,0,0,.65);}
+  .pa{position:absolute;inset:0;background:radial-gradient(120% 75% at 30% 12%,var(--c1),transparent 60%),linear-gradient(165deg,var(--c2),#0c1120);}
   .pa::after{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.5) 1px,transparent 1px);background-size:18px 18px;opacity:.05;}
-  .pb{position:absolute;inset:0;padding:26px;display:flex;flex-direction:column;align-items:center;text-align:center;}
-  .pb .ic{margin:auto 0 16px;color:var(--c,#fff);}
-  .pb .ic svg{width:66px;height:66px;filter:drop-shadow(0 4px 16px rgba(0,0,0,.45));}
-  .pb .nm{font-size:24px;font-weight:800;letter-spacing:-.02em;color:#fff;}
-  .pb .ds{font-size:13px;line-height:1.55;color:rgba(255,255,255,.78);margin-top:8px;margin-bottom:auto;}
-  .pb .tag{font-family:var(--mono);font-size:10.5px;font-weight:700;color:#fff;opacity:.7;}
+  .pthumb{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;}
+  .pscrim{position:absolute;inset:0;z-index:2;background:linear-gradient(180deg,rgba(8,9,15,.1) 28%,rgba(8,9,15,.55) 60%,rgba(8,9,15,.95) 100%);}
+  .pb{position:absolute;inset:0;z-index:3;padding:28px;display:flex;flex-direction:column;}
+  .pno{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.06em;color:rgba(255,255,255,.6);}
+  .pb .nm{margin-top:auto;font-size:29px;font-weight:800;letter-spacing:-.02em;color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.65);}
+  .pb .ds{font-size:14px;line-height:1.55;color:rgba(255,255,255,.84);margin-top:8px;text-shadow:0 1px 8px rgba(0,0,0,.6);}
   .arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:8;width:50px;height:50px;border-radius:50%;display:grid;place-items:center;
     background:var(--panel);border:1px solid var(--line-2);color:var(--ink);font-size:22px;transition:.15s;}
   .arrow:hover{background:rgba(255,255,255,.1);border-color:var(--acc-2);color:var(--acc-2);}
@@ -130,35 +129,39 @@
 <script>
   const $=(id)=>document.getElementById(id);
   const esc=(s)=>(s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
-  const SVG=(p)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
   const ROLES=[
-    { key:'free', ic:SVG('<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>'),
-      nm:'체험 모드', ds:'코드 없이 자유롭게 둘러봐요. 결과는 이미지로 저장됩니다.', tag:'누구나 · 코드 불필요',
+    { key:'free', nm:'체험 모드', ds:'코드 없이 자유롭게 둘러봐요. 결과는 이미지로 저장됩니다.', tag:'MODE · 누구나 · 코드 불필요',
       c:'#6aa6ff', c1:'rgba(59,134,255,.5)', c2:'#15233f', glow:'rgba(59,134,255,.18)' },
-    { key:'create', ic:SVG('<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M7 9h7M7 12.5h4"/><path d="M8 21h8M12 17v4"/>'),
-      nm:'수업 개설', ds:'교사용. 수업명·인원을 설정하면 입장 코드가 발급됩니다.', tag:'교사 · 수업 만들기',
+    { key:'create', nm:'수업 개설', ds:'교사용. 수업명·인원을 설정하면 입장 코드가 발급됩니다.', tag:'TEACHER · 수업 만들기',
       c:'#ff8472', c1:'rgba(240,71,58,.5)', c2:'#2a1410', glow:'rgba(240,71,58,.16)' },
-    { key:'join', ic:SVG('<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/>'),
-      nm:'수업 참여', ds:'학생용. 선생님이 만든 수업을 찾아 코드로 입장합니다.', tag:'학생 · 코드 입력',
+    { key:'join', nm:'수업 참여', ds:'학생용. 선생님이 만든 수업을 찾아 코드로 입장합니다.', tag:'STUDENT · 코드 입력',
       c:'#42e29b', c1:'rgba(66,226,155,.45)', c2:'#0e2a22', glow:'rgba(66,226,155,.15)' },
   ];
   const track=$('track');
   track.innerHTML=ROLES.map((r,i)=>`
     <button class="pack" data-i="${i}" style="--c:${r.c};--c1:${r.c1};--c2:${r.c2}">
-      <div class="pi"><div class="pa"></div>
-        <div class="pb"><div class="ic">${r.ic}</div><div class="nm">${r.nm}</div><div class="ds">${r.ds}</div><div class="tag">${r.tag}</div></div>
+      <div class="pi">
+        <div class="pa"></div>
+        <img class="pthumb" data-base="/platform/img/entry-${r.key}" alt="" decoding="async" />
+        <div class="pscrim"></div>
+        <div class="pb"><div class="pno">${r.tag}</div><div class="nm">${r.nm}</div><div class="ds">${r.ds}</div></div>
       </div>
     </button>`).join('');
   const packs=[...track.querySelectorAll('.pack')];
+  /* 실사 포스터 로더 — webp→jpg→png, 없으면 그라데이션 폴백 */
+  packs.forEach(p=>{ const img=p.querySelector('.pthumb'); if(!img) return;
+    const base=img.dataset.base, exts=['webp','jpg','png','jpeg']; let k=0;
+    const next=()=>{ if(k>=exts.length){ img.remove(); return; } img.src=base+'.'+exts[k++]; };
+    img.addEventListener('error',next); next(); });
   $('dots').innerHTML=ROLES.map((_,i)=>`<i data-i="${i}"></i>`).join('');
   const dots=[...$('dots').querySelectorAll('i')];
   let cur=0;
-  function gap(){ return Math.min(310,window.innerWidth*0.5); }
+  function gap(){ return Math.min(430,window.innerWidth*0.42); }
   function render(){
     const g=gap();
     packs.forEach((p,i)=>{ const off=i-cur,a=Math.abs(off);
       p.style.setProperty('--gap',g+'px'); p.style.setProperty('--off',off);
-      p.style.setProperty('--sc',off===0?1:0.8); p.style.setProperty('--op',a>1?0:(off===0?1:0.45));
+      p.style.setProperty('--sc',off===0?1:0.86); p.style.setProperty('--op',a>1?0:(off===0?1:0.55));
       p.style.setProperty('--z',10-a); p.style.setProperty('--pe',a<=1?'auto':'none'); p.classList.toggle('center',off===0); });
     dots.forEach((d,i)=>d.classList.toggle('on',i===cur));
     const r=ROLES[cur]; $('ambient').style.setProperty('--glow',r.glow);
