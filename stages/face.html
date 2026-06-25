@@ -25,12 +25,12 @@
 <header class="hud">
   <div class="hud-l">
     <a class="back" href="/explore.html">← 스테이지</a>
-    <div class="title"><h1>🙂 얼굴 검출</h1><span class="tag">BlazeFace · 알고리즘</span></div>
+    <div class="title"><h1><i data-ic="face"></i>얼굴 검출</h1><span class="tag">BlazeFace · 알고리즘</span></div>
   </div>
   <div class="hud-r">
-    <button class="back" data-board title="제출 게시판">📋 게시판</button>
-    <a class="back" href="/platform/index.html" title="플랫폼 홈">🏠</a>
-    <button class="back codex-open" id="codexBtn">📖 개념</button>
+    <button class="back" data-board title="제출 게시판"><i data-ic="board"></i> 게시판</button>
+    <a class="back" href="/platform/index.html" title="플랫폼 홈"><i data-ic="home"></i></a>
+    <button class="back codex-open" id="codexBtn"><i data-ic="book"></i> 개념</button>
     <span class="chip idle" id="status">● IDLE</span>
     <span class="chip" id="fps">FPS <b>—</b></span>
   </div>
@@ -43,7 +43,7 @@
     <div class="boxes" id="boxes"></div>
     <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
     <div class="cover" id="cover">
-      <div class="big">🙂</div>
+      <div class="big"><i data-ic="face"></i></div>
       <p>카메라를 켜면 화면 속 얼굴의 <b>위치</b>를 실시간 박스로 찾아요. 누구인지(신원)는 식별하지 않아요!</p>
       <button class="startbtn" id="start">▶ 카메라 켜기 · 검출 시작</button>
       <p style="font-size:11.5px;color:var(--ink-3)">카메라는 이 기기에서만 처리되고 어디에도 전송되지 않아요.</p>
@@ -58,7 +58,7 @@
       <div class="gauge" style="margin-top:16px"><div class="gauge-fill" id="bar" style="width:0%"></div></div>
     </div>
     <div class="card">
-      <h2>📊 실시간 수치</h2>
+      <h2>실시간 수치</h2>
       <div class="telem">
         <div class="t"><span class="tl">추론 시간</span><span class="tv acc" id="tInfer">— <small>ms</small></span></div>
         <div class="t"><span class="tl">FPS</span><span class="tv" id="tFps">—</span></div>
@@ -70,7 +70,7 @@
     </div>
     <div class="card ctrl">
       <p style="font-size:12.5px;color:var(--ink-2);line-height:1.65;margin:0 0 12px">얼굴의 <b>위치</b>만 찾는 ‘검출’이에요. 누구인지 알아내는 ‘인식’과는 달라서 개인정보에 안전해요.</p>
-      <button class="submitbtn" id="submitBtn">📤 미션 제출</button>
+      <button class="submitbtn" id="submitBtn"><i data-ic="submit"></i> 미션 제출</button>
       <button class="stopbtn" id="stop">⏹ 카메라 끄기</button>
     </div>
   </aside>
@@ -80,23 +80,24 @@
   <div class="codex-card">
     <button class="codex-x" id="codexX" aria-label="닫기">✕</button>
     <div class="codex-head">
-      <span class="codex-ic">🙂</span>
+      <span class="codex-ic"><i data-ic="face"></i></span>
       <div><div class="codex-name">얼굴 검출</div><div class="codex-sub">BlazeFace · 영상처리 알고리즘</div></div>
     </div>
     <div class="codex-grid">
       <div class="codex-sec">
-        <div class="codex-h">📊 학습 정보</div>
+        <div class="codex-h">학습 정보</div>
         <p>대규모 얼굴 데이터로 미리 학습된 모델을 그대로 사용해요. 목표는 <b>‘검출’(어디 있나)</b>과 <b>‘인식’(누구인가)</b>의 차이를 이해하는 거예요. 이 스테이지는 위치만 찾고 신원은 알지 못해요.</p>
       </div>
       <div class="codex-sec">
-        <div class="codex-h">⚙️ 알고리즘 정보</div>
+        <div class="codex-h">알고리즘 정보</div>
         <p>BlazeFace가 화면을 아주 빠르게 훑어 얼굴이 있을 법한 위치에 상자를 칩니다. 누구인지까지는 판단하지 않고 <b>‘위치’</b>만 찾아요. 그래서 가볍고 실시간으로 동작해요.</p>
       </div>
     </div>
-    <div class="codex-use">💡 이런 곳에 쓰여요 · 카메라 얼굴 초점 · 인원 수 세기 · 출입 감지</div>
+    <div class="codex-use">이런 곳에 쓰여요 · 카메라 얼굴 초점 · 인원 수 세기 · 출입 감지</div>
   </div>
 </div>
 
+<script src="/stages/icons.js"></script>
 <script src="/stages/session.js"></script>
 <script src="/stages/cert.js"></script>
 <script src="/stages/board.js"></script>

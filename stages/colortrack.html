@@ -24,12 +24,12 @@
 <header class="hud">
   <div class="hud-l">
     <a class="back" href="/explore.html">← 스테이지</a>
-    <div class="title"><h1>🎨 색상 추적</h1><span class="tag">RGB 임계값 · 알고리즘</span></div>
+    <div class="title"><h1><i data-ic="color"></i>색상 추적</h1><span class="tag">RGB 임계값 · 알고리즘</span></div>
   </div>
   <div class="hud-r">
-    <button class="back" data-board title="제출 게시판">📋 게시판</button>
-    <a class="back" href="/platform/index.html" title="플랫폼 홈">🏠</a>
-    <button class="back codex-open" id="codexBtn">📖 개념</button>
+    <button class="back" data-board title="제출 게시판"><i data-ic="board"></i> 게시판</button>
+    <a class="back" href="/platform/index.html" title="플랫폼 홈"><i data-ic="home"></i></a>
+    <button class="back codex-open" id="codexBtn"><i data-ic="book"></i> 개념</button>
     <span class="chip idle" id="status">● IDLE</span>
     <span class="chip" id="fps">FPS <b>—</b></span>
   </div>
@@ -42,7 +42,7 @@
     <canvas id="overlay"></canvas>
     <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
     <div class="cover" id="cover">
-      <div class="big">🎨</div>
+      <div class="big"><i data-ic="color"></i></div>
       <p>고른 색을 가진 물체를 들고 움직여 보세요. 그 색 영역만 남기고 배경은 어둡게 가려요!</p>
       <button class="startbtn" id="start">▶ 카메라 켜기 · 추적 시작</button>
       <p style="font-size:11.5px;color:var(--ink-3)">카메라는 이 기기에서만 처리되고 어디에도 전송되지 않아요.</p>
@@ -60,7 +60,7 @@
       <div class="gauge" style="margin-top:12px"><div class="gauge-fill" id="bar" style="width:0%"></div></div>
     </div>
     <div class="card">
-      <h2>📊 실시간 수치</h2>
+      <h2>실시간 수치</h2>
       <div class="telem">
         <div class="t"><span class="tl">처리 시간</span><span class="tv acc" id="tInfer">— <small>ms</small></span></div>
         <div class="t"><span class="tl">FPS</span><span class="tv" id="tFps">—</span></div>
@@ -73,7 +73,7 @@
     <div class="card ctrl">
       <label>허용 범위 <span id="tolv">140</span></label>
       <input type="range" id="tol" min="40" max="300" value="140" />
-      <button class="submitbtn" id="submitBtn">📤 미션 제출</button>
+      <button class="submitbtn" id="submitBtn"><i data-ic="submit"></i> 미션 제출</button>
       <button class="stopbtn" id="stop">⏹ 카메라 끄기</button>
     </div>
   </aside>
@@ -83,23 +83,24 @@
   <div class="codex-card">
     <button class="codex-x" id="codexX" aria-label="닫기">✕</button>
     <div class="codex-head">
-      <span class="codex-ic">🎨</span>
+      <span class="codex-ic"><i data-ic="color"></i></span>
       <div><div class="codex-name">색상 추적</div><div class="codex-sub">RGB 임계값 · 영상처리 알고리즘</div></div>
     </div>
     <div class="codex-grid">
       <div class="codex-sec">
-        <div class="codex-h">📊 학습 정보</div>
+        <div class="codex-h">학습 정보</div>
         <p>학습이 필요 없어요. 목표는 <b>‘특정 색 찾기’</b>의 원리를 체험하는 거예요. 색이 또렷한 물체를 들고 움직여 보세요. 신호등·과일 선별 같은 곳에 쓰이는 기초 원리랍니다.</p>
       </div>
       <div class="codex-sec">
-        <div class="codex-h">⚙️ 알고리즘 정보</div>
+        <div class="codex-h">알고리즘 정보</div>
         <p>각 픽셀의 색이 내가 고른 색과 얼마나 <b>가까운지(거리)</b>를 계산해, 가까우면 남기고 멀면 어둡게 가려요. <b>‘허용 범위’</b>를 키우면 더 넓게, 줄이면 더 좁게 잡혀요.</p>
       </div>
     </div>
-    <div class="codex-use">💡 이런 곳에 쓰여요 · 과일·불량품 선별 · 크로마키 합성 · 색 기반 로봇 추적</div>
+    <div class="codex-use">이런 곳에 쓰여요 · 과일·불량품 선별 · 크로마키 합성 · 색 기반 로봇 추적</div>
   </div>
 </div>
 
+<script src="/stages/icons.js"></script>
 <script src="/stages/session.js"></script>
 <script src="/stages/cert.js"></script>
 <script src="/stages/board.js"></script>

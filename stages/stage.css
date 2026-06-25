@@ -148,6 +148,21 @@ button { font-family:inherit; cursor:pointer; } a { color:inherit; text-decorati
 .codex-sec p { margin:0; font-size:14.5px; line-height:1.75; color:#39414f; }
 .codex-sec p b { color:#14161f; font-weight:700; }
 .codex-use { font-size:13px; font-weight:600; color:#5b6377; padding:4px 2px 0; }
+
+/* ── 라인 아이콘 (이모지 대체) ── */
+[data-ic]{ display:inline-flex; align-items:center; justify-content:center; line-height:0; }
+[data-ic] svg{ width:1em; height:1em; display:block; }
+.title h1{ display:inline-flex; align-items:center; gap:7px; }
+.title h1 [data-ic]{ font-size:20px; color:var(--acc-2); }
+.back [data-ic], .codex-open [data-ic]{ font-size:15px; }
+.submitbtn [data-ic]{ font-size:16px; }
+.cover .big{ color:var(--acc-2); }
+.cover .big [data-ic]{ font-size:58px; }
+.codex-ic{ color:#2453c4; }
+.codex-ic [data-ic]{ font-size:40px; }
+/* 도감 섹션 헤더 — 이모지 대신 액센트 바 */
+.codex-h{ display:flex; align-items:center; gap:9px; }
+.codex-h::before{ content:''; width:3px; height:15px; border-radius:2px; background:#2453c4; flex:none; }
 @media (max-width:620px){ .codex-grid{ grid-template-columns:1fr; } }
 
 @media (max-width:860px){
