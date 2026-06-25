@@ -79,7 +79,7 @@
 <main class="wrap">
   <div class="head">
     <div>
-      <h1>👩‍🏫 교사 확인함</h1>
+      <h1>교사 확인함</h1>
       <p>학생들이 제출한 미션을 확인하고 평가해요</p>
     </div>
     <div class="stats">
@@ -89,14 +89,14 @@
     </div>
   </div>
 
-  <div class="note-banner">ℹ️ 1차 데모 버전이라 제출물은 <b>이 브라우저(localStorage)</b>에 저장돼요. 다른 기기 제출물은 <b>‘📥 파일 가져오기’</b>로 불러오세요. (실시간 교실 연동은 백엔드 연결 시 지원)</div>
+  <div class="note-banner">ℹ️ 1차 데모 버전이라 제출물은 <b>이 브라우저(localStorage)</b>에 저장돼요. 다른 기기 제출물은 <b>‘파일 가져오기’</b>로 불러오세요. (실시간 교실 연동은 백엔드 연결 시 지원)</div>
 
   <div class="toolbar">
-    <button class="hbtn" id="importBtn">📥 파일 가져오기</button>
+    <button class="hbtn" id="importBtn">파일 가져오기</button>
     <input type="file" id="fileInput" accept="application/json" multiple style="display:none" />
-    <button class="hbtn" id="exportBtn">📤 전체 내보내기</button>
-    <button class="hbtn" id="clearBtn">🗑 전체 비우기</button>
-    <button class="hbtn" id="reloadBtn">↻ 새로고침</button>
+    <button class="hbtn" id="exportBtn">전체 내보내기</button>
+    <button class="hbtn" id="clearBtn">전체 비우기</button>
+    <button class="hbtn" id="reloadBtn">새로고침</button>
   </div>
 
   <div class="grid" id="grid"></div>
@@ -115,7 +115,7 @@
     document.getElementById('stWait').textContent=list.filter(s=>s.status!=='평가완료').length;
     document.getElementById('stDone').textContent=list.filter(s=>s.status==='평가완료').length;
     const grid=document.getElementById('grid');
-    if(!list.length){ grid.innerHTML='<div class="empty">아직 제출물이 없어요.<br>학생이 스테이지에서 <b>📤 미션 제출</b>을 하거나,<br>위 <b>📥 파일 가져오기</b>로 제출 파일을 불러오세요.</div>'; return; }
+    if(!list.length){ grid.innerHTML='<div class="empty">아직 제출물이 없어요.<br>학생이 스테이지에서 <b>📤 미션 제출</b>을 하거나,<br>위 <b>파일 가져오기</b>로 제출 파일을 불러오세요.</div>'; return; }
     grid.innerHTML=list.map(s=>`
       <div class="sub${s.status==='평가완료'?' done':''}" data-id="${s.id}">
         ${s.img?`<img class="sub-img" src="${s.img}" alt="제출 스냅샷" />`:'<div class="sub-no-img">스냅샷 없음</div>'}

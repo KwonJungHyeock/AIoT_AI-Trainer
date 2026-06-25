@@ -59,7 +59,7 @@
     const name = (mode && mode.mode==='class' && mode.student) ? mode.student : (localStorage.getItem(NAMEKEY)||'');
     card().innerHTML=`
       <button class="sub-x" id="subX">✕</button>
-      <h2 class="sub-h">📤 미션 제출</h2>
+      <h2 class="sub-h">미션 제출</h2>
       <p class="sub-sub">${esc(cfg.label)} 결과를 <b>${esc(mode.name||'수업')}</b> 게시판에 제출해요 <span style="font-family:var(--mono,monospace);color:#6aa6ff">[${esc(mode.code||'')}]</span></p>
       ${capture?`<img class="sub-prev" src="${capture}" alt="제출 스냅샷" />`:''}
       <div class="sub-chips">${(summary||[]).map(s=>`<span>${esc(s)}</span>`).join('')}</div>
@@ -81,13 +81,13 @@
   function renderFree(capture, summary){
     card().innerHTML=`
       <button class="sub-x" id="subX">✕</button>
-      <h2 class="sub-h">🖼 결과 저장</h2>
+      <h2 class="sub-h">결과 저장</h2>
       <p class="sub-sub">체험 모드예요. 결과 화면을 이미지로 저장할 수 있어요. (수업 게시판 제출은 ‘수업 참여’로 입장하면 가능)</p>
       ${capture?`<img class="sub-prev" src="${capture}" alt="결과 스냅샷" />`:'<p class="sub-sub" style="color:#ff8472">먼저 카메라를 켜고 결과를 만들어 주세요.</p>'}
       <div class="sub-chips">${(summary||[]).map(s=>`<span>${esc(s)}</span>`).join('')}</div>
       <div class="sub-row">
         <button class="sub-btn sub-ghost" id="subCancel">닫기</button>
-        <button class="sub-btn sub-go" id="subSave">🖼 이미지 저장</button>
+        <button class="sub-btn sub-go" id="subSave">이미지 저장</button>
       </div>`;
     card().querySelector('#subX').onclick=close;
     card().querySelector('#subCancel').onclick=close;
@@ -118,8 +118,8 @@
         <h3>제출 완료!</h3>
         <p>게시판에 올라갔어요 (현재 ${cnt}건). 선생님께 파일로도 전달할 수 있어요.</p>
         <div class="sub-row">
-          ${window.Cert?'<button class="sub-btn sub-ghost" id="subPdf">📄 PDF로 저장</button>':''}
-          ${window.Board?'<button class="sub-btn sub-ghost" id="subBoard">📋 게시판</button>':''}
+          ${window.Cert?'<button class="sub-btn sub-ghost" id="subPdf">PDF로 저장</button>':''}
+          ${window.Board?'<button class="sub-btn sub-ghost" id="subBoard">게시판</button>':''}
           <button class="sub-btn sub-go" id="subClose">확인</button>
         </div>
       </div>`;

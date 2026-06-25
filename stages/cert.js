@@ -50,7 +50,7 @@
   .pp{background:#f0473a;color:#fff;} .pc{background:#eef0f5;color:#3b4254;}
 </style></head><body>
 <div class="no-print">
-  <button class="pp" onclick="window.print()">🖨 PDF로 저장 / 인쇄</button>
+  <button class="pp" onclick="window.print()">PDF로 저장 / 인쇄</button>
   <button class="pc" onclick="window.close()">닫기</button>
 </div>
 <div class="cert">
@@ -74,11 +74,11 @@
 
   ${rec.img?`<div class="snap"><img src="${rec.img}" alt="제출 스냅샷" /></div>`:''}
 
-  ${(rec.summary&&rec.summary.length)?`<div class="sec"><h2>📊 결과 요약</h2><div class="chips">${rec.summary.map(s=>`<span>${esc(s)}</span>`).join('')}</div></div>`:''}
+  ${(rec.summary&&rec.summary.length)?`<div class="sec"><h2>결과 요약</h2><div class="chips">${rec.summary.map(s=>`<span>${esc(s)}</span>`).join('')}</div></div>`:''}
 
-  <div class="sec"><h2>✍️ 학생 소감</h2><div class="note">${rec.note?esc(rec.note):'(작성한 소감이 없습니다)'}</div></div>
+  <div class="sec"><h2>학생 소감</h2><div class="note">${rec.note?esc(rec.note):'(작성한 소감이 없습니다)'}</div></div>
 
-  ${evalDone?`<div class="sec"><h2>👩‍🏫 교사 평가</h2><div class="eval"><div class="res">${resultTxt}</div><div class="fb">${rec.feedback?esc(rec.feedback):'(피드백 없음)'}</div></div></div>`:''}
+  ${evalDone?`<div class="sec"><h2>교사 평가</h2><div class="eval"><div class="res">${resultTxt}</div><div class="fb">${rec.feedback?esc(rec.feedback):'(피드백 없음)'}</div></div></div>`:''}
 
   <div class="foot"><span>© Eduino AI · 브라우저로 직접 배우는 AI 학습 플랫폼</span><span>발급: ${fmt(new Date().toISOString())}</span></div>
 </div>
@@ -115,7 +115,7 @@
   .no-print{position:fixed;top:14px;right:14px;} .no-print button{font-family:'Pretendard',sans-serif;font-size:13px;font-weight:700;padding:9px 16px;border-radius:9px;border:0;cursor:pointer;background:#f0473a;color:#fff;}
   @media print{.no-print{display:none;}}
 </style></head><body>
-<div class="no-print"><button onclick="window.print()">🖨 PDF로 저장 / 인쇄</button></div>
+<div class="no-print"><button onclick="window.print()">PDF로 저장 / 인쇄</button></div>
 <div class="top"><div class="brand"><img src="${origin}/platform/img/logo-mark.webp" alt="" /><div><div class="nm">Eduino <span>AI</span></div><div class="sub">VISION AI · 수업 제출 명단</div></div></div>
   <div style="text-align:right;font-size:11px;color:#9aa1b3">발급 ${fmt(new Date().toISOString())}</div></div>
 <h1>${esc(cls.name)||'수업'} 제출 명단</h1>

@@ -62,16 +62,16 @@
   const ov=document.createElement('div'); ov.className='bd-ov';
   ov.innerHTML=`<div class="bd-wrap">
     <div class="bd-bar">
-      <div class="bd-title"><h2 id="bdTitle">📋 제출 게시판</h2>
+      <div class="bd-title"><h2 id="bdTitle">제출 게시판</h2>
         <div class="bd-stats"><span class="bd-stat">전체 <b id="bdTotal">0</b></span><span class="bd-stat">미평가 <b id="bdWait">0</b></span></div>
       </div>
       <div class="bd-tools">
-        <button class="bd-b" id="bdRoster" style="display:none">🖨 명단 PDF</button>
+        <button class="bd-b" id="bdRoster" style="display:none">명단 PDF</button>
         <button class="bd-b" id="bdAll" style="display:none">전체 보기</button>
-        <button class="bd-b" id="bdImport">📥 가져오기</button>
+        <button class="bd-b" id="bdImport">가져오기</button>
         <input type="file" id="bdFile" accept="application/json" multiple style="display:none" />
-        <button class="bd-b" id="bdExport">📤 내보내기</button>
-        <button class="bd-b" id="bdClear">🗑 비우기</button>
+        <button class="bd-b" id="bdExport">내보내기</button>
+        <button class="bd-b" id="bdClear">비우기</button>
         <button class="bd-close" id="bdClose">✕</button>
       </div>
     </div>
@@ -86,14 +86,14 @@
     const list = filterCode ? all.filter(s=>s.classCode===filterCode) : all;
     const cls = (filterCode && window.Session) ? Session.getClass(filterCode) : null;
     ov.querySelector('#bdTitle').innerHTML = filterCode
-      ? '📋 '+esc(cls?cls.name:'수업')+' <span style="font-family:\'JetBrains Mono\',monospace;color:#6aa6ff;font-size:14px">['+esc(filterCode)+']</span>'
-      : '📋 제출 게시판';
+      ? ''+esc(cls?cls.name:'수업')+' <span style="font-family:\'JetBrains Mono\',monospace;color:#6aa6ff;font-size:14px">['+esc(filterCode)+']</span>'
+      : '제출 게시판';
     ov.querySelector('#bdRoster').style.display = filterCode ? '' : 'none';
     ov.querySelector('#bdAll').style.display = filterCode ? '' : 'none';
     ov.querySelector('#bdTotal').textContent=list.length;
     ov.querySelector('#bdWait').textContent=list.filter(s=>s.status!=='평가완료').length;
     const grid=ov.querySelector('#bdGrid');
-    if(!list.length){ grid.innerHTML='<div class="bd-empty">아직 제출물이 없어요.<br>스테이지에서 <b>📤 미션 제출</b>을 하면 여기에 올라와요.</div>'; return; }
+    if(!list.length){ grid.innerHTML='<div class="bd-empty">아직 제출물이 없어요.<br>스테이지에서 <b>미션 제출</b>을 하면 여기에 올라와요.</div>'; return; }
     grid.innerHTML=list.map(s=>`
       <div class="bd-card${s.status==='평가완료'?' done':''}" data-id="${s.id}">
         ${s.img?`<img class="bd-img" src="${s.img}" alt="제출 스냅샷" />`:'<div class="bd-noimg">스냅샷 없음</div>'}
@@ -111,7 +111,7 @@
           <input class="bd-fb" placeholder="한 줄 피드백…" value="${esc(s.feedback)}" />
           <div class="bd-erow2"><button class="bd-del">삭제</button>
             <div style="display:flex;gap:7px">
-              <button class="bd-b bd-pdf" style="padding:8px 11px">🖨 PDF</button>
+              <button class="bd-b bd-pdf" style="padding:8px 11px">PDF</button>
               <button class="bd-save">평가 저장</button>
             </div>
           </div>
