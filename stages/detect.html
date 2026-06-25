@@ -161,13 +161,15 @@
         const inferMs=performance.now()-t0;
         detect.lastPreds = preds; detect.frames=(detect.frames||0)+1;
         const ctx=els.overlay.getContext('2d'); ctx.clearRect(0,0,vw,vh);
-        ctx.font='bold 16px JetBrains Mono';
+        ctx.font='600 16px JetBrains Mono';
+        const rr=(x,y,w,h,r)=>{ if(ctx.roundRect){ctx.beginPath();ctx.roundRect(x,y,w,h,r);} else {ctx.beginPath();ctx.rect(x,y,w,h);} };
         preds.forEach(p=>{
           const [x,y,w,h]=p.bbox, mx=vw-x-w; // 비디오가 좌우 반전 표시되므로 박스 X만 반전
-          ctx.strokeStyle='#00ff88'; ctx.lineWidth=3; ctx.strokeRect(mx,y,w,h);
+          ctx.strokeStyle='rgba(106,166,255,.95)'; ctx.lineWidth=2.5; ctx.shadowColor='rgba(59,134,255,.6)'; ctx.shadowBlur=10;
+          rr(mx, y, w, h, 10); ctx.stroke(); ctx.shadowBlur=0;
           const label=`${p.class} ${Math.round(p.score*100)}%`, tw=ctx.measureText(label).width;
-          ctx.fillStyle='#00ff88'; ctx.fillRect(mx, y-20, tw+10, 20);
-          ctx.fillStyle='#000'; ctx.fillText(label, mx+5, y-5);
+          ctx.fillStyle='rgba(10,12,20,.82)'; rr(mx, y-24, tw+16, 21, 6); ctx.fill();
+          ctx.fillStyle='#9cc1ff'; ctx.fillText(label, mx+8, y-8);
         });
         els.count.textContent=preds.length;
         els.list.innerHTML = preds.length ? preds.slice(0,8).map(p=>{
