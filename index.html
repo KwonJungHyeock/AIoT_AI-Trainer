@@ -34,35 +34,36 @@
 
 <style>
   :root {
-    /* ── 라이트 베이스 (플랫폼과 동일 톤) ── */
-    --bg:           #f6f7fb;
-    --bg-grid:      rgba(20, 22, 31, 0.028);
-    --panel:        #ffffff;
-    --panel-soft:   #f3f5fa;
-    --border:       #e9ebf2;
-    --border-strong:#d7dbe7;
+    /* ── 다크 콘솔 베이스 (체험 트랙과 동일 톤) ── */
+    --bg:           #0a0b12;
+    --bg-2:         #120f14;
+    --bg-grid:      rgba(255,255,255,.04);
+    --panel:        rgba(255,255,255,.045);
+    --panel-soft:   rgba(255,255,255,.07);
+    --border:       rgba(255,255,255,.10);
+    --border-strong:rgba(255,255,255,.18);
 
-    /* 텍스트 위계 (라이트) */
-    --ink:          #14161f;
-    --ink-2:        #3b4254;
-    --ink-3:        #6c7488;
-    --ink-4:        #9aa1b3;
+    /* 텍스트 위계 (다크) */
+    --ink:          #f2f4fb;
+    --ink-2:        #cdb6bd;
+    --ink-3:        #9c7d84;
+    --ink-4:        #6b7390;
 
     /* 액센트 */
-    --blue:         #2f6df6;     /* 데이터 시각화 */
-    --blue-soft:    rgba(47,109,246,.12);
-    --cyan:         #0fb5d6;     /* 라이브/실행 표시 */
-    --green:        #11a06f;     /* 학습완료 */
-    --amber:        #d97a16;     /* 추론 활성 */
-    --rose:         #e11d48;     /* 위험/삭제 */
+    --blue:         #6aa6ff;     /* 데이터 시각화 */
+    --blue-soft:    rgba(106,166,255,.16);
+    --cyan:         #42d6e0;     /* 라이브/실행 표시 */
+    --green:        #42e29b;     /* 학습완료 */
+    --amber:        #ffd36a;     /* 추론 활성 */
+    --rose:         #ff7a90;     /* 위험/삭제 */
 
-    /* 메인 포인트 — 에듀이노 레드 */
-    --accent:       #f0473a;
-    --accent-soft:  rgba(240,71,58,.10);
-    --accent-ink:   #d4382c;
+    /* 메인 포인트 — 에듀이노 레드 (제작 트랙) */
+    --accent:       #ff5747;
+    --accent-soft:  rgba(255,87,71,.16);
+    --accent-ink:   #ff8472;
 
-    --shadow-sm:    0 1px 2px rgba(20,22,31,.06);
-    --shadow:       0 1px 3px rgba(20,22,31,.06), 0 10px 28px rgba(20,22,31,.07);
+    --shadow-sm:    inset 0 1px 0 rgba(255,255,255,.05);
+    --shadow:       inset 0 1px 0 rgba(255,255,255,.05), 0 12px 30px rgba(0,0,0,.4);
 
     --radius:       12px;
     --radius-sm:    8px;
@@ -79,9 +80,11 @@
     font-family: var(--sans);
     color: var(--ink);
     background:
+      radial-gradient(60% 50% at 50% 0%, rgba(255,87,71,.10), transparent 60%),
       linear-gradient(var(--bg-grid) 1px, transparent 1px) 0 0 / 24px 24px,
       linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px) 0 0 / 24px 24px,
-      var(--bg);
+      linear-gradient(180deg, var(--bg-2), var(--bg));
+    background-attachment: fixed;
     min-height: 100vh;
     font-size: 16px;
     line-height: 1.6;
@@ -93,7 +96,7 @@
   /* ───────────────────────────── 헤더 ────────────────────────────── */
   .topbar {
     position: sticky; top: 0; z-index: 50;
-    background: rgba(255,255,255,.86);
+    background: rgba(10,11,18,.82);
     backdrop-filter: saturate(180%) blur(10px);
     border-bottom: 1px solid var(--border);
     box-shadow: 0 1px 0 rgba(20,22,31,.02), 0 6px 20px rgba(20,22,31,.04);
@@ -345,9 +348,9 @@
   .fi-desc { margin: 8px 0 0; font-size: 14.5px; color: var(--ink-3); line-height: 1.5; }
   .fi-theory { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
   .fi-tcard { position: relative; border-radius: 12px; padding: 14px 16px; border: 1px solid var(--border);
-    box-shadow: 0 1px 2px rgba(20,22,31,.04), inset 0 1px 0 rgba(255,255,255,.7); }
-  .fi-theory > .fi-tcard:nth-child(1) { background: linear-gradient(158deg, #fbfdff 0%, #eef3fb 100%); }
-  .fi-theory > .fi-tcard:nth-child(2) { background: linear-gradient(158deg, #fffbfa 0%, #fdf1ed 100%); }
+    box-shadow: var(--shadow-sm); }
+  .fi-theory > .fi-tcard:nth-child(1) { background: linear-gradient(158deg, rgba(106,166,255,.12) 0%, rgba(255,255,255,.02) 100%); }
+  .fi-theory > .fi-tcard:nth-child(2) { background: linear-gradient(158deg, rgba(255,87,71,.12) 0%, rgba(255,255,255,.02) 100%); }
   .fi-th { font-family: var(--mono); font-size: 11.5px; letter-spacing: .05em; color: var(--accent-ink); margin-bottom: 7px; font-weight: 700; }
   .fi-tcard p { margin: 0; font-size: 14px; color: var(--ink-2); line-height: 1.6; }
   @media (max-width: 720px) { .fi-theory { grid-template-columns: 1fr; } }
@@ -482,16 +485,16 @@
   }
   /* 좌/우 영역에 은은한 배경 톤을 줘서 영역을 구분 (좌=쿨, 우=웜) */
   .sub-panel.active > aside.card:first-child {
-    background: linear-gradient(180deg, #fafbff 0%, #f4f7fc 100%);
+    background: linear-gradient(180deg, rgba(106,166,255,.07) 0%, rgba(255,255,255,.03) 100%);
   }
   .sub-panel.active > aside.card:last-child {
-    background: linear-gradient(180deg, #fffaf9 0%, #fdf4f2 100%);
+    background: linear-gradient(180deg, rgba(255,87,71,.07) 0%, rgba(255,255,255,.03) 100%);
   }
   .card-h {
     padding: 13px 16px 11px;
     display: flex; align-items: center; justify-content: space-between;
     border-bottom: 1px solid var(--border);
-    background: linear-gradient(180deg, #fafbfe, #f4f6fb);
+    background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
     border-radius: var(--radius) var(--radius) 0 0;
   }
   .card-h .label {
