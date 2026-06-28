@@ -18,7 +18,7 @@
 <title>제출 확인서 · ${esc(rec.name)||'학생'}</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 <style>
-  @page { size:A4; margin:16mm; }
+  @page { size:A4; margin:16mm 18mm; }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'Pretendard',system-ui,sans-serif;color:#14161f;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .cert{max-width:720px;margin:0 auto;padding:8px;}
@@ -96,7 +96,8 @@
     return `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8" /><title>제출 명단 · ${esc(cls.name)||''}</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 <style>
-  @page{size:A4;margin:14mm;} *{box-sizing:border-box;margin:0;padding:0;}
+  @page{size:A4;margin:15mm 18mm;} *{box-sizing:border-box;margin:0;padding:0;}
+  @media screen{ body{padding:30px 38px;} }
   body{font-family:'Pretendard',system-ui,sans-serif;color:#14161f;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .top{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #f0473a;padding-bottom:12px;margin-bottom:18px;}
   .brand{display:flex;align-items:center;gap:10px;} .brand img{height:28px;}
@@ -155,7 +156,8 @@
     return `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8" /><title>수업 종합 · ${esc(cls.name)||''}</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 <style>
-  @page{size:A4;margin:14mm;} *{box-sizing:border-box;margin:0;padding:0;}
+  @page{size:A4;margin:15mm 18mm;} *{box-sizing:border-box;margin:0;padding:0;}
+  @media screen{ body{padding:30px 38px;} }
   body{font-family:'Pretendard',system-ui,sans-serif;color:#14161f;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .top{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #f0473a;padding-bottom:12px;margin-bottom:16px;}
   .brand{display:flex;align-items:center;gap:10px;} .brand img{height:28px;}
