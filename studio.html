@@ -475,9 +475,15 @@
     if (soundOn) beep(700,0.08,'triangle',0.05);
   });
 
-  /* 제출 게시판 — 페이지 이동 없이 오버레이로 */
+  /* 제출 게시판 — 페이지 이동 없이 오버레이로 (체험 모드는 숨김) */
   const bb = document.getElementById('boardBtn');
-  if (bb) bb.addEventListener('click', ()=>{ if(window.Board) Board.open(); });
+  if (bb){
+    const bm=(window.Session&&Session.getMode&&Session.getMode())||{mode:'free'};
+    if(bm.mode==='free'){ bb.style.display='none'; }
+    else if(bm.mode==='class'){ bb.title='내 제출 현황'; if(bb.lastChild&&bb.lastChild.nodeType===3) bb.lastChild.textContent=' 내 현황'; }
+    else if(bm.mode==='teach'){ bb.title='제출 게시판 (평가)'; }
+    bb.addEventListener('click', ()=>{ if(window.Board) Board.open(); });
+  }
 
   /* 현재 진입 모드 배너 */
   (function(){ const m=(window.Session&&Session.getMode&&Session.getMode())||{mode:'free'}; const chip=document.getElementById('modeChip');

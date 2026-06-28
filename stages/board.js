@@ -21,20 +21,25 @@
   .bd-title h2{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em;}
   .bd-stats{display:flex;gap:8px;}
   .bd-stat{font-family:'JetBrains Mono',monospace;font-size:12px;color:#aeb6cf;background:rgba(255,255,255,.05);
-    border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:6px 11px;}
+    border:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.06);border-radius:9px;padding:6px 11px;}
   .bd-stat b{color:#6aa6ff;font-size:14px;}
   .bd-tools{display:flex;gap:8px;flex-wrap:wrap;}
-  .bd-b{font-size:12.5px;font-weight:700;color:#aeb6cf;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);
-    border-radius:10px;padding:8px 12px;cursor:pointer;transition:.15s;}
-  .bd-b:hover{color:#fff;border-color:#6aa6ff;}
-  .bd-close{font-size:15px;color:#fff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);
+  .bd-back{font-size:13px;font-weight:700;color:#aeb6cf;background:rgba(255,255,255,.06);border:0;border-radius:11px;
+    padding:9px 14px;cursor:pointer;transition:.15s;box-shadow:inset 0 1px 0 rgba(255,255,255,.06);}
+  .bd-back:hover{color:#fff;background:rgba(255,255,255,.1);}
+  .bd-b{font-size:12.5px;font-weight:700;color:#aeb6cf;background:rgba(255,255,255,.05);border:0;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06);border-radius:10px;padding:8px 12px;cursor:pointer;transition:.15s;}
+  .bd-b:hover{color:#fff;box-shadow:inset 0 0 0 1px #6aa6ff;}
+  .bd-close{font-size:15px;color:#fff;background:rgba(255,255,255,.06);border:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
     width:38px;height:38px;border-radius:11px;cursor:pointer;}
   .bd-banner{background:rgba(255,180,60,.08);border:1px solid rgba(255,180,60,.22);border-radius:11px;padding:10px 14px;
     font-size:12px;color:#ffd36a;margin-bottom:16px;line-height:1.55;}
   .bd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;}
   .bd-empty{grid-column:1/-1;text-align:center;color:#737c9c;padding:64px 0;font-size:14px;line-height:1.8;}
-  .bd-card{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;}
-  .bd-card.done{border-color:rgba(66,226,155,.4);}
+  .bd-card{background:rgba(255,255,255,.045);border:0;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 10px 26px rgba(0,0,0,.32);}
+  .bd-card.done{box-shadow:inset 0 0 0 1px rgba(66,226,155,.45),0 10px 26px rgba(0,0,0,.32);}
+  .bd-card.mine{box-shadow:inset 0 0 0 1px rgba(106,166,255,.5),0 10px 26px rgba(0,0,0,.32);}
   .bd-img{width:100%;aspect-ratio:4/3;object-fit:cover;background:#05060c;}
   .bd-noimg{width:100%;aspect-ratio:4/3;display:grid;place-items:center;background:#05060c;color:#737c9c;font-size:13px;}
   .bd-bd{padding:14px 15px;display:flex;flex-direction:column;gap:8px;flex:1;}
@@ -63,14 +68,26 @@
   .bd-mh{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14.5px;font-weight:800;color:#f2f4fb;}
   .bd-mcnt{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#6aa6ff;background:rgba(59,134,255,.15);border-radius:7px;padding:3px 9px;}
   .bd-mcard p{margin:6px 0 0;font-size:12.5px;color:#aeb6cf;line-height:1.5;}
-  .bd-mempty{color:#737c9c;font-size:12.5px;padding:6px 2px;}`;
+  .bd-mempty{color:#737c9c;font-size:12.5px;padding:6px 2px;}
+  /* 학생 읽기전용 현황 */
+  .bd-status{display:flex;flex-direction:column;gap:9px;border-top:1px solid rgba(255,255,255,.08);padding:13px 15px;background:rgba(255,255,255,.02);}
+  .bd-srow{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .bd-slabel{font-size:12px;color:#8b93ad;font-weight:600;}
+  .bd-badge{font-size:12.5px;font-weight:800;border-radius:9px;padding:6px 12px;}
+  .bd-badge.pass{color:#04140c;background:#42e29b;}
+  .bd-badge.redo{color:#1a0a08;background:#ffd36a;}
+  .bd-badge.wait{color:#aeb6cf;background:rgba(255,255,255,.08);}
+  .bd-fbview{font-size:12.5px;color:#aeb6cf;line-height:1.55;background:rgba(255,255,255,.04);border-radius:9px;padding:9px 11px;}
+  .bd-fbview.em{color:#6b7390;font-style:italic;}
+  .bd-mine-tag{font-size:10px;font-weight:800;color:#6aa6ff;background:rgba(59,134,255,.16);border-radius:6px;padding:3px 7px;}`;
   const st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
 
   const ov=document.createElement('div'); ov.className='bd-ov';
   ov.innerHTML=`<div class="bd-wrap">
     <div class="bd-bar">
-      <div class="bd-title"><h2 id="bdTitle">제출 게시판</h2>
-        <div class="bd-stats"><span class="bd-stat">전체 <b id="bdTotal">0</b></span><span class="bd-stat">미평가 <b id="bdWait">0</b></span></div>
+      <div class="bd-title"><button class="bd-back" id="bdBack">← 뒤로</button>
+        <h2 id="bdTitle">제출 게시판</h2>
+        <div class="bd-stats"><span class="bd-stat">전체 <b id="bdTotal">0</b></span><span class="bd-stat" id="bdWaitWrap">미평가 <b id="bdWait">0</b></span></div>
       </div>
       <div class="bd-tools">
         <button class="bd-b" id="bdEnd" style="display:none">수업 종료 · 종합 PDF</button>
@@ -83,35 +100,89 @@
         <button class="bd-close" id="bdClose">✕</button>
       </div>
     </div>
-    <div class="bd-banner">ℹ️ 제출물은 이 브라우저에 저장돼요. 다른 기기 제출물은 <b>가져오기</b>로 모아보세요. (실시간 연동은 백엔드 단계)</div>
+    <div class="bd-banner" id="bdBanner">ℹ️ 제출물은 이 브라우저에 저장돼요. 다른 기기 제출물은 <b>가져오기</b>로 모아보세요. (실시간 연동은 백엔드 단계)</div>
     <div class="bd-missions" id="bdMissions"></div>
     <div class="bd-grid" id="bdGrid"></div>
   </div>`;
 
   function ensure(){ if(!document.body.contains(ov)) document.body.appendChild(ov); }
+  function roleNow(){ return (window.Session&&Session.getMode&&Session.getMode())||{mode:'free'}; }
+  function myName(){ try{ return (localStorage.getItem('vision_student_name')||'').trim(); }catch(e){ return ''; } }
+  const badge=(s)=> s.result==='pass'
+      ? '<span class="bd-badge pass">✓ 통과</span>'
+      : (s.result==='redo' ? '<span class="bd-badge redo">↻ 재도전</span>' : '<span class="bd-badge wait">평가 대기중</span>');
   let filterCode=null;
   function render(){
     const all=load();
-    const list = filterCode ? all.filter(s=>s.classCode===filterCode) : all;
+    const role=roleNow();
+    const isTeacher = role.mode==='teach';
+    const isStudent = role.mode==='class';
+    const mine = myName();
+    // 학생은 자기 수업 + 본인 제출만, 교사는 수업 전체
+    let list = filterCode ? all.filter(s=>s.classCode===filterCode) : all;
+    if(isStudent) list = list.filter(s=> (s.name||'').trim()===mine && mine);
     const cls = (filterCode && window.Session) ? Session.getClass(filterCode) : null;
-    ov.querySelector('#bdTitle').innerHTML = filterCode
-      ? ''+esc(cls?cls.name:'수업')+' <span style="font-family:\'JetBrains Mono\',monospace;color:#6aa6ff;font-size:14px">['+esc(filterCode)+']</span>'
-      : '제출 게시판';
-    ov.querySelector('#bdRoster').style.display = filterCode ? '' : 'none';
-    ov.querySelector('#bdAll').style.display = filterCode ? '' : 'none';
-    ov.querySelector('#bdEnd').style.display = filterCode ? '' : 'none';
+    ov.querySelector('#bdTitle').innerHTML = isStudent
+      ? '내 제출 현황'+(cls?' <span style="font-family:\'JetBrains Mono\',monospace;color:#6aa6ff;font-size:14px">'+esc(cls.name)+'</span>':'')
+      : (filterCode
+        ? ''+esc(cls?cls.name:'수업')+' <span style="font-family:\'JetBrains Mono\',monospace;color:#6aa6ff;font-size:14px">['+esc(filterCode)+']</span>'
+        : '제출 게시판');
+    // 교사 전용 도구 — 학생/체험 모드에서는 모두 숨김
+    const teacherTools = isTeacher;
+    ov.querySelector('#bdRoster').style.display = (teacherTools&&filterCode) ? '' : 'none';
+    ov.querySelector('#bdAll').style.display = (teacherTools&&filterCode) ? '' : 'none';
+    ov.querySelector('#bdEnd').style.display = (teacherTools&&filterCode) ? '' : 'none';
+    ov.querySelector('#bdImport').style.display = teacherTools ? '' : 'none';
+    ov.querySelector('#bdExport').style.display = teacherTools ? '' : 'none';
+    ov.querySelector('#bdClear').style.display = teacherTools ? '' : 'none';
+    ov.querySelector('#bdWaitWrap').style.display = isStudent ? 'none' : '';
     ov.querySelector('#bdTotal').textContent=list.length;
     ov.querySelector('#bdWait').textContent=list.filter(s=>s.status!=='평가완료').length;
-    // 미션 섹션 (교사/수업 필터 시)
+    // 배너 — 역할별 안내
+    const banner=ov.querySelector('#bdBanner');
+    if(banner) banner.innerHTML = isStudent
+      ? 'ℹ️ 여기에서는 <b>내가 제출한 결과와 평가 점수만</b> 확인할 수 있어요. 평가는 선생님이 진행해요.'
+      : (isTeacher
+        ? 'ℹ️ 선생님 화면이에요. 제출물을 평가(통과·재도전)하고 피드백을 남길 수 있어요. 다른 기기 제출물은 <b>가져오기</b>로 모아보세요.'
+        : 'ℹ️ 제출물은 이 브라우저에 저장돼요. 다른 기기 제출물은 <b>가져오기</b>로 모아보세요. (실시간 연동은 백엔드 단계)');
+    // 미션 섹션 (교사만)
     const mEl=ov.querySelector('#bdMissions');
     const missions=(filterCode&&window.Session)?(Session.missionsFor(filterCode)||[]):[];
-    if(filterCode){ mEl.style.display=''; mEl.innerHTML='<div class="bd-mtitle">클래스 미션 '+missions.length+'개</div>'+
+    if(isTeacher && filterCode){ mEl.style.display=''; mEl.innerHTML='<div class="bd-mtitle">클래스 미션 '+missions.length+'개</div>'+
       (missions.length? missions.map(mi=>{ const cnt=all.filter(s=>s.missionId===mi.id).length;
         return `<div class="bd-mcard"><div class="bd-mh"><span>${esc(mi.title)}</span><span class="bd-mcnt">${cnt} 제출</span></div>${mi.content?`<p>${esc(mi.content)}</p>`:''}</div>`; }).join('')
         : '<div class="bd-mempty">아직 만든 미션이 없어요. 스테이지에서 ‘클래스 미션 생성’으로 추가하세요.</div>'); }
     else { mEl.style.display='none'; mEl.innerHTML=''; }
     const grid=ov.querySelector('#bdGrid');
-    if(!list.length){ grid.innerHTML='<div class="bd-empty">아직 제출물이 없어요.<br>스테이지에서 <b>미션 제출</b>을 하면 여기에 올라와요.</div>'; return; }
+    if(!list.length){ grid.innerHTML = isStudent
+        ? '<div class="bd-empty">아직 제출한 결과가 없어요.<br>스테이지에서 <b>미션 제출</b>을 하면 여기에서 현황과 점수를 볼 수 있어요.<br><span style="font-size:12px">(같은 이름으로 제출해야 내 현황으로 모여요)</span></div>'
+        : '<div class="bd-empty">아직 제출물이 없어요.<br>스테이지에서 <b>미션 제출</b>을 하면 여기에 올라와요.</div>';
+      return; }
+
+    if(isStudent){
+      // ── 학생: 읽기 전용 현황 + 확인서 저장 ──
+      grid.innerHTML=list.map(s=>`
+        <div class="bd-card mine${s.status==='평가완료'?' done':''}" data-id="${s.id}">
+          ${s.img?`<img class="bd-img" src="${s.img}" alt="제출 스냅샷" />`:'<div class="bd-noimg">스냅샷 없음</div>'}
+          <div class="bd-bd">
+            <div class="bd-top"><span class="bd-name">${esc(s.missionTitle||s.label)||'제출'}</span><span class="bd-feat">${esc(s.label)}</span></div>
+            <div class="bd-meta">${esc(s.name)||'이름없음'} · ${fmt(s.time)}</div>
+            <div class="bd-chips">${(s.summary||[]).map(c=>`<span>${esc(c)}</span>`).join('')}</div>
+          </div>
+          <div class="bd-status">
+            <div class="bd-srow"><span class="bd-slabel">평가 결과</span>${badge(s)}</div>
+            <div class="bd-srow"><span class="bd-slabel">선생님 피드백</span></div>
+            <div class="bd-fbview${s.feedback?'':' em'}">${s.feedback?esc(s.feedback):'아직 피드백이 없어요'}</div>
+            <button class="bd-save bd-pdf" style="width:100%">내 확인서 저장 (PDF)</button>
+          </div>
+        </div>`).join('');
+      grid.querySelectorAll('.bd-card').forEach(c=>{ const id=c.dataset.id;
+        const pdf=c.querySelector('.bd-pdf'); if(pdf) pdf.addEventListener('click',()=>{ const r=load().find(x=>x.id===id); if(r&&window.Cert) Cert.print(r); });
+      });
+      return;
+    }
+
+    // ── 교사: 평가 가능 ──
     grid.innerHTML=list.map(s=>`
       <div class="bd-card${s.status==='평가완료'?' done':''}" data-id="${s.id}">
         ${s.img?`<img class="bd-img" src="${s.img}" alt="제출 스냅샷" />`:'<div class="bd-noimg">스냅샷 없음</div>'}
@@ -147,6 +218,7 @@
   }
 
   ov.querySelector('#bdClose').addEventListener('click',()=>ov.classList.remove('on'));
+  ov.querySelector('#bdBack').addEventListener('click',()=>ov.classList.remove('on'));
   ov.querySelector('#bdImport').addEventListener('click',()=>ov.querySelector('#bdFile').click());
   ov.querySelector('#bdFile').addEventListener('change', async (e)=>{
     const files=[...e.target.files]; const l=load(); let n=0;

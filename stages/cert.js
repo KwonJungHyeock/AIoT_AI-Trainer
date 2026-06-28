@@ -133,9 +133,16 @@
 </body></html>`;
   }
 
+  const fmtDate=(iso)=>{ try{ const d=new Date(iso); return `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}.`; }catch(e){ return '-'; } };
+
   function summaryHtml(cls, missions, subs){
     const origin=location.origin;
     const pass=subs.filter(s=>s.result==='pass').length, redo=subs.filter(s=>s.result==='redo').length, wait=subs.filter(s=>s.status!=='평가완료').length;
+    const students=new Set(subs.map(s=>(s.name||'').trim()).filter(Boolean)).size;
+    const cap=+cls.capacity||0;
+    const capTxt = cap ? `${students} / ${cap}명` : `${students}명`;
+    const evaluated = subs.filter(s=>s.status==='평가완료').length;
+    const passRate = subs.length ? Math.round(pass/subs.length*100) : 0;
     const byMission=(mid)=>subs.filter(s=>s.missionId===mid);
     const noMission=subs.filter(s=>!s.missionId);
     const rowsFor=(arr)=>arr.map((s,i)=>{
@@ -154,6 +161,10 @@
   .brand{display:flex;align-items:center;gap:10px;} .brand img{height:28px;}
   .brand .nm{font-size:16px;font-weight:800;} .brand .nm span{color:#f0473a;} .brand .sub{font-size:11px;color:#6c7488;}
   h1{font-size:23px;font-weight:800;margin-bottom:3px;} .meta{font-size:12.5px;color:#6c7488;margin-bottom:16px;} .code{font-family:'JetBrains Mono',monospace;color:#2453c4;font-weight:700;}
+  .info{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#e6eaf3;border:1px solid #e6eaf3;border-radius:12px;overflow:hidden;margin-bottom:16px;}
+  .info .cell{background:#fbfcfe;padding:11px 14px;}
+  .info .k{font-size:11px;color:#9aa1b3;font-weight:700;margin-bottom:3px;}
+  .info .v{font-size:14.5px;font-weight:800;color:#14161f;} .info .v .code{font-size:14px;}
   .sum{display:flex;gap:10px;margin-bottom:18px;}
   .sc{flex:1;background:#f5f7fc;border:1px solid #e6eaf3;border-radius:10px;padding:10px 14px;text-align:center;}
   .sc .n{font-size:22px;font-weight:800;} .sc .l{font-size:11px;color:#6c7488;}
@@ -168,8 +179,19 @@
 <div class="no-print"><button onclick="window.print()">PDF로 저장 / 인쇄</button></div>
 <div class="top"><div class="brand"><img src="${origin}/platform/img/logo-mark.webp" alt="" /><div><div class="nm">Eduino <span>AI</span></div><div class="sub">VISION AI · 수업 종합 결과</div></div></div>
   <div style="text-align:right;font-size:11px;color:#9aa1b3">발급 ${fmt(new Date().toISOString())}</div></div>
-<h1>${esc(cls.name)||'수업'} 종합 결과</h1>
-<div class="meta">수업 코드 <span class="code">${esc(cls.code)||'-'}</span> · 미션 ${missions.length}개 · 총 제출 <b>${subs.length}</b>건</div>
+<h1>${esc(cls.name)||'수업'} 종합 결과 보고서</h1>
+<div class="meta">브라우저로 직접 체험·제작한 AI 학습 수업의 진행 결과를 정리한 문서입니다.</div>
+<div class="info">
+  <div class="cell"><div class="k">수업명</div><div class="v">${esc(cls.name)||'수업'}</div></div>
+  <div class="cell"><div class="k">수업 코드</div><div class="v"><span class="code">${esc(cls.code)||'-'}</span></div></div>
+  <div class="cell"><div class="k">수업 인원 (제출/정원)</div><div class="v">${capTxt}</div></div>
+  <div class="cell"><div class="k">개설일</div><div class="v">${cls.createdAt?fmtDate(cls.createdAt):'-'}</div></div>
+  <div class="cell"><div class="k">미션 수</div><div class="v">${missions.length}개</div></div>
+  <div class="cell"><div class="k">총 제출</div><div class="v">${subs.length}건</div></div>
+  <div class="cell"><div class="k">평가 완료</div><div class="v">${evaluated} / ${subs.length}건</div></div>
+  <div class="cell"><div class="k">통과율</div><div class="v">${passRate}%</div></div>
+  <div class="cell"><div class="k">발급일</div><div class="v">${fmtDate(new Date().toISOString())}</div></div>
+</div>
 <div class="sum">
   <div class="sc"><div class="n">${subs.length}</div><div class="l">제출</div></div>
   <div class="sc"><div class="n" style="color:#11a06f">${pass}</div><div class="l">통과</div></div>
