@@ -81,9 +81,8 @@
     font-family: var(--sans);
     color: var(--ink);
     background:
-      radial-gradient(60% 50% at 50% 0%, rgba(255,87,71,.10), transparent 60%),
-      linear-gradient(var(--bg-grid) 1px, transparent 1px) 0 0 / 24px 24px,
-      linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px) 0 0 / 24px 24px,
+      radial-gradient(60% 55% at 50% 0%, var(--accent-soft), transparent 60%),
+      radial-gradient(45% 45% at 88% 96%, rgba(255,132,114,.06), transparent 62%),
       linear-gradient(180deg, var(--bg-2), var(--bg));
     background-attachment: fixed;
     min-height: 100vh;
@@ -960,7 +959,7 @@
   .act-ghost { color:var(--ink-2); background:var(--panel); }
   .act-ghost:hover { border-color:var(--ink-3); }
   /* ── 콘솔 게임 HUD (체험 스테이지와 동일 톤) ── */
-  .scanlines { position:fixed; inset:0; z-index:40; pointer-events:none; opacity:.22;
+  .scanlines { position:fixed; inset:0; z-index:40; pointer-events:none; opacity:.25;
     background:repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px); }
   .vhud { position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:space-between; gap:14px;
     padding:13px 22px; background:rgba(10,11,18,.82); backdrop-filter:saturate(180%) blur(10px); border-bottom:1px solid var(--border); }
