@@ -56,7 +56,21 @@
   .ad-st{font-size:11.5px;font-weight:800;border-radius:7px;padding:3px 9px;}
   .ad-st.done{color:#04140c;background:#42e29b;} .ad-st.ing{color:#1a0a08;background:#ffd36a;} .ad-st.none{color:#aeb6cf;background:rgba(255,255,255,.08);}
   .ad-rosterempty{color:#737c9c;font-size:12.5px;padding:10px 2px;}
-  .ad-note{font-size:11.5px;color:#737c9c;margin-top:10px;line-height:1.6;}`;
+  .ad-note{font-size:11.5px;color:#737c9c;margin-top:10px;line-height:1.6;}
+  /* 관리자 인증 게이트 */
+  .ad-gate{display:none;max-width:380px;margin:56px auto 0;text-align:center;background:rgba(255,255,255,.04);
+    border-radius:18px;padding:32px 28px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 14px 36px rgba(0,0,0,.35);}
+  .ad-ov.locked .ad-gate{display:block;}
+  .ad-ov.locked #adKpis,.ad-ov.locked #adList,.ad-ov.locked .ad-note,.ad-ov.locked #adExport,.ad-ov.locked #adWipe{display:none!important;}
+  .ad-gate .lk{font-size:30px;line-height:1;color:#6aa6ff;}
+  .ad-gate h3{margin:12px 0 4px;font-size:18px;font-weight:800;}
+  .ad-gate p{margin:0 0 18px;font-size:12.5px;color:#8b93ad;}
+  .ad-gin{width:100%;background:rgba(255,255,255,.05);border:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);
+    border-radius:11px;color:#f2f4fb;font-size:15px;font-family:inherit;padding:12px 13px;text-align:center;letter-spacing:.1em;}
+  .ad-gin:focus{outline:none;box-shadow:inset 0 0 0 2px #6aa6ff;}
+  .ad-gerr{min-height:18px;font-size:12px;color:#ff8472;margin:9px 0 4px;}
+  .ad-gbtn{width:100%;font-size:14.5px;font-weight:800;color:#fff;border:0;border-radius:12px;padding:12px;cursor:pointer;
+    background:linear-gradient(135deg,#6aa6ff,#3b86ff);box-shadow:0 8px 22px rgba(59,134,255,.34);}`;
   const st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
 
   const ov=document.createElement('div'); ov.className='ad-ov';
@@ -68,6 +82,14 @@
         <button class="ad-b danger" id="adWipe">전체 초기화</button>
         <button class="ad-close" id="adClose">✕</button>
       </div>
+    </div>
+    <div class="ad-gate" id="adGate">
+      <div class="lk">🔒</div>
+      <h3>관리자 인증</h3>
+      <p>관리자 비밀번호를 입력하세요.</p>
+      <input class="ad-gin" id="adPw" type="password" placeholder="비밀번호" autocomplete="off" />
+      <div class="ad-gerr" id="adErr"></div>
+      <button class="ad-gbtn" id="adEnter">입장</button>
     </div>
     <div class="ad-kpis" id="adKpis"></div>
     <div id="adList"></div>
@@ -178,6 +200,24 @@
     }
   });
 
-  window.Admin={ open(){ ensure(); render(); ov.classList.add('on'); }, close(){ ov.classList.remove('on'); } };
+  /* 관리자 인증 (세션 단위) */
+  const PW='robodyne';
+  const authed=()=>{ try{ return sessionStorage.getItem('vision_admin_ok')==='1'; }catch(e){ return false; } };
+  function tryAuth(){ const inp=ov.querySelector('#adPw'), err=ov.querySelector('#adErr');
+    if((inp.value||'')===PW){ try{ sessionStorage.setItem('vision_admin_ok','1'); }catch(e){} inp.value=''; err.textContent='';
+      ov.classList.remove('locked'); render(); }
+    else { err.textContent='비밀번호가 올바르지 않습니다.'; inp.select(); } }
+  ov.querySelector('#adEnter').addEventListener('click',tryAuth);
+  ov.querySelector('#adPw').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); tryAuth(); } });
+
+  window.Admin={
+    open(){ ensure();
+      if(authed()){ ov.classList.remove('locked'); render(); }
+      else { ov.classList.add('locked'); ov.querySelector('#adErr').textContent=''; ov.querySelector('#adPw').value=''; }
+      ov.classList.add('on');
+      setTimeout(()=>{ if(!authed()){ const i=ov.querySelector('#adPw'); if(i) i.focus(); } },60);
+    },
+    close(){ ov.classList.remove('on'); }
+  };
   document.addEventListener('click',(e)=>{ const t=e.target.closest&&e.target.closest('[data-admin]'); if(t){ e.preventDefault(); Admin.open(); } });
 })();
