@@ -17,6 +17,13 @@
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.2.0/dist/body-pix.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.1.0/dist/blazeface.min.umd.js"></script>
 
+<!-- VISION AI · 수업/제출/게시판/확인서 공용 모듈 (체험 트랙과 동일한 제출 개념) -->
+<script src="/stages/icons.js"></script>
+<script src="/stages/session.js"></script>
+<script src="/stages/cert.js"></script>
+<script src="/stages/board.js"></script>
+<script src="/stages/submit.js"></script>
+
 <!-- 폰트: Pretendard (한국어 본문) + JetBrains Mono (텔레메트리 데이터) -->
 <link rel="preconnect" href="https://cdn.jsdelivr.net" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
@@ -935,6 +942,14 @@
     color: var(--ink-4); font-family: var(--sans); font-size: 12.5px;
     letter-spacing: 0; text-align: center;
   }
+  /* 제출 액션(체험 트랙과 동일 개념) */
+  .act-area { display:flex; gap:9px; margin-top:14px; }
+  .act { flex:1; font-size:13.5px; font-weight:800; border-radius:11px; padding:12px; cursor:pointer;
+    border:1px solid var(--border); transition:.15s; }
+  .act-primary { color:#fff; background:linear-gradient(135deg,#ff6a52,#e8392b); border-color:transparent; }
+  .act-primary:hover { filter:brightness(1.05); }
+  .act-ghost { color:var(--ink-2); background:var(--panel); }
+  .act-ghost:hover { border-color:var(--ink-3); }
 </style>
 </head>
 <body>
@@ -949,7 +964,10 @@
         <div class="logo-tag">브라우저로 직접 배우는 AI · 영상처리 실험실</div>
       </div>
     </div>
-    <a class="studio-back" href="/studio.html" onclick="try{sessionStorage.setItem(String.fromCharCode(118,111,115,95,112,97,115,115),String(1))}catch(e){}">← 비전 콘솔</a>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="btn" id="boardBtn" data-board style="display:none">게시판</button>
+      <a class="studio-back" href="/studio.html" onclick="try{sessionStorage.setItem(String.fromCharCode(118,111,115,95,112,97,115,115),String(1))}catch(e){}">← 비전 콘솔</a>
+    </div>
   </div>
 </header>
 
@@ -1092,6 +1110,8 @@
       <div id="bars"></div>
       <button class="btn blue" id="infer-toggle" disabled style="width:100%;margin-top:14px">추론 시작</button>
       <p class="hint">학습 후 실시간으로 카메라 영상을 분류합니다. 막대는 그 클래스일 확률입니다.</p>
+      <div id="actionArea" class="act-area"></div>
+      <p class="hint" id="action-hint" style="margin-top:6px"></p>
     </div>
   </aside>
   </div>
@@ -3615,6 +3635,42 @@ if (!window.isSecureContext) {
   const w = $('insecure-warn');
   if (w) { w.style.display = 'block'; const o = $('insecure-origin'); if (o) o.textContent = location.host; }
 }
+</script>
+
+<!-- VISION AI · 제작 트랙 제출 연동 (체험 트랙과 동일한 모드별 제출 개념) -->
+<script>
+(function(){
+  function activeCam(){ const v=document.getElementById('webcam'); if(v&&v.videoWidth) return v;
+    const p=document.getElementById('p-webcam'); if(p&&p.videoWidth) return p; return v||p||null; }
+  function predName(){ const el=document.querySelector('#top-pred .tp-name')||document.querySelector('.tp-name');
+    const t=el?el.textContent.trim():''; return (t&&t!=='아직 학습 전')?t:''; }
+  function predPct(){ const el=document.getElementById('top-donut-pct'); return el?el.textContent.trim():''; }
+  /* 결과 스냅샷: 현재 카메라 프레임 + 예측 라벨을 합성해 이미지로 반환 */
+  function captureResult(){
+    const v=activeCam(); const W=640; let H=480; if(v&&v.videoWidth) H=Math.round(W*v.videoHeight/v.videoWidth);
+    const cv=document.createElement('canvas'); cv.width=W; cv.height=H; const ctx=cv.getContext('2d');
+    ctx.fillStyle='#0a0b12'; ctx.fillRect(0,0,W,H);
+    try{ if(v&&v.videoWidth) ctx.drawImage(v,0,0,W,H); }catch(e){}
+    const name=predName(), pct=predPct();
+    if(name){ ctx.fillStyle='rgba(0,0,0,.62)'; ctx.fillRect(0,H-52,W,52);
+      ctx.fillStyle='#fff'; ctx.font='bold 23px Pretendard,system-ui,sans-serif'; ctx.textBaseline='middle';
+      ctx.fillText(name+(pct?('  '+pct):''),16,H-26); }
+    if(!v||!v.videoWidth){ ctx.fillStyle='#9c7d84'; ctx.font='15px Pretendard,system-ui,sans-serif';
+      ctx.textAlign='center'; ctx.fillText('카메라/추론 결과가 아직 없어요',W/2,H/2); }
+    return cv.toDataURL('image/jpeg',0.86);
+  }
+  function feat(){ const h=(location.hash||'').replace('#',''); return h||'image'; }
+  function label(){ const fi=document.getElementById('fi-name'); return fi?fi.textContent.trim():'직접 제작'; }
+  function summ(){ return [label(), predName()].filter(Boolean); }
+  function hint(){ const m=(window.Session&&Session.getMode&&Session.getMode())||{mode:'free'};
+    const el=document.getElementById('action-hint'); if(!el) return;
+    el.textContent = m.mode==='teach' ? '교사: 학생이 제출할 클래스 미션을 만들어요.'
+      : m.mode==='class' ? '학생: 학습한 결과를 캡처해 미션으로 제출하세요. (제출 필수)'
+      : '결과를 이미지로 저장할 수 있어요. 수업 참여로 들어오면 미션 제출이 가능해요.'; }
+  function sync(){ if(window.Submit) Submit.init({feature:feat(),label:label(),capture:captureResult,summary:summ}); hint(); }
+  if(document.readyState!=='loading') sync(); else document.addEventListener('DOMContentLoaded',sync);
+  window.addEventListener('hashchange',()=>setTimeout(sync,80));
+})();
 </script>
 </body>
 </html>
