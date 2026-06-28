@@ -958,25 +958,42 @@
   .act-primary:hover { filter:brightness(1.05); }
   .act-ghost { color:var(--ink-2); background:var(--panel); }
   .act-ghost:hover { border-color:var(--ink-3); }
+  /* ── 콘솔 게임 HUD (체험 스테이지와 동일 톤) ── */
+  .scanlines { position:fixed; inset:0; z-index:40; pointer-events:none; opacity:.22;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px); }
+  .vhud { position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:space-between; gap:14px;
+    padding:13px 22px; background:rgba(10,11,18,.82); backdrop-filter:saturate(180%) blur(10px); border-bottom:1px solid var(--border); }
+  .vhud-l, .vhud-r { display:flex; align-items:center; gap:11px; }
+  .vback { display:inline-flex; align-items:center; gap:7px; font-size:13px; font-weight:700; color:var(--ink-2);
+    background:rgba(255,255,255,.05); border:0; border-radius:10px; padding:9px 13px; transition:.15s; cursor:pointer; }
+  .vback:hover { color:#fff; background:rgba(255,255,255,.1); }
+  .vback img { height:18px; display:block; }
+  .vback [data-ic] { font-size:15px; }
+  .vdiv { width:1px; height:18px; background:var(--border-strong); }
+  .vtitle { display:flex; flex-direction:column; line-height:1.16; }
+  .vtitle h1 { margin:0; font-size:18px; font-weight:800; letter-spacing:-.02em; display:inline-flex; align-items:center; gap:7px; color:var(--ink); }
+  .vtitle h1 [data-ic] { font-size:19px; color:var(--accent-ink); }
+  .vtitle .vt-tag { font-family:var(--mono); font-size:10.5px; color:var(--ink-3); letter-spacing:.04em; }
+  .vchip { font-family:var(--mono); font-size:12px; font-weight:700; padding:6px 11px; border-radius:9px; background:rgba(255,255,255,.05); color:var(--ink-2); }
+  .vchip b { color:var(--green); }
+  @media (max-width:720px){ .vt-tag,.vtitle{display:none;} }
 </style>
 </head>
 <body>
 
-<!-- ──────────────────────── 상단 바 ──────────────────────── -->
-<header class="topbar">
-  <div class="topbar-inner">
-    <div class="logo">
-      <img class="logo-mark-img" src="/platform/img/logo-mark.webp" alt="Eduino AI" />
-      <div class="logo-titles">
-        <div class="logo-title">Eduino <span>AI</span></div>
-        <div class="logo-tag">브라우저로 직접 배우는 AI · 영상처리 실험실</div>
-      </div>
-    </div>
-    <div style="display:flex;gap:10px;align-items:center">
-      <a class="studio-back" href="/create.html">← 뒤로</a>
-      <button class="btn" id="boardBtn" data-board style="display:none">게시판</button>
-      <a class="studio-back" href="/studio.html" onclick="try{sessionStorage.setItem(String.fromCharCode(118,111,115,95,112,97,115,115),String(1))}catch(e){}">비전 콘솔</a>
-    </div>
+<!-- ──────────────────────── 콘솔 HUD ──────────────────────── -->
+<div class="scanlines"></div>
+<header class="vhud">
+  <div class="vhud-l">
+    <a class="vback" href="/studio.html" onclick="try{sessionStorage.setItem(String.fromCharCode(118,111,115,95,112,97,115,115),String(1))}catch(e){}" title="콘솔(모드 선택)"><img src="/platform/img/logo-mark.webp" alt="콘솔" /></a>
+    <a class="vback" href="/create.html">← 뒤로</a>
+    <span class="vdiv"></span>
+    <div class="vtitle"><h1 id="vTitle"><i data-ic="image"></i> 이미지 분류</h1><span class="vt-tag">TRACK 02 · 직접 제작</span></div>
+  </div>
+  <div class="vhud-r">
+    <button class="vback" id="boardBtn" data-board style="display:none"><i data-ic="board"></i> 게시판</button>
+    <a class="vback" href="/platform/index.html" title="플랫폼 홈"><i data-ic="home"></i> 홈</a>
+    <span class="vchip" id="vStatus">● READY</span>
   </div>
 </header>
 
@@ -3677,7 +3694,10 @@ if (!window.isSecureContext) {
     el.textContent = m.mode==='teach' ? '교사: 학생이 제출할 클래스 미션을 만들어요.'
       : m.mode==='class' ? '학생: 학습한 결과를 캡처해 미션으로 제출하세요. (제출 필수)'
       : '결과를 이미지로 저장할 수 있어요. 수업 참여로 들어오면 미션 제출이 가능해요.'; }
-  function sync(){ if(window.Submit) Submit.init({feature:feat(),label:label(),capture:captureResult,summary:summ}); hint(); }
+  function syncTitle(){ const h=document.getElementById('vTitle'); if(!h) return;
+    const k=feat(); const ic=(k==='audio'||k==='pose')?k:'image';
+    h.innerHTML='<i data-ic="'+ic+'"></i> '+label(); if(window.paintIcons) paintIcons(h); }
+  function sync(){ if(window.Submit) Submit.init({feature:feat(),label:label(),capture:captureResult,summary:summ}); hint(); syncTitle(); }
   if(document.readyState!=='loading') sync(); else document.addEventListener('DOMContentLoaded',sync);
   window.addEventListener('hashchange',()=>setTimeout(sync,80));
 })();
