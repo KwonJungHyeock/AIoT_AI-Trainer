@@ -79,7 +79,11 @@
   .bd-badge.wait{color:#aeb6cf;background:rgba(255,255,255,.08);}
   .bd-fbview{font-size:12.5px;color:#aeb6cf;line-height:1.55;background:rgba(255,255,255,.04);border-radius:9px;padding:9px 11px;}
   .bd-fbview.em{color:#6b7390;font-style:italic;}
-  .bd-mine-tag{font-size:10px;font-weight:800;color:#6aa6ff;background:rgba(59,134,255,.16);border-radius:6px;padding:3px 7px;}`;
+  .bd-mine-tag{font-size:10px;font-weight:800;color:#6aa6ff;background:rgba(59,134,255,.16);border-radius:6px;padding:3px 7px;}
+  .bd-toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(20px);z-index:120;
+    display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:700;color:#04140c;background:#42e29b;
+    border-radius:12px;padding:12px 18px;box-shadow:0 14px 40px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:.25s;}
+  .bd-toast.on{opacity:1;transform:translateX(-50%) translateY(0);}`;
   const st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
 
   const ov=document.createElement('div'); ov.className='bd-ov';
@@ -95,7 +99,7 @@
         <button class="bd-b" id="bdAll" style="display:none">전체 보기</button>
         <button class="bd-b" id="bdImport">가져오기</button>
         <input type="file" id="bdFile" accept="application/json" multiple style="display:none" />
-        <button class="bd-b" id="bdExport">내보내기</button>
+        <button class="bd-b" id="bdExport">결과 내보내기</button>
         <button class="bd-b" id="bdClear">비우기</button>
         <button class="bd-close" id="bdClose">✕</button>
       </div>
@@ -106,6 +110,9 @@
   </div>`;
 
   function ensure(){ if(!document.body.contains(ov)) document.body.appendChild(ov); }
+  let toastEl=null, toastT=null;
+  function toast(msg){ if(!toastEl){ toastEl=document.createElement('div'); toastEl.className='bd-toast'; document.body.appendChild(toastEl); }
+    toastEl.textContent='✓ '+msg; toastEl.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(()=>toastEl.classList.remove('on'),1700); }
   function roleNow(){ return (window.Session&&Session.getMode&&Session.getMode())||{mode:'free'}; }
   function myName(){ try{ return (localStorage.getItem('vision_student_name')||'').trim(); }catch(e){ return ''; } }
   const badge=(s)=> s.result==='pass'
@@ -127,14 +134,14 @@
       : (filterCode
         ? ''+esc(cls?cls.name:'수업')+' <span style="font-family:\'JetBrains Mono\',monospace;color:#6aa6ff;font-size:14px">['+esc(filterCode)+']</span>'
         : '제출 게시판');
-    // 교사 전용 도구 — 학생/체험 모드에서는 모두 숨김
+    // 교사 전용 도구 — 학생/체험 모드에서는 모두 숨김. 가져오기·비우기·전체보기는 관리자 모드로 이관(여기선 제거)
     const teacherTools = isTeacher;
     ov.querySelector('#bdRoster').style.display = (teacherTools&&filterCode) ? '' : 'none';
-    ov.querySelector('#bdAll').style.display = (teacherTools&&filterCode) ? '' : 'none';
     ov.querySelector('#bdEnd').style.display = (teacherTools&&filterCode) ? '' : 'none';
-    ov.querySelector('#bdImport').style.display = teacherTools ? '' : 'none';
     ov.querySelector('#bdExport').style.display = teacherTools ? '' : 'none';
-    ov.querySelector('#bdClear').style.display = teacherTools ? '' : 'none';
+    ov.querySelector('#bdAll').style.display = 'none';
+    ov.querySelector('#bdImport').style.display = 'none';
+    ov.querySelector('#bdClear').style.display = 'none';
     ov.querySelector('#bdWaitWrap').style.display = isStudent ? 'none' : '';
     ov.querySelector('#bdTotal').textContent=list.length;
     ov.querySelector('#bdWait').textContent=list.filter(s=>s.status!=='평가완료').length;
@@ -143,8 +150,8 @@
     if(banner) banner.innerHTML = isStudent
       ? 'ℹ️ 여기에서는 <b>내가 제출한 결과와 평가 점수만</b> 확인할 수 있어요. 평가는 선생님이 진행해요.'
       : (isTeacher
-        ? 'ℹ️ 선생님 화면이에요. 제출물을 평가(통과·재도전)하고 피드백을 남길 수 있어요. 다른 기기 제출물은 <b>가져오기</b>로 모아보세요.'
-        : 'ℹ️ 제출물은 이 브라우저에 저장돼요. 다른 기기 제출물은 <b>가져오기</b>로 모아보세요. (실시간 연동은 백엔드 단계)');
+        ? 'ℹ️ 선생님 화면이에요. 제출물을 평가(통과·재도전)하고 피드백을 남길 수 있어요. <b>결과 내보내기</b>로 이 수업 결과를 백업할 수 있어요.'
+        : 'ℹ️ 제출물은 이 브라우저에 저장돼요. (실시간 연동은 백엔드 단계)');
     // 미션 섹션 (교사만)
     const mEl=ov.querySelector('#bdMissions');
     const missions=(filterCode&&window.Session)?(Session.missionsFor(filterCode)||[]):[];
@@ -211,7 +218,9 @@
       c.querySelectorAll('.bd-ev').forEach(b=>b.addEventListener('click',()=>{ c.querySelectorAll('.bd-ev').forEach(x=>x.classList.remove('on')); b.classList.add('on'); }));
       c.querySelector('.bd-save').addEventListener('click',()=>{ const l=load(),r=l.find(x=>x.id===id); if(!r) return;
         const sel=c.querySelector('.bd-ev.on'); r.result=sel?sel.dataset.r:(r.result||null);
-        r.feedback=c.querySelector('.bd-fb').value.trim(); r.status=r.result?'평가완료':'제출됨'; saveAll(l); render(); });
+        r.feedback=c.querySelector('.bd-fb').value.trim(); r.status=r.result?'평가완료':'제출됨'; saveAll(l);
+        const who=(r.name||'학생'); const res=r.result==='pass'?'통과':(r.result==='redo'?'재도전':'저장');
+        render(); toast(`${who} · ${res} 저장됨`); });
       c.querySelector('.bd-del').addEventListener('click',()=>{ if(confirm('이 제출물을 삭제할까요?')){ saveAll(load().filter(x=>x.id!==id)); render(); } });
       const pdf=c.querySelector('.bd-pdf'); if(pdf) pdf.addEventListener('click',()=>{ const r=load().find(x=>x.id===id); if(r&&window.Cert) Cert.print(r); });
     });
@@ -225,8 +234,12 @@
     for(const f of files){ try{ const o=JSON.parse(await f.text()); (Array.isArray(o)?o:[o]).forEach(r=>{ if(r&&r.id&&!l.some(x=>x.id===r.id)){ l.unshift(r); n++; } }); }catch(err){} }
     saveAll(l); render(); alert(n+'건 가져왔어요.'); e.target.value='';
   });
-  ov.querySelector('#bdExport').addEventListener('click',()=>{ const b=new Blob([JSON.stringify(load(),null,2)],{type:'application/json'});
-    const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='제출물_전체.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); });
+  ov.querySelector('#bdExport').addEventListener('click',()=>{
+    const data = filterCode ? load().filter(s=>s.classCode===filterCode) : load();
+    const cls=(window.Session&&filterCode&&Session.getClass(filterCode));
+    const fname = cls ? `${cls.name}_결과.json` : '제출물_전체.json';
+    const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=fname; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); });
   ov.querySelector('#bdClear').addEventListener('click',()=>{ if(confirm('모든 제출물을 비울까요?')){ saveAll([]); render(); } });
   ov.addEventListener('click',e=>{ if(e.target===ov) ov.classList.remove('on'); });
   window.addEventListener('keydown',e=>{ if(e.key==='Escape'&&ov.classList.contains('on')) ov.classList.remove('on'); });
