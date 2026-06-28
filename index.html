@@ -978,6 +978,25 @@
   .vchip { font-family:var(--mono); font-size:12px; font-weight:700; padding:6px 11px; border-radius:9px; background:rgba(255,255,255,.05); color:var(--ink-2); }
   .vchip b { color:var(--green); }
   @media (max-width:720px){ .vt-tag,.vtitle{display:none;} }
+  /* ── 체험 스테이지형 카메라 뷰포트 ── */
+  .stage-card { box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 18px 46px rgba(0,0,0,.45); }
+  .corner { position:absolute; width:22px; height:22px; border:2px solid rgba(255,255,255,.5); z-index:4; pointer-events:none; opacity:.5; }
+  .corner.tl{ top:12px; left:12px; border-right:0; border-bottom:0; border-radius:7px 0 0 0; }
+  .corner.tr{ top:12px; right:12px; border-left:0; border-bottom:0; border-radius:0 7px 0 0; }
+  .corner.bl{ bottom:12px; left:12px; border-right:0; border-top:0; border-radius:0 0 0 7px; }
+  .corner.br{ bottom:12px; right:12px; border-left:0; border-top:0; border-radius:0 0 7px 0; }
+  .video-overlay { background: radial-gradient(70% 60% at 50% 40%, rgba(255,87,71,.13), transparent), rgba(5,6,12,.9) !important; }
+  .cover-ic { color: var(--accent-ink); margin-bottom: 10px; }
+  .cover-ic [data-ic] { font-size: 50px; }
+  #cam-toggle { font-size:15px; font-weight:800; color:#fff; background:linear-gradient(135deg,#ff8472,#e8392b); border:0; border-radius:12px; padding:14px; }
+  #cam-toggle:hover { filter:brightness(1.06); }
+  /* 이론 학습하기 (체험 스테이지와 동일) */
+  .theorybtn-x { display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--ink);
+    background:rgba(255,255,255,.05); border:0; border-radius:12px; padding:11px 16px; cursor:pointer; margin-top:12px; transition:.15s; }
+  .theorybtn-x:hover { background:rgba(255,255,255,.1); }
+  .theorybtn-x [data-ic] { font-size:15px; color:var(--accent-ink); }
+  #fi-theory { display:none; }
+  .feature-info.show-theory #fi-theory { display:grid; }
 </style>
 </head>
 <body>
@@ -1016,6 +1035,7 @@
         <span class="fi-model" id="fi-model">MobileNet v2</span>
       </div>
       <p class="fi-desc" id="fi-desc">카메라로 직접 클래스를 만들어 사진을 분류합니다.</p>
+      <button class="theorybtn-x" id="theoryToggle"><i data-ic="book"></i> 이론 학습하기</button>
       <div class="fi-theory" id="fi-theory">
         <div class="fi-tcard"><div class="fi-th">📊 학습 정보</div><p id="fi-learn"></p></div>
         <div class="fi-tcard"><div class="fi-th">⚙️ 알고리즘 정보</div><p id="fi-algo"></p></div>
@@ -1051,8 +1071,10 @@
       <!-- 카메라 -->
       <div class="video-wrap">
         <video id="webcam" autoplay playsinline muted></video>
+        <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
         <div class="video-overlay" id="cam-overlay">
           <div>
+            <div class="cover-ic"><i data-ic="camera"></i></div>
             <div class="ph">CAMERA · STANDBY</div>
             <div class="ph-msg">카메라를 켜면 미리보기가 표시됩니다</div>
           </div>
@@ -3705,6 +3727,8 @@ if (!window.isSecureContext) {
   function sync(){ if(window.Submit) Submit.init({feature:feat(),label:label(),capture:captureResult,summary:summ}); hint(); syncTitle(); }
   if(document.readyState!=='loading') sync(); else document.addEventListener('DOMContentLoaded',sync);
   window.addEventListener('hashchange',()=>setTimeout(sync,80));
+  const tg=document.getElementById('theoryToggle');
+  if(tg) tg.addEventListener('click',()=>{ const fi=document.querySelector('.feature-info'); if(fi) fi.classList.toggle('show-theory'); });
 })();
 </script>
 </body>
