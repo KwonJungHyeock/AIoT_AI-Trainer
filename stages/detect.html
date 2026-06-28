@@ -29,9 +29,8 @@
     <div class="title"><h1><i data-ic="detect"></i>객체 탐지</h1><span class="tag">COCO-SSD · 사전학습</span></div>
   </div>
   <div class="hud-r">
-    <button class="back" data-board title="제출 게시판"><i data-ic="board"></i> 게시판</button>
-    <a class="back" href="/platform/index.html" title="플랫폼 홈"><i data-ic="home"></i></a>
-    <button class="back codex-open" id="codexBtn"><i data-ic="book"></i> 개념</button>
+    <a class="back" href="/platform/index.html" title="플랫폼 홈"><i data-ic="home"></i> 홈</a>
+    <button class="back" data-board id="boardBtn" title="제출 게시판" style="display:none"><i data-ic="board"></i> 게시판</button>
     <span class="chip idle" id="status">● IDLE</span>
     <span class="chip" id="fps">FPS <b>—</b></span>
   </div>
@@ -53,6 +52,7 @@
   </div>
 
   <aside class="side">
+    <button class="theorybtn" id="codexBtn"><i data-ic="book"></i> 이론 학습하기</button>
     <div class="card list-card">
       <h2>탐지된 사물 <span class="cnt" id="count">0</span></h2>
       <div class="det-list" id="list"><div class="empty">아직 없어요 — 카메라를 켜보세요</div></div>
@@ -71,7 +71,7 @@
     <div class="card ctrl">
       <label>탐지 민감도 <span id="thrv">50%</span></label>
       <input type="range" id="thr" min="10" max="90" value="50" />
-      <button class="submitbtn" id="submitBtn"><i data-ic="submit"></i> 미션 제출</button>
+      <div id="actionArea"></div>
       <button class="stopbtn" id="stop">⏹ 카메라 끄기</button>
     </div>
   </aside>
@@ -208,10 +208,6 @@
     return [`탐지 ${n}개`, ...cls];
   }
   if(window.Submit) Submit.init({ feature:'detect', label:'객체 탐지', capture:captureFrame, summary });
-  $('submitBtn').addEventListener('click', ()=>{
-    if(!detect.stream){ alert('카메라를 켜고 사물을 탐지한 뒤 제출해 주세요!'); return; }
-    Submit.open();
-  });
 
   /* 개념 도감 */
   const codex = $('codex');

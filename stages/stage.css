@@ -120,9 +120,23 @@ button { font-family:inherit; cursor:pointer; } a { color:inherit; text-decorati
 .modebtn:hover { color:#fff; background:rgba(255,255,255,.1); }
 .modebtn.active { color:#fff; background:var(--acc-soft); box-shadow:inset 0 0 0 1px rgba(106,166,255,.5); }
 
-.stopbtn { width:100%; margin-top:14px; font-size:14px; font-weight:700; color:var(--ink-2);
+.stopbtn { width:100%; margin-top:10px; font-size:14px; font-weight:700; color:var(--ink-2);
   background:rgba(255,255,255,.05); border:0; border-radius:12px; padding:13px; transition:.15s; }
 .stopbtn:hover { color:#fff; background:rgba(255,255,255,.1); }
+
+/* 모드별 액션 버튼 영역 */
+#actionArea { display:flex; gap:9px; margin-top:14px; }
+.act { flex:1; font-size:14px; font-weight:800; border:0; border-radius:12px; padding:13px; cursor:pointer; transition:.15s; }
+.act-primary { color:#fff; background:linear-gradient(135deg,var(--acc-2),var(--acc)); box-shadow:0 8px 22px rgba(59,134,255,.3); }
+.act-primary:hover { filter:brightness(1.07); }
+.act-ghost { color:var(--ink-2); background:rgba(255,255,255,.06); }
+.act-ghost:hover { color:#fff; background:rgba(255,255,255,.1); }
+
+/* 이론 학습하기 (콘텐츠 영역 버튼) */
+.theorybtn { width:100%; display:flex; align-items:center; justify-content:center; gap:8px; font-size:14px; font-weight:700;
+  color:var(--ink); background:rgba(255,255,255,.05); border:0; border-radius:14px; padding:14px; cursor:pointer; transition:.15s; }
+.theorybtn:hover { background:rgba(255,255,255,.1); }
+.theorybtn [data-ic] { font-size:17px; color:var(--acc-2); }
 
 /* 개념 도감 모달 */
 .codex-open { color:var(--acc-2); border-color:rgba(59,134,255,.4); }

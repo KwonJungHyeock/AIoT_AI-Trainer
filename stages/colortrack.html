@@ -27,9 +27,8 @@
     <div class="title"><h1><i data-ic="color"></i>색상 추적</h1><span class="tag">RGB 임계값 · 알고리즘</span></div>
   </div>
   <div class="hud-r">
-    <button class="back" data-board title="제출 게시판"><i data-ic="board"></i> 게시판</button>
-    <a class="back" href="/platform/index.html" title="플랫폼 홈"><i data-ic="home"></i></a>
-    <button class="back codex-open" id="codexBtn"><i data-ic="book"></i> 개념</button>
+    <a class="back" href="/platform/index.html" title="플랫폼 홈"><i data-ic="home"></i> 홈</a>
+    <button class="back" data-board id="boardBtn" title="제출 게시판" style="display:none"><i data-ic="board"></i> 게시판</button>
     <span class="chip idle" id="status">● IDLE</span>
     <span class="chip" id="fps">FPS <b>—</b></span>
   </div>
@@ -51,6 +50,7 @@
   </div>
 
   <aside class="side">
+    <button class="theorybtn" id="codexBtn"><i data-ic="book"></i> 이론 학습하기</button>
     <div class="card list-card" style="justify-content:flex-start">
       <h2>추적할 색</h2>
       <div class="swatches" id="swatches"></div>
@@ -73,7 +73,7 @@
     <div class="card ctrl">
       <label>허용 범위 <span id="tolv">140</span></label>
       <input type="range" id="tol" min="40" max="300" value="140" />
-      <button class="submitbtn" id="submitBtn"><i data-ic="submit"></i> 미션 제출</button>
+      <div id="actionArea"></div>
       <button class="stopbtn" id="stop">⏹ 카메라 끄기</button>
     </div>
   </aside>
@@ -190,7 +190,6 @@
   }
   function summary(){ return ['일치 색 '+(els.match.textContent||'0%')]; }
   if(window.Submit) Submit.init({ feature:'colortrack', label:'색상 추적', capture:captureFrame, summary });
-  $('submitBtn').addEventListener('click', ()=>{ if(!ct.stream){ alert('카메라를 켜고 제출해 주세요!'); return; } Submit.open(); });
 
   const codex=$('codex'); const openC=()=>codex.classList.add('on'), closeC=()=>codex.classList.remove('on');
   $('codexBtn').addEventListener('click',openC); $('codexX').addEventListener('click',closeC);

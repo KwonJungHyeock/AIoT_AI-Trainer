@@ -27,9 +27,8 @@
     <div class="title"><h1><i data-ic="filter"></i>영상 효과</h1><span class="tag">Canvas 필터 · 알고리즘</span></div>
   </div>
   <div class="hud-r">
-    <button class="back" data-board title="제출 게시판"><i data-ic="board"></i> 게시판</button>
-    <a class="back" href="/platform/index.html" title="플랫폼 홈"><i data-ic="home"></i></a>
-    <button class="back codex-open" id="codexBtn"><i data-ic="book"></i> 개념</button>
+    <a class="back" href="/platform/index.html" title="플랫폼 홈"><i data-ic="home"></i> 홈</a>
+    <button class="back" data-board id="boardBtn" title="제출 게시판" style="display:none"><i data-ic="board"></i> 게시판</button>
     <span class="chip idle" id="status">● IDLE</span>
     <span class="chip" id="fps">FPS <b>—</b></span>
   </div>
@@ -51,6 +50,7 @@
   </div>
 
   <aside class="side">
+    <button class="theorybtn" id="codexBtn"><i data-ic="book"></i> 이론 학습하기</button>
     <div class="card list-card" style="justify-content:flex-start">
       <h2>효과 모드 <span class="cnt" id="modeName" style="font-size:14px">원본</span></h2>
       <div class="modes" id="modes"></div>
@@ -77,7 +77,7 @@
       <input type="range" id="contrast" min="40" max="220" value="100" />
       <label style="margin-top:14px">블러 <span id="blurv">0px</span></label>
       <input type="range" id="blur" min="0" max="12" value="0" />
-      <button class="submitbtn" id="submitBtn"><i data-ic="submit"></i> 미션 제출</button>
+      <div id="actionArea"></div>
       <button class="stopbtn" id="stop">⏹ 카메라 끄기</button>
     </div>
   </aside>
@@ -201,7 +201,6 @@
   }
   function summary(){ const s=['효과 '+FF_LABEL[ff.mode]]; if(ff.mode==='motion') s.push('움직임 '+(els.motion.textContent||'0%')); return s; }
   if(window.Submit) Submit.init({ feature:'filter', label:'영상 효과', capture:captureFrame, summary });
-  $('submitBtn').addEventListener('click', ()=>{ if(!ff.stream){ alert('카메라를 켜고 제출해 주세요!'); return; } Submit.open(); });
 
   const codex=$('codex'); const openC=()=>codex.classList.add('on'), closeC=()=>codex.classList.remove('on');
   $('codexBtn').addEventListener('click',openC); $('codexX').addEventListener('click',closeC);

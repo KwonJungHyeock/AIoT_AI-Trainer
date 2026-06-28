@@ -28,9 +28,8 @@
     <div class="title"><h1><i data-ic="face"></i>얼굴 검출</h1><span class="tag">BlazeFace · 알고리즘</span></div>
   </div>
   <div class="hud-r">
-    <button class="back" data-board title="제출 게시판"><i data-ic="board"></i> 게시판</button>
-    <a class="back" href="/platform/index.html" title="플랫폼 홈"><i data-ic="home"></i></a>
-    <button class="back codex-open" id="codexBtn"><i data-ic="book"></i> 개념</button>
+    <a class="back" href="/platform/index.html" title="플랫폼 홈"><i data-ic="home"></i> 홈</a>
+    <button class="back" data-board id="boardBtn" title="제출 게시판" style="display:none"><i data-ic="board"></i> 게시판</button>
     <span class="chip idle" id="status">● IDLE</span>
     <span class="chip" id="fps">FPS <b>—</b></span>
   </div>
@@ -52,6 +51,7 @@
   </div>
 
   <aside class="side">
+    <button class="theorybtn" id="codexBtn"><i data-ic="book"></i> 이론 학습하기</button>
     <div class="card list-card" style="justify-content:center">
       <h2>실시간 얼굴 검출</h2>
       <div class="metric"><div class="v" id="count">0</div><div class="u">명 검출 중</div></div>
@@ -70,7 +70,7 @@
     </div>
     <div class="card ctrl">
       <p style="font-size:12.5px;color:var(--ink-2);line-height:1.65;margin:0 0 12px">얼굴의 <b>위치</b>만 찾는 ‘검출’이에요. 누구인지 알아내는 ‘인식’과는 달라서 개인정보에 안전해요.</p>
-      <button class="submitbtn" id="submitBtn"><i data-ic="submit"></i> 미션 제출</button>
+      <div id="actionArea"></div>
       <button class="stopbtn" id="stop">⏹ 카메라 끄기</button>
     </div>
   </aside>
@@ -193,7 +193,6 @@
   }
   function summary(){ return ['얼굴 '+(els.count.textContent||'0')+'명']; }
   if(window.Submit) Submit.init({ feature:'face', label:'얼굴 검출', capture:captureFrame, summary });
-  $('submitBtn').addEventListener('click', ()=>{ if(!face.stream){ alert('카메라를 켜고 제출해 주세요!'); return; } Submit.open(); });
 
   const codex=$('codex'); const openC=()=>codex.classList.add('on'), closeC=()=>codex.classList.remove('on');
   $('codexBtn').addEventListener('click',openC); $('codexX').addEventListener('click',closeC);

@@ -27,5 +27,12 @@
     pass(){ try{ const ok=sessionStorage.getItem('vos_pass')==='1'; sessionStorage.removeItem('vos_pass'); return ok; }catch(e){ return true; } },
     /* 수업별 제출물 집계 */
     submissionsFor(code){ try{ return JSON.parse(localStorage.getItem('vision_submissions')||'[]').filter(s=>s.classCode===code); }catch(e){ return []; } },
+    /* 클래스 미션(교사가 생성, 학생이 선택해 제출) */
+    createMission({classCode, className, title, content}){
+      let list; try{ list=JSON.parse(localStorage.getItem('vision_missions')||'[]'); }catch(e){ list=[]; }
+      const rec={ id:'m'+Date.now()+'_'+Math.floor(Math.random()*1e4), classCode, className:className||'', title:(title||'미션').trim(), content:(content||'').trim(), createdAt:new Date().toISOString() };
+      list.unshift(rec); localStorage.setItem('vision_missions', JSON.stringify(list)); return rec;
+    },
+    missionsFor(code){ try{ return JSON.parse(localStorage.getItem('vision_missions')||'[]').filter(m=>m.classCode===code); }catch(e){ return []; } },
   };
 })();
