@@ -24,6 +24,7 @@
 <script src="/stages/board.js"></script>
 <script src="/stages/submit.js"></script>
 <script src="/stages/maker.js"></script>
+<script src="/stages/imagelab.js"></script>
 
 <!-- 폰트: Pretendard (한국어 본문) + JetBrains Mono (텔레메트리 데이터) -->
 <link rel="preconnect" href="https://cdn.jsdelivr.net" />
@@ -993,6 +994,7 @@
   <div class="vhud-r">
     <button class="vback" id="boardBtn" data-board style="display:none"><i data-ic="board"></i> 게시판</button>
     <a class="vback" href="/platform/index.html" title="플랫폼 홈"><i data-ic="home"></i> 홈</a>
+    <span id="lab-badges"></span>
     <span class="vchip" id="vStatus">● READY</span>
   </div>
 </header>
@@ -1022,6 +1024,7 @@
 
     <!-- 단계 네비 (기능별 진행 단계) -->
     <div class="step-nav" id="step-nav"></div>
+    <div id="lab-scenarios"></div>
 
 <!-- ──────────────────────── 메인 ──────────────────────── -->
 <main>
@@ -1038,6 +1041,7 @@
       <div id="class-list"></div>
       <button class="btn ghost" id="add-class" style="width:100%;margin-top:6px">+ 클래스 추가</button>
       <p class="hint">분류할 종류를 만들고, 각 클래스의 <b>📷 촬영</b>을 누르세요. <b>탭</b>하면 1장, <b>길게</b> 누르면 연속으로 찍힙니다.</p>
+      <div id="lab-coach"></div>
     </div>
   </aside>
 
