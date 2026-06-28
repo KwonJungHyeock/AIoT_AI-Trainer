@@ -151,15 +151,13 @@
   .tile-glare { position:absolute; inset:0; z-index:3; opacity:0; transition:opacity .2s;
     background:radial-gradient(240px 240px at var(--mx,50%) var(--my,50%), rgba(255,255,255,.20), transparent 60%); }
   .tile:hover .tile-glare { opacity:1; }
-  .tile-body { position:relative; z-index:4; height:100%; padding:30px 30px 56px; display:flex; flex-direction:column; transform:translateZ(36px); }
+  .tile-body { position:relative; z-index:4; height:100%; padding:28px; display:flex; flex-direction:column; transform:translateZ(36px); }
   .tile-ic { font-size:58px; line-height:1; filter:drop-shadow(0 4px 12px rgba(0,0,0,.55)); }
   .tile.has-thumb .tile-ic { display:none; }
   .tile-no { position:absolute; top:24px; right:26px; font-family:var(--mono); font-size:17px; font-weight:700; color:rgba(255,255,255,.55); }
   .tile-name { margin-top:auto; font-size:31px; font-weight:800; letter-spacing:-.02em; color:#fff; text-shadow:0 2px 14px rgba(0,0,0,.6); }
   .tile-tag { margin-top:6px; font-size:15.5px; font-weight:600; color:#e2e8f8; text-shadow:0 1px 8px rgba(0,0,0,.55); }
-  .tile-play { position:absolute; inset:auto 0 0 0; transform:translateY(101%);
-    display:flex; align-items:center; justify-content:center; gap:9px; padding:15px;
-    font-size:15px; font-weight:800; letter-spacing:.1em; background:rgba(255,255,255,.94); color:#0a0b12; transition:transform .22s; z-index:5; }
+  .tile-play { display:none; }
   .tile:hover, .tile.sel { transform:translateY(-8px) scale(1.03); }
   .tile.sel { box-shadow:0 0 60px -10px var(--ring,#fff), 0 36px 80px rgba(0,0,0,.6); }
   .tile.explore.sel { --ring:var(--blue-2); }

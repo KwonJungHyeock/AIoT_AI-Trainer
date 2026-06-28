@@ -56,7 +56,14 @@
   .bd-fb:focus{outline:none;border-color:#6aa6ff;}
   .bd-erow2{display:flex;justify-content:space-between;align-items:center;}
   .bd-del{font-size:11px;color:#737c9c;background:none;border:0;text-decoration:underline;cursor:pointer;}
-  .bd-save{font-size:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,#6aa6ff,#3b86ff);border:0;border-radius:9px;padding:8px 13px;cursor:pointer;}`;
+  .bd-save{font-size:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,#6aa6ff,#3b86ff);border:0;border-radius:9px;padding:8px 13px;cursor:pointer;}
+  .bd-missions{margin-bottom:18px;}
+  .bd-mtitle{font-size:13px;font-weight:800;color:#aeb6cf;margin-bottom:10px;}
+  .bd-mcard{background:rgba(59,134,255,.08);border-radius:12px;padding:13px 15px;margin-bottom:9px;}
+  .bd-mh{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14.5px;font-weight:800;color:#f2f4fb;}
+  .bd-mcnt{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#6aa6ff;background:rgba(59,134,255,.15);border-radius:7px;padding:3px 9px;}
+  .bd-mcard p{margin:6px 0 0;font-size:12.5px;color:#aeb6cf;line-height:1.5;}
+  .bd-mempty{color:#737c9c;font-size:12.5px;padding:6px 2px;}`;
   const st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
 
   const ov=document.createElement('div'); ov.className='bd-ov';
@@ -66,6 +73,7 @@
         <div class="bd-stats"><span class="bd-stat">전체 <b id="bdTotal">0</b></span><span class="bd-stat">미평가 <b id="bdWait">0</b></span></div>
       </div>
       <div class="bd-tools">
+        <button class="bd-b" id="bdEnd" style="display:none">수업 종료 · 종합 PDF</button>
         <button class="bd-b" id="bdRoster" style="display:none">명단 PDF</button>
         <button class="bd-b" id="bdAll" style="display:none">전체 보기</button>
         <button class="bd-b" id="bdImport">가져오기</button>
@@ -76,6 +84,7 @@
       </div>
     </div>
     <div class="bd-banner">ℹ️ 제출물은 이 브라우저에 저장돼요. 다른 기기 제출물은 <b>가져오기</b>로 모아보세요. (실시간 연동은 백엔드 단계)</div>
+    <div class="bd-missions" id="bdMissions"></div>
     <div class="bd-grid" id="bdGrid"></div>
   </div>`;
 
@@ -90,8 +99,17 @@
       : '제출 게시판';
     ov.querySelector('#bdRoster').style.display = filterCode ? '' : 'none';
     ov.querySelector('#bdAll').style.display = filterCode ? '' : 'none';
+    ov.querySelector('#bdEnd').style.display = filterCode ? '' : 'none';
     ov.querySelector('#bdTotal').textContent=list.length;
     ov.querySelector('#bdWait').textContent=list.filter(s=>s.status!=='평가완료').length;
+    // 미션 섹션 (교사/수업 필터 시)
+    const mEl=ov.querySelector('#bdMissions');
+    const missions=(filterCode&&window.Session)?(Session.missionsFor(filterCode)||[]):[];
+    if(filterCode){ mEl.style.display=''; mEl.innerHTML='<div class="bd-mtitle">클래스 미션 '+missions.length+'개</div>'+
+      (missions.length? missions.map(mi=>{ const cnt=all.filter(s=>s.missionId===mi.id).length;
+        return `<div class="bd-mcard"><div class="bd-mh"><span>${esc(mi.title)}</span><span class="bd-mcnt">${cnt} 제출</span></div>${mi.content?`<p>${esc(mi.content)}</p>`:''}</div>`; }).join('')
+        : '<div class="bd-mempty">아직 만든 미션이 없어요. 스테이지에서 ‘클래스 미션 생성’으로 추가하세요.</div>'); }
+    else { mEl.style.display='none'; mEl.innerHTML=''; }
     const grid=ov.querySelector('#bdGrid');
     if(!list.length){ grid.innerHTML='<div class="bd-empty">아직 제출물이 없어요.<br>스테이지에서 <b>미션 제출</b>을 하면 여기에 올라와요.</div>'; return; }
     grid.innerHTML=list.map(s=>`
@@ -145,6 +163,12 @@
     const cls=(window.Session&&Session.getClass(filterCode))||{name:'수업',code:filterCode};
     Cert.roster(cls, load().filter(s=>s.classCode===filterCode)); });
   ov.querySelector('#bdAll').addEventListener('click',()=>{ filterCode=null; render(); });
+  ov.querySelector('#bdEnd').addEventListener('click',()=>{ if(!window.Cert) return;
+    const cls=(window.Session&&Session.getClass(filterCode))||{name:'수업',code:filterCode};
+    const missions=(window.Session&&Session.missionsFor(filterCode))||[];
+    if(!confirm('수업을 종료하고 종합 결과 PDF를 생성할까요?\n(평가한 미션·제출물이 PDF로 저장됩니다)')) return;
+    Cert.summary(cls, missions, load().filter(s=>s.classCode===filterCode));
+  });
 
   window.Board={
     open(opts){ filterCode=(opts&&opts.code) || (window.Session&&Session.getMode&&(Session.getMode()||{}).code) || null;

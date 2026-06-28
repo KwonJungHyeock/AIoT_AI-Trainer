@@ -133,6 +133,56 @@
 </body></html>`;
   }
 
+  function summaryHtml(cls, missions, subs){
+    const origin=location.origin;
+    const pass=subs.filter(s=>s.result==='pass').length, redo=subs.filter(s=>s.result==='redo').length, wait=subs.filter(s=>s.status!=='평가완료').length;
+    const byMission=(mid)=>subs.filter(s=>s.missionId===mid);
+    const noMission=subs.filter(s=>!s.missionId);
+    const rowsFor=(arr)=>arr.map((s,i)=>{
+      const res=s.result==='pass'?'<b style="color:#11a06f">통과</b>':(s.result==='redo'?'<b style="color:#d97a16">재도전</b>':'<span style="color:#9aa1b3">미평가</span>');
+      return `<tr><td>${i+1}</td><td class="nm">${esc(s.name)||'-'}</td><td>${esc(s.label)||'-'}</td><td>${fmt(s.time)}</td><td>${res}</td><td class="fb">${s.feedback?esc(s.feedback):'-'}</td></tr>`;
+    }).join('');
+    const section=(title, content, arr)=>`<div class="ms"><div class="ms-h">${esc(title)} <span>${arr.length}건</span></div>${content?`<div class="ms-d">${esc(content)}</div>`:''}
+      <table><thead><tr><th>#</th><th>이름</th><th>기능</th><th>제출</th><th>평가</th><th>피드백</th></tr></thead>
+      <tbody>${rowsFor(arr)||'<tr><td colspan="6" style="text-align:center;color:#9aa1b3;padding:18px">제출 없음</td></tr>'}</tbody></table></div>`;
+    return `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8" /><title>수업 종합 · ${esc(cls.name)||''}</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  @page{size:A4;margin:14mm;} *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Pretendard',system-ui,sans-serif;color:#14161f;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .top{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #f0473a;padding-bottom:12px;margin-bottom:16px;}
+  .brand{display:flex;align-items:center;gap:10px;} .brand img{height:28px;}
+  .brand .nm{font-size:16px;font-weight:800;} .brand .nm span{color:#f0473a;} .brand .sub{font-size:11px;color:#6c7488;}
+  h1{font-size:23px;font-weight:800;margin-bottom:3px;} .meta{font-size:12.5px;color:#6c7488;margin-bottom:16px;} .code{font-family:'JetBrains Mono',monospace;color:#2453c4;font-weight:700;}
+  .sum{display:flex;gap:10px;margin-bottom:18px;}
+  .sc{flex:1;background:#f5f7fc;border:1px solid #e6eaf3;border-radius:10px;padding:10px 14px;text-align:center;}
+  .sc .n{font-size:22px;font-weight:800;} .sc .l{font-size:11px;color:#6c7488;}
+  .ms{margin-bottom:18px;break-inside:avoid;} .ms-h{font-size:15px;font-weight:800;color:#2453c4;margin-bottom:4px;} .ms-h span{font-size:11px;color:#9aa1b3;font-weight:700;}
+  .ms-d{font-size:12.5px;color:#6c7488;margin-bottom:8px;}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;} th,td{border-bottom:1px solid #eef0f5;padding:8px;text-align:left;vertical-align:top;}
+  th{font-size:10.5px;color:#9aa1b3;font-weight:700;text-transform:uppercase;} td.nm{font-weight:700;} td.fb{color:#39414f;}
+  .foot{margin-top:18px;font-size:11px;color:#9aa1b3;text-align:right;}
+  .no-print{position:fixed;top:14px;right:14px;} .no-print button{font-family:'Pretendard',sans-serif;font-size:13px;font-weight:700;padding:9px 16px;border-radius:9px;border:0;cursor:pointer;background:#f0473a;color:#fff;}
+  @media print{.no-print{display:none;}}
+</style></head><body>
+<div class="no-print"><button onclick="window.print()">PDF로 저장 / 인쇄</button></div>
+<div class="top"><div class="brand"><img src="${origin}/platform/img/logo-mark.webp" alt="" /><div><div class="nm">Eduino <span>AI</span></div><div class="sub">VISION AI · 수업 종합 결과</div></div></div>
+  <div style="text-align:right;font-size:11px;color:#9aa1b3">발급 ${fmt(new Date().toISOString())}</div></div>
+<h1>${esc(cls.name)||'수업'} 종합 결과</h1>
+<div class="meta">수업 코드 <span class="code">${esc(cls.code)||'-'}</span> · 미션 ${missions.length}개 · 총 제출 <b>${subs.length}</b>건</div>
+<div class="sum">
+  <div class="sc"><div class="n">${subs.length}</div><div class="l">제출</div></div>
+  <div class="sc"><div class="n" style="color:#11a06f">${pass}</div><div class="l">통과</div></div>
+  <div class="sc"><div class="n" style="color:#d97a16">${redo}</div><div class="l">재도전</div></div>
+  <div class="sc"><div class="n" style="color:#9aa1b3">${wait}</div><div class="l">미평가</div></div>
+</div>
+${missions.map(mi=>section(mi.title, mi.content, byMission(mi.id))).join('')}
+${noMission.length?section('미션 미지정 제출', '', noMission):''}
+<div class="foot">© Eduino AI · 브라우저로 직접 배우는 AI 학습 플랫폼</div>
+<script>window.addEventListener('load',function(){setTimeout(function(){window.print();},350);});</script>
+</body></html>`;
+  }
+
   window.Cert={
     print(rec){
       const w=window.open('','vision_cert','width=840,height=1080');
@@ -143,6 +193,11 @@
       const w=window.open('','vision_roster','width=900,height=1100');
       if(!w){ alert('PDF 저장을 위해 팝업을 허용해 주세요.'); return; }
       w.document.open(); w.document.write(rosterHtml(cls, subs||[])); w.document.close();
+    },
+    summary(cls, missions, subs){
+      const w=window.open('','vision_summary','width=900,height=1100');
+      if(!w){ alert('PDF 저장을 위해 팝업을 허용해 주세요.'); return; }
+      w.document.open(); w.document.write(summaryHtml(cls, missions||[], subs||[])); w.document.close();
     }
   };
 })();

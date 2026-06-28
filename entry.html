@@ -72,6 +72,7 @@
   /* 모달 */
   .ov{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(5,6,12,.74);backdrop-filter:blur(6px);}
   .ov.on{display:flex;}
+  .modal.wide{width:min(640px,100%);}
   .modal{position:relative;width:min(460px,100%);max-height:90vh;overflow:auto;background:linear-gradient(180deg,#12162a,#0d1020);
     border:1px solid rgba(59,134,255,.32);border-radius:20px;padding:24px;box-shadow:0 0 0 4px rgba(59,134,255,.14),0 30px 70px rgba(0,0,0,.6);}
   .modal h2{margin:0 0 4px;font-size:19px;font-weight:800;} .modal .sub{margin:0 0 16px;font-size:12.5px;color:var(--ink-3);}
@@ -84,11 +85,14 @@
   .row{display:flex;gap:9px;}
   .codebig{font-family:var(--mono);font-size:38px;font-weight:700;letter-spacing:.12em;color:var(--acc-2);text-align:center;
     background:rgba(59,134,255,.1);border:1px dashed rgba(59,134,255,.4);border-radius:14px;padding:18px;margin:6px 0 16px;}
-  .clist{display:flex;flex-direction:column;gap:8px;max-height:230px;overflow:auto;margin-bottom:14px;}
-  .citem{display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:11px;padding:11px 13px;cursor:pointer;transition:.15s;}
-  .citem:hover{border-color:var(--acc-2);} .citem.sel{border-color:var(--acc-2);background:var(--acc-soft);}
-  .citem .cn{font-weight:700;font-size:14px;} .citem .cc{font-family:var(--mono);font-size:12px;color:var(--acc-2);}
-  .citem .cm{font-size:11px;color:var(--ink-3);}
+  .clist{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-height:300px;overflow:auto;margin-bottom:16px;padding:2px;}
+  .citem{display:flex;flex-direction:column;align-items:flex-start;gap:5px;text-align:left;background:rgba(255,255,255,.05);border:0;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);border-radius:14px;padding:16px 16px;cursor:pointer;transition:.15s;min-height:78px;justify-content:center;}
+  .citem:hover{background:rgba(255,255,255,.09);}
+  .citem.sel{background:var(--acc-soft);box-shadow:inset 0 0 0 2px var(--acc-2);}
+  .citem .cn{font-weight:800;font-size:15px;color:#fff;}
+  .citem .cm{font-size:11.5px;color:var(--ink-3);}
+  @media(max-width:520px){ .clist{grid-template-columns:1fr;} }
   .cl-empty{color:var(--ink-3);font-size:12.5px;text-align:center;padding:18px 0;}
   @media(max-width:560px){ .title{font-size:22px;} .arrow{width:40px;height:40px;} }
 </style>
@@ -127,7 +131,7 @@
 </div>
 <!-- 수업 참여 모달 -->
 <div class="ov" id="joinOv">
-  <div class="modal" id="joinCard"></div>
+  <div class="modal wide" id="joinCard"></div>
 </div>
 
 <script src="/stages/icons.js"></script>
@@ -198,7 +202,8 @@
   function openCreate(){
     $('createCard').innerHTML=`
       <button class="x" onclick="document.getElementById('createOv').classList.remove('on')">✕</button>
-      <h2>👩‍🏫 수업 만들기</h2><p class="sub">수업을 개설하면 입장 코드가 발급돼요.</p>
+      <h2>수업 개설 <span style="font-size:11px;font-weight:700;color:#ff8472;background:rgba(240,71,58,.16);border-radius:6px;padding:3px 8px;vertical-align:middle;margin-left:4px">교사용</span></h2>
+      <p class="sub">교사가 수업을 개설하면 학생 입장 코드가 발급돼요.</p>
       <label class="lbl">수업명</label><input class="in" id="cName" placeholder="예: 3학년 2반 AI 비전 수업" />
       <label class="lbl">예상 인원 (선택)</label><input class="in" id="cCap" type="number" min="1" placeholder="예: 28" />
       <button class="btn" id="cMake">코드 발급하고 개설</button>`;
@@ -227,17 +232,18 @@
     const list=Session.listClasses();
     $('joinCard').innerHTML=`
       <button class="x" onclick="document.getElementById('joinOv').classList.remove('on')">✕</button>
-      <h2>🧑‍🎓 수업 참여하기</h2><p class="sub">참여할 수업을 고르고 코드를 입력하세요.</p>
-      <label class="lbl">개설된 수업</label>
-      <div class="clist" id="clist">${ list.length? list.map(c=>`<div class="citem" data-code="${c.code}"><div><div class="cn">${esc(c.name)}</div><div class="cm">${c.capacity?('정원 '+c.capacity+'명'):'정원 미정'}</div></div><div class="cc">${c.code}</div></div>`).join('') : '<div class="cl-empty">이 기기에 개설된 수업이 없어요. 코드를 직접 입력해도 됩니다.</div>' }</div>
-      <label class="lbl">입장 코드</label><input class="in" id="jCode" placeholder="6자리 코드" maxlength="6" style="text-transform:uppercase;font-family:var(--mono);letter-spacing:.1em" />
+      <h2>수업 참여 <span style="font-size:11px;font-weight:700;color:#42e29b;background:rgba(66,226,155,.16);border-radius:6px;padding:3px 8px;vertical-align:middle;margin-left:4px">학생용</span></h2>
+      <p class="sub">참여할 수업을 고르고, 선생님께 받은 코드를 입력하세요.</p>
+      <label class="lbl">참여할 수업 선택</label>
+      <div class="clist" id="clist">${ list.length? list.map(c=>`<button class="citem" data-code="${c.code}"><div class="cn">${esc(c.name)}</div><div class="cm">${c.capacity?('정원 '+c.capacity+'명'):'정원 미정'}</div></button>`).join('') : '<div class="cl-empty">개설된 수업이 없어요. 코드를 직접 입력해 입장할 수 있어요.</div>' }</div>
+      <label class="lbl">입장 코드</label><input class="in" id="jCode" placeholder="선생님께 받은 6자리 코드" maxlength="6" style="text-transform:uppercase;font-family:var(--mono);letter-spacing:.12em" />
       <label class="lbl">이름 / 번호</label><input class="in" id="jName" placeholder="예: 3학년 2반 김에듀" />
       <button class="btn" id="jEnter">입장하기</button>`;
     $('joinOv').classList.add('on');
     joinSel=null;
     $('joinCard').querySelectorAll('.citem').forEach(it=>it.addEventListener('click',()=>{
       $('joinCard').querySelectorAll('.citem').forEach(x=>x.classList.remove('sel')); it.classList.add('sel');
-      joinSel=it.dataset.code; $('jCode').value=it.dataset.code;
+      joinSel=it.dataset.code; setTimeout(()=>$('jCode').focus(),30);
     }));
     $('jEnter').onclick=()=>{
       const code=($('jCode').value||'').trim().toUpperCase(); const name=($('jName').value||'').trim();

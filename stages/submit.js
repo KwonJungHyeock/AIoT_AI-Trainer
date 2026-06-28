@@ -42,7 +42,12 @@
   .sub-done{text-align:center;padding:8px 0;}
   .sub-done .ic{font-size:46px;}
   .sub-done h3{margin:8px 0 4px;font-size:18px;font-weight:800;}
-  .sub-done p{margin:0 0 16px;font-size:13px;color:#aeb6cf;}`;
+  .sub-done p{margin:0 0 16px;font-size:13px;color:#aeb6cf;}
+  .sub-badge{font-size:11px;font-weight:700;border-radius:6px;padding:3px 8px;margin-left:4px;vertical-align:middle;}
+  .sub-up{border:1.5px dashed rgba(106,166,255,.4);border-radius:12px;background:rgba(59,134,255,.06);cursor:pointer;margin-bottom:13px;overflow:hidden;transition:.15s;}
+  .sub-up:hover{background:rgba(59,134,255,.1);}
+  .sub-up-in{padding:26px 14px;text-align:center;font-size:14px;font-weight:700;color:#aeb6cf;display:flex;flex-direction:column;gap:6px;}
+  .sub-up-in small{font-size:11.5px;color:#737c9c;font-weight:500;}`;
   const st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
 
   const ov=document.createElement('div'); ov.className='sub-ov';
@@ -73,7 +78,7 @@
     const m=modeNow();
     card().innerHTML=`
       <button class="sub-x" id="subX">✕</button>
-      <h2 class="sub-h">클래스 미션 생성</h2>
+      <h2 class="sub-h">클래스 미션 생성 <span class="sub-badge" style="color:#ff8472;background:rgba(240,71,58,.16)">교사용</span></h2>
       <p class="sub-sub">수업 <b>${esc(m.name||'')}</b> <span style="font-family:var(--mono,monospace);color:#6aa6ff">[${esc(m.code||'')}]</span> 에 미션을 추가해요</p>
       <label class="sub-l">미션 제목</label>
       <input class="sub-in" id="mTitle" placeholder="예: 우리 교실 사물 5가지 찾기" />
@@ -95,46 +100,53 @@
     };
   }
 
-  /* ── 학생: 미션 제출(미션 선택 + 이름 + 파일명 + 이미지) ── */
+  /* ── 학생: 미션 제출(저장한 이미지 직접 첨부 + 미션 선택 + 이름) ── */
   function openSubmit(){
-    const m=modeNow(); const missions=(window.Session&&Session.missionsFor(m.code))||[]; const c=cap();
+    const m=modeNow(); const missions=(window.Session&&Session.missionsFor(m.code))||[];
+    let imgData=null;
     card().innerHTML=`
       <button class="sub-x" id="subX">✕</button>
       <h2 class="sub-h">미션 제출</h2>
-      <p class="sub-sub"><b>${esc(m.name||'수업')}</b> 수업에 제출해요</p>
-      ${c?`<img class="sub-prev" src="${c}" alt="제출 이미지" />`:'<p class="sub-sub" style="color:#ff8472">먼저 카메라를 켜고 결과를 만들어 주세요.</p>'}
-      <div class="sub-chips">${(summ()||[]).map(s=>`<span>${esc(s)}</span>`).join('')}</div>
+      <p class="sub-sub"><b>${esc(m.name||'수업')}</b> 수업에 제출해요. <b>저장해 둔 이미지</b>를 첨부하세요.</p>
+      <div class="sub-up" id="sUp">
+        <div class="sub-up-in" id="sUpIn">＋ 저장한 이미지 선택<small>클릭해서 파일 추가 (png · jpg)</small></div>
+        <input type="file" id="sFileInput" accept="image/*" style="display:none" />
+      </div>
       <label class="sub-l">미션 선택</label>
       ${missions.length
         ? `<select class="sub-in" id="sMission">${missions.map(mi=>`<option value="${mi.id}">${esc(mi.title)}</option>`).join('')}</select>`
         : '<div class="sub-sub" style="color:#ffb36a">아직 선생님이 만든 미션이 없어요. 선생님이 ‘클래스 미션 생성’을 하면 선택할 수 있어요.</div>'}
       <label class="sub-l">이름 / 번호</label>
       <input class="sub-in" id="sName" value="${esc(m.student||'')}" placeholder="예: 김에듀" />
-      <label class="sub-l">파일명 (선택)</label>
-      <input class="sub-in" id="sFile" placeholder="예: 우리반_사물탐지" />
       <div class="sub-row"><button class="sub-btn sub-ghost" id="sCancel">취소</button><button class="sub-btn sub-go" id="sGo">제출하기</button></div>`;
-    open(); setTimeout(()=>card().querySelector('#sName').focus(),50);
+    open();
+    const fileInput=card().querySelector('#sFileInput'), up=card().querySelector('#sUp');
+    up.onclick=()=>fileInput.click();
+    fileInput.onchange=()=>{ const f=fileInput.files[0]; if(!f) return;
+      const r=new FileReader(); r.onload=()=>{ imgData=r.result;
+        card().querySelector('#sUpIn').outerHTML=`<img class="sub-prev" id="sUpIn" src="${imgData}" alt="첨부 이미지" style="margin:0" />`;
+      }; r.readAsDataURL(f);
+    };
     card().querySelector('#subX').onclick=close; card().querySelector('#sCancel').onclick=close;
     card().querySelector('#sGo').onclick=()=>{
       const name=(card().querySelector('#sName').value||'').trim();
+      if(!imgData){ alert('제출할 이미지를 먼저 첨부하세요. (이미지 저장 → 그 파일을 선택)'); return; }
       if(!name){ card().querySelector('#sName').focus(); card().querySelector('#sName').style.borderColor='#ff6a52'; return; }
-      if(!c){ alert('제출할 이미지가 없어요. 카메라를 켜고 결과를 만든 뒤 제출하세요.'); return; }
       const sel=card().querySelector('#sMission'); const missionId=sel?sel.value:'';
       const mission=missions.find(x=>x.id===missionId);
-      const fileName=(card().querySelector('#sFile').value||'').trim();
       localStorage.setItem(NAMEKEY,name);
       const rec={ id:'s'+Date.now()+'_'+Math.floor(Math.random()*1e4),
         feature:cfg.feature, label:cfg.label, name, klass:m.name||'',
         classCode:m.code||'', className:m.name||'',
-        missionId:missionId||'', missionTitle:mission?mission.title:'', fileName,
-        note:'', summary:summ()||[], img:c||'',
+        missionId:missionId||'', missionTitle:mission?mission.title:'',
+        note:'', summary:[], img:imgData,
         time:new Date().toISOString(), status:'제출됨', score:null, feedback:'' };
       const list=load(); list.unshift(rec); saveAll(list);
       const cnt=list.filter(s=>s.classCode===m.code).length;
       card().innerHTML=`<div class="sub-done"><div class="ic">✅</div><h3>제출 완료!</h3>
         <p>${mission?('“'+esc(mission.title)+'” 미션에 '):''}제출했어요. 이 수업 게시판에 ${cnt}건.</p>
-        <div class="sub-row"><button class="sub-btn sub-ghost" id="sSave">이미지 저장</button><button class="sub-btn sub-go" id="sClose">확인</button></div></div>`;
-      card().querySelector('#sClose').onclick=close; card().querySelector('#sSave').onclick=saveImage;
+        <div class="sub-row"><button class="sub-btn sub-go" id="sClose">확인</button></div></div>`;
+      card().querySelector('#sClose').onclick=close;
     };
   }
 
