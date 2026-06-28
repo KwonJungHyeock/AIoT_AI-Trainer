@@ -90,8 +90,14 @@
     box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);border-radius:14px;padding:16px 16px;cursor:pointer;transition:.15s;min-height:78px;justify-content:center;}
   .citem:hover{background:rgba(255,255,255,.09);}
   .citem.sel{background:var(--acc-soft);box-shadow:inset 0 0 0 2px var(--acc-2);}
-  .citem .cn{font-weight:800;font-size:15px;color:#fff;}
+  .citem{position:relative;}
+  .citem .cn{font-weight:800;font-size:15px;color:#fff;padding-right:18px;}
   .citem .cm{font-size:11.5px;color:var(--ink-3);}
+  .cdel{position:absolute;top:8px;right:9px;width:20px;height:20px;border-radius:7px;display:grid;place-items:center;
+    font-size:11px;color:var(--ink-3);background:rgba(255,255,255,.06);transition:.15s;}
+  .cdel:hover{color:#fff;background:rgba(240,71,58,.5);}
+  .cdiv{display:flex;align-items:center;gap:10px;margin:4px 0 14px;color:var(--ink-3);font-size:11.5px;}
+  .cdiv::before,.cdiv::after{content:'';flex:1;height:1px;background:var(--line);}
   @media(max-width:520px){ .clist{grid-template-columns:1fr;} }
   .cl-empty{color:var(--ink-3);font-size:12.5px;text-align:center;padding:18px 0;}
   @media(max-width:560px){ .title{font-size:22px;} .arrow{width:40px;height:40px;} }
@@ -198,16 +204,31 @@
   $('createOv').addEventListener('click',e=>{ if(e.target===$('createOv')) closeAll(); });
   $('joinOv').addEventListener('click',e=>{ if(e.target===$('joinOv')) closeAll(); });
 
-  /* 수업 만들기 */
+  /* 수업 만들기 / 이어서 운영 */
+  function resumeTeach(code){ const cls=Session.getClass(code); if(!cls) return;
+    Session.setMode({mode:'teach', code:cls.code, name:cls.name}); Session.arm(); location.href='/studio.html'; }
   function openCreate(){
+    const mine=Session.listClasses();
+    const mineHtml = mine.length ? `
+      <label class="lbl">내가 만든 수업 · 이어서 운영하기</label>
+      <div class="clist" id="myList">${mine.map(c=>{ const n=Session.submissionsFor(c.code).length;
+        return `<button class="citem" data-code="${c.code}"><span class="cdel" data-del="${c.code}" title="목록에서 삭제">✕</span>
+          <div class="cn">${esc(c.name)}</div><div class="cm"><span style="font-family:var(--mono);color:var(--acc-2)">${c.code}</span> · 제출 ${n}건</div></button>`; }).join('')}</div>
+      <div class="cdiv"><span>또는 새 수업 만들기</span></div>` : '';
     $('createCard').innerHTML=`
       <button class="x" onclick="document.getElementById('createOv').classList.remove('on')">✕</button>
-      <h2>수업 개설 <span style="font-size:11px;font-weight:700;color:#ff8472;background:rgba(240,71,58,.16);border-radius:6px;padding:3px 8px;vertical-align:middle;margin-left:4px">교사용</span></h2>
-      <p class="sub">교사가 수업을 개설하면 학생 입장 코드가 발급돼요.</p>
+      <h2>수업 개설 · 운영 <span style="font-size:11px;font-weight:700;color:#ff8472;background:rgba(240,71,58,.16);border-radius:6px;padding:3px 8px;vertical-align:middle;margin-left:4px">교사용</span></h2>
+      <p class="sub">이미 만든 수업을 이어서 운영하거나, 새 수업을 개설하세요.</p>
+      ${mineHtml}
       <label class="lbl">수업명</label><input class="in" id="cName" placeholder="예: 3학년 2반 AI 비전 수업" />
       <label class="lbl">예상 인원 (선택)</label><input class="in" id="cCap" type="number" min="1" placeholder="예: 28" />
       <button class="btn" id="cMake">코드 발급하고 개설</button>`;
-    $('createOv').classList.add('on'); setTimeout(()=>$('cName').focus(),50);
+    $('createOv').classList.add('on'); setTimeout(()=>{ const f=$('cName'); if(f&&!mine.length) f.focus(); },50);
+    $('createCard').querySelectorAll('.citem').forEach(it=>it.addEventListener('click',(e)=>{
+      const del=e.target.closest('[data-del]');
+      if(del){ e.stopPropagation(); if(confirm('이 수업을 목록에서 삭제할까요?\n(제출물은 게시판에 남아있어요)')){ Session.removeClass(del.dataset.del); openCreate(); } return; }
+      resumeTeach(it.dataset.code);
+    }));
     $('cMake').onclick=()=>{
       const name=($('cName').value||'').trim(); if(!name){ $('cName').focus(); $('cName').style.borderColor='#ff6a52'; return; }
       const rec=Session.createClass({name, capacity:$('cCap').value});
@@ -226,32 +247,51 @@
     };
   }
 
-  /* 수업 참여 */
+  /* 수업 참여 / 재참여 */
+  function enterClass(code, name, className){
+    Session.setMode({mode:'class', code, name:className||code, student:name});
+    Session.addRecentJoin({code, name, className:className||code});
+    try{ localStorage.setItem('vision_student_name', name); }catch(e){}
+    Session.arm(); location.href='/studio.html';
+  }
   let joinSel=null;
   function openJoin(){
     const list=Session.listClasses();
+    const recent=Session.recentJoins();
+    const recentHtml = recent.length ? `
+      <label class="lbl">최근 참여한 수업 · 다시 입장</label>
+      <div class="clist" id="recentList">${recent.map(r=>`<button class="citem" data-rcode="${r.code}" data-rname="${esc(r.name)}" data-rcls="${esc(r.className)}">
+        <span class="cdel" data-rdel="${r.code}" title="기록 삭제">✕</span>
+        <div class="cn">${esc(r.className||r.code)}</div><div class="cm"><span style="font-family:var(--mono);color:var(--acc-2)">${r.code}</span>${r.name?(' · '+esc(r.name)):''}</div></button>`).join('')}</div>
+      <div class="cdiv"><span>또는 새 수업 코드로 참여</span></div>` : '';
     $('joinCard').innerHTML=`
       <button class="x" onclick="document.getElementById('joinOv').classList.remove('on')">✕</button>
       <h2>수업 참여 <span style="font-size:11px;font-weight:700;color:#42e29b;background:rgba(66,226,155,.16);border-radius:6px;padding:3px 8px;vertical-align:middle;margin-left:4px">학생용</span></h2>
-      <p class="sub">참여할 수업을 고르고, 선생님께 받은 코드를 입력하세요.</p>
-      <label class="lbl">참여할 수업 선택</label>
-      <div class="clist" id="clist">${ list.length? list.map(c=>`<button class="citem" data-code="${c.code}"><div class="cn">${esc(c.name)}</div><div class="cm">${c.capacity?('정원 '+c.capacity+'명'):'정원 미정'}</div></button>`).join('') : '<div class="cl-empty">개설된 수업이 없어요. 코드를 직접 입력해 입장할 수 있어요.</div>' }</div>
+      <p class="sub">전에 참여한 수업은 한 번에 다시 입장하고, 새 수업은 코드로 참여하세요.</p>
+      ${recentHtml}
+      ${ list.length? `<label class="lbl">이 기기에 등록된 수업</label><div class="clist" id="clist">${list.map(c=>`<button class="citem" data-code="${c.code}"><div class="cn">${esc(c.name)}</div><div class="cm"><span style="font-family:var(--mono);color:var(--acc-2)">${c.code}</span>${c.capacity?(' · 정원 '+c.capacity+'명'):''}</div></button>`).join('')}</div>` : '' }
       <label class="lbl">입장 코드</label><input class="in" id="jCode" placeholder="선생님께 받은 6자리 코드" maxlength="6" style="text-transform:uppercase;font-family:var(--mono);letter-spacing:.12em" />
       <label class="lbl">이름 / 번호</label><input class="in" id="jName" placeholder="예: 3학년 2반 김에듀" />
       <button class="btn" id="jEnter">입장하기</button>`;
     $('joinOv').classList.add('on');
     joinSel=null;
-    $('joinCard').querySelectorAll('.citem').forEach(it=>it.addEventListener('click',()=>{
-      $('joinCard').querySelectorAll('.citem').forEach(x=>x.classList.remove('sel')); it.classList.add('sel');
-      joinSel=it.dataset.code; setTimeout(()=>$('jCode').focus(),30);
+    // 최근 참여 — 원탭 재입장 (로컬에 수업이 없어도 기록으로 복원)
+    $('joinCard').querySelectorAll('[data-rcode]').forEach(it=>it.addEventListener('click',(e)=>{
+      const del=e.target.closest('[data-rdel]');
+      if(del){ e.stopPropagation(); Session.removeRecentJoin(del.dataset.rdel); openJoin(); return; }
+      enterClass(it.dataset.rcode, it.dataset.rname||'', it.dataset.rcls||'');
+    }));
+    // 이 기기 등록 수업 — 코드 자동 채움
+    $('joinCard').querySelectorAll('#clist .citem').forEach(it=>it.addEventListener('click',()=>{
+      $('joinCard').querySelectorAll('#clist .citem').forEach(x=>x.classList.remove('sel')); it.classList.add('sel');
+      joinSel=it.dataset.code; $('jCode').value=it.dataset.code; setTimeout(()=>$('jName').focus(),30);
     }));
     $('jEnter').onclick=()=>{
       const code=($('jCode').value||'').trim().toUpperCase(); const name=($('jName').value||'').trim();
       const cls=Session.getClass(code);
       if(!cls){ $('jCode').style.borderColor='#ff6a52'; alert('일치하는 수업 코드가 없어요. 코드를 확인해 주세요.'); return; }
       if(!name){ $('jName').focus(); $('jName').style.borderColor='#ff6a52'; return; }
-      Session.setMode({mode:'class', code:cls.code, name:cls.name, student:name});
-      Session.arm(); location.href='/studio.html';
+      enterClass(cls.code, name, cls.name);
     };
   }
 

@@ -34,5 +34,14 @@
       list.unshift(rec); localStorage.setItem('vision_missions', JSON.stringify(list)); return rec;
     },
     missionsFor(code){ try{ return JSON.parse(localStorage.getItem('vision_missions')||'[]').filter(m=>m.classCode===code); }catch(e){ return []; } },
+    /* 최근 참여 기억 — 학생이 재접속할 때 코드/이름 재입력 없이 다시 들어가도록 */
+    recentJoins(){ try{ return JSON.parse(localStorage.getItem('vision_recent_joins')||'[]'); }catch(e){ return []; } },
+    addRecentJoin({code, name, className}){
+      try{ let l=this.recentJoins().filter(r=>r.code!==code);
+        l.unshift({ code, name:name||'', className:className||'', at:new Date().toISOString() });
+        localStorage.setItem('vision_recent_joins', JSON.stringify(l.slice(0,8)));
+      }catch(e){}
+    },
+    removeRecentJoin(code){ try{ localStorage.setItem('vision_recent_joins', JSON.stringify(this.recentJoins().filter(r=>r.code!==code))); }catch(e){} },
   };
 })();
