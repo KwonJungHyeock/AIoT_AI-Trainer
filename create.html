@@ -147,12 +147,8 @@
 </main>
 
 <footer class="foot">
-  <div class="infobar" id="infobar"></div>
   <button class="enter" id="enter">미션 시작 <span style="color:var(--acc-2);font-weight:400;font-size:20px">→</span></button>
   <div class="dots" id="dots"></div>
-  <div class="flowhint"><b>클래스 만들기</b> → <b>데이터 수집</b> → <b>모델 학습</b> → <b>추론·평가</b></div>
-  <div class="legend"><kbd>←</kbd> <kbd>→</kbd> 넘기기 · <kbd>⏎</kbd> 시작 · <kbd>ESC</kbd> 콘솔로</div>
-  <div class="cbrand"><img src="/platform/img/logo-mark.webp" alt="" />Eduino <b>AI</b></div>
 </footer>
 
 <script>
@@ -220,10 +216,6 @@
       p.classList.toggle('center', off===0);
     });
     dots.forEach((d,i)=>d.classList.toggle('on', i===cur));
-    const s = FEATURES[cur];
-    document.getElementById('infobar').innerHTML =
-      `<span class="ib-tag">MISSION ${String(cur+1).padStart(2,'0')}</span>` +
-      `<span class="nm">${s.name}</span><span class="tg">${s.tag}</span>`;
   }
   function go(d){ cur=(cur+d+FEATURES.length)%FEATURES.length; render(); sMove(); }
   function to(i){ if(i===cur) return; cur=i; render(); sMove(); }

@@ -29,6 +29,8 @@
   .mk-back:hover{color:#fff;background:rgba(255,255,255,.1);}
   .mk-ttl h2{margin:0;font-size:20px;font-weight:800;letter-spacing:-.02em;}
   .mk-ttl .tag{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#ff8472;background:rgba(240,71,58,.16);border-radius:7px;padding:4px 8px;}
+  .mk-sub{margin:-2px 0 16px;font-size:13px;color:#aeb6cf;line-height:1.55;max-width:760px;}
+  .mk-sub b{color:#ffd36a;}
   .mk-tools{display:flex;gap:8px;flex-wrap:wrap;}
   .mk-b{font-size:12.5px;font-weight:700;color:#aeb6cf;background:rgba(255,255,255,.05);border:0;
     box-shadow:inset 0 1px 0 rgba(255,255,255,.06);border-radius:10px;padding:9px 13px;cursor:pointer;transition:.15s;}
@@ -71,6 +73,7 @@
         <button class="mk-close" id="mkClose">✕</button>
       </div>
     </div>
+    <p class="mk-sub">방금 <b>학습시킨 클래스</b>를 카메라로 보여주면, 내가 정한 <b>반응(소리·이모지·점수…)</b>이 나오는 나만의 작품을 만들어요. 예: “가위→✌️, 바위→점수+1, 보→배경 파랑”.</p>
     <div class="mk-grid">
       <div class="mk-panel">
         <p class="mk-h">규칙 · 클래스를 보면 →</p>
@@ -137,9 +140,11 @@
   const cv=()=>ov.querySelector('#mkStage');
   function drawStage(){
     const c=cv(), ctx=c.getContext('2d'), W=c.width, H=c.height;
-    ctx.clearRect(0,0,W,H); ctx.fillStyle='#05060c'; ctx.fillRect(0,0,W,H);
+    ctx.clearRect(0,0,W,H);
+    const grd=ctx.createLinearGradient(0,0,W,H); grd.addColorStop(0,'#101526'); grd.addColorStop(1,'#070a12');
+    ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
     const cam=activeCam();
-    if(cam){ try{ ctx.save(); ctx.globalAlpha=.85; ctx.drawImage(cam,0,0,W,H); ctx.restore(); }catch(e){} }
+    if(cam){ try{ ctx.save(); ctx.globalAlpha=.9; ctx.drawImage(cam,0,0,W,H); ctx.restore(); }catch(e){} }
     const name=playing?curPred():''; const r=name?rules[name]:null;
     // 배경색 액션
     if(playing && r && r.type==='bg'){ ctx.save(); ctx.globalAlpha=.42; ctx.fillStyle=r.value||'#3b86ff'; ctx.fillRect(0,0,W,H); ctx.restore(); }
@@ -151,8 +156,10 @@
       else { ctx.fillStyle='#fff'; ctx.font='bold 72px Pretendard,system-ui,sans-serif'; ctx.fillText(r.value||'정답!',W/2,H/2); }
       ctx.restore();
     }
-    if(!cam){ ctx.save(); ctx.fillStyle='#737c9c'; ctx.font='15px Pretendard,system-ui,sans-serif'; ctx.textAlign='center';
-      ctx.fillText(playing?'카메라/추론 결과를 기다리는 중…':'미리보기 — 플레이를 누르면 시작',W/2,H-22); ctx.restore(); }
+    if(!cam){ ctx.save(); ctx.textAlign='center';
+      ctx.globalAlpha=.5; ctx.font='64px serif'; ctx.fillText('🎮',W/2,H/2-14); ctx.globalAlpha=1;
+      ctx.fillStyle='#9aa3bf'; ctx.font='bold 16px Pretendard,system-ui,sans-serif';
+      ctx.fillText(playing?'카메라를 켜고 추론을 시작하면 여기서 반응해요':'미리보기 — ▶ 플레이를 누르면 시작',W/2,H/2+44); ctx.restore(); }
     // HUD 업데이트
     ov.querySelector('#mkScore').textContent='SCORE '+score;
     ov.querySelector('#mkCur').textContent = playing ? (name? (name+' · '+curConf()+'%') : '인식 대기') : '대기중';

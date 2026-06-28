@@ -943,6 +943,10 @@
     color: var(--ink-4); font-family: var(--sans); font-size: 12.5px;
     letter-spacing: 0; text-align: center;
   }
+  /* 단일 미션 집중 — 기능 사이드바 숨김(미션 선택은 제작 캐러셀에서) */
+  .app-shell { grid-template-columns: 1fr; }
+  .sidebar { display: none !important; }
+  .content { max-width: 1200px; margin: 0 auto; width: 100%; }
   /* 제출 액션(체험 트랙과 동일 개념) */
   .act-area { display:flex; gap:9px; margin-top:14px; }
   .act { flex:1; font-size:13.5px; font-weight:800; border-radius:11px; padding:12px; cursor:pointer;
@@ -966,8 +970,9 @@
       </div>
     </div>
     <div style="display:flex;gap:10px;align-items:center">
+      <a class="studio-back" href="/create.html">← 뒤로</a>
       <button class="btn" id="boardBtn" data-board style="display:none">게시판</button>
-      <a class="studio-back" href="/studio.html" onclick="try{sessionStorage.setItem(String.fromCharCode(118,111,115,95,112,97,115,115),String(1))}catch(e){}">← 비전 콘솔</a>
+      <a class="studio-back" href="/studio.html" onclick="try{sessionStorage.setItem(String.fromCharCode(118,111,115,95,112,97,115,115),String(1))}catch(e){}">비전 콘솔</a>
     </div>
   </div>
 </header>
