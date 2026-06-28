@@ -20,6 +20,7 @@
     pose:     S('<circle cx="12" cy="4.6" r="2.1"/><path d="M12 6.7v6.1m0 0-3.8 4.9m3.8-4.9 3.8 4.9M7.4 9.2l4.6 1 4.6-1"/>'),
     play:     S('<path d="M7 4.5 19 12 7 19.5Z" fill="currentColor" stroke="none"/>'),
     user:     S('<circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c.6-3.6 3.3-5.6 6.5-5.6s5.9 2 6.5 5.6"/>'),
+    settings: S('<circle cx="12" cy="12" r="3.1"/><path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V20a2 2 0 1 1-4 0v-.07a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H4a2 2 0 1 1 0-4h.07a1.7 1.7 0 0 0 1.56-1.11 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H10a1.7 1.7 0 0 0 1-1.56V4a2 2 0 1 1 4 0v.07a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V10a1.7 1.7 0 0 0 1.56 1H20a2 2 0 1 1 0 4h-.07a1.7 1.7 0 0 0-1.53 1.03Z"/>'),
   };
   function paint(root){ (root||document).querySelectorAll('[data-ic]').forEach(el=>{ const n=el.getAttribute('data-ic'); if(IC[n]&&!el.dataset.painted){ el.innerHTML=IC[n]; el.dataset.painted='1'; } }); }
   window.IC=IC; window.paintIcons=paint;
