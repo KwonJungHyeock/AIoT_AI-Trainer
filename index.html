@@ -6,7 +6,7 @@
 <link rel="icon" href="/favicon.png" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <meta name="theme-color" content="#f6f7fb" />
-<title>EDUINO · AI 학습·추론 체험</title>
+<title>직접 제작 트랙 · VISION AI</title>
 
 <!-- TensorFlow.js + Models -->
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
@@ -3474,10 +3474,10 @@ const FEATURES = {
     panel: 'panel-pretrained', sub: 'sub-segment', type: '사전학습 추론', model: 'BodyPix', desc: '사람과 배경을 픽셀 단위로 분리합니다(얼굴 인식·분류가 아닙니다).' },
 };
 
-/* 사이드바 그룹 구성 — 이 배열 순서대로 렌더된다. */
+/* 사이드바 그룹 구성 — 이 배열 순서대로 렌더된다.
+   컨셉 정리: 제작 트랙(직접 만드는 AI)만 노출. 영상처리 체험은 explore.html → stages/*.html 로 분리됨. */
 const NAV_GROUPS = [
-  { title: 'AI 학습·추론 · 만드는 AI', items: ['image', 'audio', 'pose'] },
-  { title: 'AI 영상처리 · 체험하는 AI', items: ['filter', 'colortrack', 'face', 'skeleton', 'detect'] },
+  { title: '직접 만드는 AI · 제작 트랙', items: ['image', 'audio', 'pose'] },
 ];
 
 /* 단계 네비 — 학습추론/영상처리 기능군에 따라 단계 라벨이 다르다. */
