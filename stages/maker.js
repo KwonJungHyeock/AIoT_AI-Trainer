@@ -65,7 +65,27 @@
   .mk-warn.on{display:block;}
   .mk-toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(18px);z-index:140;font-size:13.5px;font-weight:700;
     color:#04140c;background:#42e29b;border-radius:12px;padding:11px 17px;box-shadow:0 14px 40px rgba(0,0,0,.5);opacity:0;transition:.25s;pointer-events:none;}
-  .mk-toast.on{opacity:1;transform:translateX(-50%) translateY(0);}`;
+  .mk-toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+  .mk-game{background:rgba(255,180,60,.07);border-radius:12px;padding:12px 13px;margin-bottom:14px;}
+  .mk-game .gh{font-size:12px;font-weight:800;color:#ffd36a;margin-bottom:9px;}
+  .mk-grow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;}
+  .mk-grow:last-child{margin-bottom:0;} .mk-grow label{font-size:12.5px;color:#cdb6bd;}
+  .mk-blk{background:rgba(255,255,255,.03);border-radius:12px;padding:11px;margin-bottom:9px;}
+  .mk-blk-h{display:flex;align-items:center;gap:8px;margin-bottom:9px;}
+  .mk-actrow{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+  .mk-del{width:26px;height:30px;flex:none;border:0;border-radius:8px;background:rgba(255,255,255,.05);color:#737c9c;font-size:12px;cursor:pointer;}
+  .mk-del:hover{color:#ff8472;background:rgba(240,71,58,.18);}
+  .mk-addact{font-size:12px;font-weight:700;color:#6aa6ff;background:none;border:0;cursor:pointer;padding:2px;}
+  .mk-addact:hover{color:#9cc0ff;}
+  .mk-stagewrap{position:relative;}
+  .mk-result{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+    background:rgba(5,6,12,.88);border-radius:14px;text-align:center;padding:24px;}
+  .mk-result.on{display:flex;}
+  .mk-result .rt{font-size:40px;font-weight:800;}
+  .mk-result .rs{font-size:15px;color:#aeb6cf;}
+  .mk-result .rrow{display:flex;gap:9px;margin-top:10px;}
+  .mk-rbtn{font-size:14px;font-weight:800;color:#04140c;background:#42e29b;border:0;border-radius:11px;padding:11px 18px;cursor:pointer;}
+  .mk-rbtn.ghost{color:#aeb6cf;background:rgba(255,255,255,.08);}`;
   const st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
 
   const ov=document.createElement('div'); ov.className='mk-ov';
@@ -86,11 +106,12 @@
         <div class="mk-warn" id="mkWarn">먼저 페이지에서 <b>카메라 켜기 → 추론 시작</b>을 누르면, 보이는 클래스에 따라 작품이 반응해요.</div>
         <p class="mk-note">학습한 클래스마다 반응(액션)을 골라 나만의 작품을 만들어요. 같은 방식으로 게임·장면 전환도 만들 수 있어요.</p>
       </div>
-      <div class="mk-panel">
+      <div class="mk-panel mk-stagewrap">
         <div class="mk-h mk-stagehead">무대 · 미리보기
-          <span class="mk-stat"><span class="mk-chip" id="mkCur">대기중</span><span class="mk-chip" id="mkScore">SCORE <b>0</b></span></span>
+          <span class="mk-stat"><span class="mk-chip" id="mkTime" style="display:none">⏱ —</span><span class="mk-chip" id="mkCur">대기중</span><span class="mk-chip" id="mkScore">SCORE <b>0</b></span></span>
         </div>
         <canvas class="mk-stage" id="mkStage" width="640" height="480"></canvas>
+        <div class="mk-result" id="mkResult"></div>
       </div>
     </div>
   </div>`;
@@ -115,45 +136,53 @@
   function curConf(){ const el=document.getElementById('top-donut-pct'); const v=el?parseInt(el.textContent):0; return isNaN(v)?0:v; }
   function activeCam(){ const v=document.getElementById('webcam'); return (v&&v.videoWidth)?v:null; }
 
-  let rules={};   // name -> {type, value}
+  let rules={};   // name -> [ {type,value,color}, ... ]
+  let game={ time:0, target:0 };
+  function ensureRule(name){ if(!rules[name]||!rules[name].length) rules[name]=[{type:'emoji',value:'🎉',color:'#ffffff'}]; return rules[name]; }
+  const typeOpts=()=>Object.entries(ACTIONS).map(([k,a])=>`<option value="${k}">${a.label}</option>`).join('');
+
+  function gameHtml(){
+    const tOpt=[[0,'없음'],[30,'30초'],[60,'60초'],[90,'90초']].map(o=>`<option value="${o[0]}"${game.time===o[0]?' selected':''}>${o[1]}</option>`).join('');
+    return `<div class="mk-game"><div class="gh">🎯 게임 규칙 (선택)</div>
+      <div class="mk-grow"><label>제한 시간</label><select class="mk-sel" id="gTime">${tOpt}</select></div>
+      <div class="mk-grow"><label>목표 점수 <small style="color:#737c9c">(0=없음)</small></label><input class="mk-val" id="gTarget" type="number" min="0" max="99" value="${game.target}" style="width:70px"></div></div>`;
+  }
+  function buildVal(w,a){ const t=a.type;
+    if(t==='emoji'){ w.innerHTML=`<select class="mk-sel mk-emoji" data-role="val">${EMOJIS.map(e=>`<option${e===a.value?' selected':''}>${e}</option>`).join('')}</select>`;
+      w.querySelector('[data-role=val]').onchange=(e)=>a.value=e.target.value; }
+    else if(t==='text'){ w.innerHTML=`<input class="mk-val" type="text" data-role="val" value="${esc(a.value)}" placeholder="정답!" style="width:88px"><input class="mk-val" type="color" data-role="col" value="${a.color||'#ffffff'}" title="글자색">`;
+      w.querySelector('[data-role=val]').oninput=(e)=>a.value=e.target.value; w.querySelector('[data-role=col]').oninput=(e)=>a.color=e.target.value; }
+    else if(t==='bg'){ w.innerHTML=`<input class="mk-val" type="color" data-role="val" value="${a.value||'#3b86ff'}">`;
+      w.querySelector('[data-role=val]').oninput=(e)=>a.value=e.target.value; }
+    else if(t==='tone'){ w.innerHTML=`<select class="mk-sel" data-role="val">${ACTIONS.tone.opts.map(o=>`<option value="${o[0]}"${o[0]===a.value?' selected':''}>${o[1]}</option>`).join('')}</select>`;
+      w.querySelector('[data-role=val]').onchange=(e)=>a.value=e.target.value; }
+    else { w.innerHTML=''; }
+  }
   function renderRules(){
     const cs=readClasses(); const box=ov.querySelector('#mkRules');
     if(!cs.length){ box.innerHTML='<div class="mk-empty">아직 학습한 클래스가 없어요.<br>페이지에서 클래스를 만들고 사진을 모아 <b>모델 학습</b>을 한 뒤 다시 열어주세요.</div>'; return; }
-    const opts=Object.entries(ACTIONS).map(([k,a])=>`<option value="${k}">${a.label}</option>`).join('');
-    box.innerHTML=cs.map(c=>{ const r=rules[c.name]||(rules[c.name]={type:'emoji',value:ACTIONS.emoji.def});
-      return `<div class="mk-rule" data-name="${esc(c.name)}">
-        <span class="mk-dot" style="background:${c.color}"></span>
-        <span class="mk-cn" title="${esc(c.name)}">${esc(c.name)}</span><span class="mk-arrow">→</span>
-        <select class="mk-sel" data-role="type">${opts}</select>
-        <span data-role="valwrap"></span>
-      </div>`; }).join('');
-    box.querySelectorAll('.mk-rule').forEach(row=>{
-      const name=row.dataset.name; const sel=row.querySelector('[data-role=type]'); sel.value=rules[name].type;
-      const drawVal=()=>{ const t=rules[name].type; const w=row.querySelector('[data-role=valwrap]');
-        if(t==='emoji'){
-          w.innerHTML=`<select class="mk-sel mk-emoji" data-role="val">${EMOJIS.map(e=>`<option${e===rules[name].value?' selected':''}>${e}</option>`).join('')}</select>`;
-          const v=w.querySelector('[data-role=val]'); v.value=rules[name].value; v.addEventListener('change',()=>rules[name].value=v.value);
-        } else if(t==='text'){
-          w.innerHTML=`<input class="mk-val" type="text" data-role="val" value="${esc(rules[name].value)}" placeholder="예: 정답!" style="width:100px">`+
-            `<input class="mk-val" type="color" data-role="col" value="${rules[name].color||'#ffffff'}" title="글자색">`;
-          const v=w.querySelector('[data-role=val]'); v.addEventListener('input',()=>rules[name].value=v.value);
-          const cc=w.querySelector('[data-role=col]'); cc.addEventListener('input',()=>rules[name].color=cc.value);
-        } else if(t==='bg'){
-          w.innerHTML=`<input class="mk-val" type="color" data-role="val" value="${rules[name].value||ACTIONS.bg.def}">`;
-          const v=w.querySelector('[data-role=val]'); v.addEventListener('input',()=>rules[name].value=v.value);
-        } else if(t==='tone'){
-          w.innerHTML=`<select class="mk-sel" data-role="val">${ACTIONS.tone.opts.map(o=>`<option value="${o[0]}"${o[0]===rules[name].value?' selected':''}>${o[1]}</option>`).join('')}</select>`;
-          const v=w.querySelector('[data-role=val]'); v.addEventListener('change',()=>rules[name].value=v.value);
-        } else { w.innerHTML=''; }
-      };
-      sel.addEventListener('change',()=>{ rules[name].type=sel.value; rules[name].value=ACTIONS[sel.value].def;
-        if(sel.value==='text') rules[name].color='#ffffff'; drawVal(); });
-      drawVal();
+    box.innerHTML=gameHtml()+cs.map(c=>{ const arr=ensureRule(c.name);
+      return `<div class="mk-blk" data-name="${esc(c.name)}">
+        <div class="mk-blk-h"><span class="mk-dot" style="background:${c.color}"></span><span class="mk-cn" title="${esc(c.name)}">${esc(c.name)}</span><span class="mk-arrow">→</span></div>
+        <div data-role="acts">${arr.map((a,i)=>`<div class="mk-actrow" data-i="${i}"><select class="mk-sel" data-role="type">${typeOpts()}</select><span data-role="valwrap"></span><button class="mk-del" data-del title="삭제">✕</button></div>`).join('')}</div>
+        <button class="mk-addact" data-add>＋ 액션 추가</button></div>`; }).join('');
+    const gT=box.querySelector('#gTime'); if(gT) gT.onchange=()=>game.time=+gT.value;
+    const gG=box.querySelector('#gTarget'); if(gG) gG.oninput=()=>game.target=Math.max(0,+gG.value||0);
+    box.querySelectorAll('.mk-blk').forEach(blk=>{
+      const name=blk.dataset.name; const arr=rules[name];
+      blk.querySelector('[data-add]').addEventListener('click',()=>{ if(arr.length<4){ arr.push({type:'emoji',value:'🎉',color:'#ffffff'}); renderRules(); } });
+      blk.querySelectorAll('.mk-actrow').forEach(row=>{ const i=+row.dataset.i; const a=arr[i]; if(!a) return;
+        const sel=row.querySelector('[data-role=type]'); sel.value=a.type;
+        const w=row.querySelector('[data-role=valwrap]');
+        sel.addEventListener('change',()=>{ a.type=sel.value; a.value=ACTIONS[sel.value]?ACTIONS[sel.value].def:''; if(sel.value==='text') a.color='#ffffff'; buildVal(w,a); });
+        row.querySelector('[data-del]').addEventListener('click',()=>{ arr.splice(i,1); ensureRule(name); renderRules(); });
+        buildVal(w,a);
+      });
     });
   }
 
   /* ── 무대 렌더 + 플레이 루프 ── */
-  let playing=false, raf=0, score=0, lastFired='', frame=0, confetti=[];
+  let playing=false, raf=0, score=0, lastFired='', frame=0, confetti=[], remaining=0, gTimer=null;
   const cv=()=>ov.querySelector('#mkStage');
   const CCOL=['#ff5747','#ffb84d','#42e29b','#6aa6ff','#b98cff','#ff7a90'];
   function spawnConfetti(W){ return { x:Math.random()*W, y:-12, vx:(Math.random()-.5)*2.4, vy:2+Math.random()*3,
@@ -171,14 +200,21 @@
     const cam=activeCam();
     // 카메라: 본 페이지와 동일하게 좌우반전(셀피) 적용
     if(cam){ try{ ctx.save(); ctx.translate(W,0); ctx.scale(-1,1); ctx.globalAlpha=.95; ctx.drawImage(cam,0,0,W,H); ctx.restore(); }catch(e){} }
-    const name=playing?curPred():''; const r=name?rules[name]:null;
-    if(r && r.type==='bg'){ ctx.save(); ctx.globalAlpha=.42; ctx.fillStyle=r.value||'#3b86ff'; ctx.fillRect(0,0,W,H); ctx.restore(); }
-    if(r && r.type==='emoji'){ const bob=Math.sin(frame/8)*10; ctx.save(); ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.shadowColor='rgba(0,0,0,.5)'; ctx.shadowBlur=22; ctx.font='170px serif'; ctx.fillText(r.value||'🎉',W/2,H/2+bob); ctx.restore(); }
-    if(r && r.type==='text'){ const t=r.value||'정답!'; ctx.save(); ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.font='bold 84px Pretendard,system-ui,sans-serif'; ctx.lineJoin='round'; ctx.lineWidth=14; ctx.strokeStyle='rgba(0,0,0,.82)'; ctx.strokeText(t,W/2,H/2);
-      ctx.fillStyle=r.color||'#ffffff'; ctx.fillText(t,W/2,H/2); ctx.restore(); }
-    if(r && r.type==='confetti'){ for(let i=0;i<5;i++) confetti.push(spawnConfetti(W)); }
+    const name=playing?curPred():''; const acts=name?(rules[name]||[]):[];
+    const bg=acts.find(a=>a.type==='bg');
+    if(bg){ ctx.save(); ctx.globalAlpha=.42; ctx.fillStyle=bg.value||'#3b86ff'; ctx.fillRect(0,0,W,H); ctx.restore(); }
+    const emos=acts.filter(a=>a.type==='emoji').map(a=>a.value||'🎉');
+    const txts=acts.filter(a=>a.type==='text');
+    const emojiY = txts.length? H*0.40 : H/2;
+    const textY  = emos.length? H*0.70 : H/2;
+    if(emos.length){ const bob=Math.sin(frame/8)*8; ctx.save(); ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.shadowColor='rgba(0,0,0,.5)'; ctx.shadowBlur=20; const fs=emos.length>=3?108:emos.length===2?132:160; ctx.font=fs+'px serif';
+      emos.forEach((e,i)=>{ const x=emos.length===1?W/2:(W*(i+1)/(emos.length+1)); ctx.fillText(e,x,emojiY+bob); }); ctx.restore(); }
+    if(txts.length){ ctx.save(); ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.font='bold 64px Pretendard,system-ui,sans-serif'; ctx.lineJoin='round'; ctx.lineWidth=12;
+      txts.forEach((a,i)=>{ const y=textY+i*70; const t=a.value||'정답!'; ctx.strokeStyle='rgba(0,0,0,.82)'; ctx.strokeText(t,W/2,y);
+        ctx.fillStyle=a.color||'#ffffff'; ctx.fillText(t,W/2,y); }); ctx.restore(); }
+    if(acts.some(a=>a.type==='confetti')){ for(let i=0;i<5;i++) confetti.push(spawnConfetti(W)); }
     drawConfetti(ctx,W,H);
     if(!cam){ ctx.save(); ctx.textAlign='center';
       ctx.globalAlpha=.5; ctx.font='64px serif'; ctx.fillText('🎮',W/2,H/2-14); ctx.globalAlpha=1;
@@ -191,19 +227,38 @@
     if(!playing) return;
     const name=curPred();
     if(name && name!==lastFired){ // 클래스가 바뀌는 순간 1회성 액션 발동
-      lastFired=name; const r=rules[name];
-      if(r){ if(r.type==='score'){ score++; } else if(r.type==='tone'){ beep(parseInt(r.value)||660); } }
+      lastFired=name; (rules[name]||[]).forEach(a=>{ if(a.type==='score') score++; else if(a.type==='tone') beep(parseInt(a.value)||660); });
+      if(game.target>0 && score>=game.target){ endGame('win'); }
     }
     if(!name) lastFired='';
   }
   function loop(){ if(!playing) return; drawStage(); raf=requestAnimationFrame(loop); }
   let fireTimer=null;
+  function updateTimeChip(){ const c=ov.querySelector('#mkTime'); if(!c) return;
+    if(playing && game.time>0){ c.style.display=''; c.textContent='⏱ '+Math.max(0,remaining); } else c.style.display='none'; }
+  function hideResult(){ const r=ov.querySelector('#mkResult'); if(r) r.classList.remove('on'); }
+  function showResult(reason){ const r=ov.querySelector('#mkResult'); if(!r) return; const win=reason==='win';
+    r.innerHTML=`<div class="rt">${win?'🏆 승리!':'⏱ 시간 종료'}</div>
+      <div class="rs">최종 점수 <b style="color:#42e29b">${score}</b>점${game.target?(' / 목표 '+game.target):''}</div>
+      <div class="rrow"><button class="mk-rbtn ghost" id="mkRsave">결과 저장</button><button class="mk-rbtn" id="mkRagain">다시 플레이</button></div>`;
+    r.classList.add('on');
+    r.querySelector('#mkRagain').onclick=()=>{ hideResult(); play(true); };
+    r.querySelector('#mkRsave').onclick=saveImage;
+  }
+  function endGame(reason){
+    if(!playing) return; playing=false; clearInterval(fireTimer); clearInterval(gTimer); cancelAnimationFrame(raf);
+    const btn=ov.querySelector('#mkPlay'); btn.classList.remove('on'); btn.textContent='▶ 플레이';
+    drawStage(); updateTimeChip(); showResult(reason);
+  }
   function play(on){
     playing=on; const btn=ov.querySelector('#mkPlay');
     btn.classList.toggle('on',on); btn.textContent=on?'⏸ 정지':'▶ 플레이';
     ov.querySelector('#mkWarn').classList.toggle('on', on && !curPred());
-    if(on){ score=0; lastFired=''; frame=0; confetti=[]; clearInterval(fireTimer); fireTimer=setInterval(tickFire,160); cancelAnimationFrame(raf); loop(); }
-    else { clearInterval(fireTimer); cancelAnimationFrame(raf); confetti=[]; drawStage(); }
+    if(on){ hideResult(); score=0; lastFired=''; frame=0; confetti=[]; remaining=game.time||0; updateTimeChip();
+      clearInterval(fireTimer); fireTimer=setInterval(tickFire,160);
+      clearInterval(gTimer); if(game.time>0){ gTimer=setInterval(()=>{ remaining--; updateTimeChip(); if(remaining<=0) endGame('time'); },1000); }
+      cancelAnimationFrame(raf); loop(); }
+    else { clearInterval(fireTimer); clearInterval(gTimer); cancelAnimationFrame(raf); confetti=[]; updateTimeChip(); drawStage(); }
   }
 
   /* 소리 */
