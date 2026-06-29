@@ -1211,6 +1211,7 @@
           <div class="video-wrap">
             <video id="p-webcam" autoplay playsinline muted></video>
             <canvas id="p-pose-overlay" class="pose-overlay"></canvas>
+            <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
             <div class="video-overlay" id="p-cam-overlay">
               <div>
                 <div class="ph">CAMERA · STANDBY</div>
@@ -1297,6 +1298,7 @@
           <div id="p-bars"></div>
           <button class="btn blue" id="p-infer-toggle" disabled style="width:100%;margin-top:14px">추론 시작</button>
           <p class="hint">학습 후 실시간으로 자세를 분류합니다.</p>
+          <div data-actions class="act-area"></div>
         </div>
       </aside>
     </div>
@@ -1373,6 +1375,7 @@
           <div id="a-bars"></div>
           <button class="btn blue" id="a-infer-toggle" disabled style="width:100%;margin-top:14px">추론 시작</button>
           <p class="hint">학습 후 마이크 입력을 실시간으로 분류합니다.</p>
+          <div data-actions class="act-area"></div>
         </div>
       </aside>
     </div>
@@ -3694,10 +3697,11 @@ if (!window.isSecureContext) {
 <script>
 (function(){
   function activeCam(){ const v=document.getElementById('webcam'); if(v&&v.videoWidth) return v;
-    const p=document.getElementById('p-webcam'); if(p&&p.videoWidth) return p; return v||p||null; }
-  function predName(){ const el=document.querySelector('#top-pred .tp-name')||document.querySelector('.tp-name');
-    const t=el?el.textContent.trim():''; return (t&&t!=='아직 학습 전')?t:''; }
-  function predPct(){ const el=document.getElementById('top-donut-pct'); return el?el.textContent.trim():''; }
+    const p=document.getElementById('p-webcam'); if(p&&p.videoWidth) return p; return null; }
+  function predName(){ const sels=['#top-pred .tp-name','#p-top-pred .tp-name','#a-top-pred .tp-name'];
+    for(const s of sels){ const e=document.querySelector(s); if(e){ const t=e.textContent.trim();
+      if(t && !/학습 전|무엇으로/.test(t)) return t; } } return ''; }
+  function predPct(){ for(const id of ['top-donut-pct','p-top-donut-pct','a-top-donut-pct']){ const e=document.getElementById(id); if(e&&e.textContent.trim()) return e.textContent.trim(); } return ''; }
   /* 결과 스냅샷: 현재 카메라 프레임 + 예측 라벨을 합성해 이미지로 반환 */
   function captureResult(){
     const v=activeCam(); const W=640; let H=480; if(v&&v.videoWidth) H=Math.round(W*v.videoHeight/v.videoWidth);
@@ -3708,8 +3712,11 @@ if (!window.isSecureContext) {
     if(name){ ctx.fillStyle='rgba(0,0,0,.62)'; ctx.fillRect(0,H-52,W,52);
       ctx.fillStyle='#fff'; ctx.font='bold 23px Pretendard,system-ui,sans-serif'; ctx.textBaseline='middle';
       ctx.fillText(name+(pct?('  '+pct):''),16,H-26); }
-    if(!v||!v.videoWidth){ ctx.fillStyle='#9c7d84'; ctx.font='15px Pretendard,system-ui,sans-serif';
-      ctx.textAlign='center'; ctx.fillText('카메라/추론 결과가 아직 없어요',W/2,H/2); }
+    if(!v||!v.videoWidth){ // 카메라 없는 트랙(음성 등): 결과 카드로 합성
+      const g=ctx.createLinearGradient(0,0,W,H); g.addColorStop(0,'#1a1320'); g.addColorStop(1,'#0a0b12'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      ctx.textAlign='center'; ctx.fillStyle='#ff8472'; ctx.font='bold 22px Pretendard,system-ui,sans-serif'; ctx.fillText(label()||'직접 제작', W/2, H/2-46);
+      ctx.fillStyle='#f2f4fb'; ctx.font='bold 44px Pretendard,system-ui,sans-serif'; ctx.fillText(name||'결과', W/2, H/2+8);
+      if(pct){ ctx.fillStyle='#aeb6cf'; ctx.font='20px JetBrains Mono, monospace'; ctx.fillText(pct, W/2, H/2+52); } }
     return cv.toDataURL('image/jpeg',0.86);
   }
   function feat(){ const h=(location.hash||'').replace('#',''); return h||'image'; }

@@ -150,27 +150,24 @@
     };
   }
 
-  /* ── 모드별 액션 버튼 렌더 ── */
+  /* ── 모드별 액션 버튼 렌더 (여러 패널의 #actionArea + [data-actions] 모두 지원) ── */
   function renderActions(){
-    const area=document.getElementById('actionArea');
     const bb=document.getElementById('boardBtn');
     const m=modeNow();
     // 교사: 평가 게시판 / 학생: 내 제출 현황 — 둘 다 게시판 버튼 노출(체험 모드만 숨김)
     if(bb){ bb.style.display = (m.mode==='teach'||m.mode==='class') ? '' : 'none';
       if(m.mode==='class'){ bb.title='내 제출 현황'; if(bb.lastChild&&bb.lastChild.nodeType===3) bb.lastChild.textContent=' 내 현황'; }
       else if(m.mode==='teach'){ bb.title='제출 게시판 (평가)'; if(bb.lastChild&&bb.lastChild.nodeType===3) bb.lastChild.textContent=' 게시판'; } }
-    if(!area) return;
-    if(m.mode==='teach'){
-      area.innerHTML='<button class="act act-primary" id="aCreate">＋ 클래스 미션 생성</button>';
-      area.querySelector('#aCreate').onclick=openMissionCreate;
-    } else if(m.mode==='class'){
-      area.innerHTML='<button class="act act-ghost" id="aSave">🖼 이미지 저장</button><button class="act act-primary" id="aSubmit">📤 미션 제출</button>';
-      area.querySelector('#aSave').onclick=saveImage;
-      area.querySelector('#aSubmit').onclick=openSubmit;
-    } else {
-      area.innerHTML='<button class="act act-primary" id="aSave">🖼 이미지 저장하기</button>';
-      area.querySelector('#aSave').onclick=saveImage;
-    }
+    const areas=[...document.querySelectorAll('#actionArea, [data-actions]')];
+    if(!areas.length) return;
+    const html = m.mode==='teach'
+      ? '<button class="act act-primary" data-a="create">＋ 클래스 미션 생성</button>'
+      : m.mode==='class'
+        ? '<button class="act act-ghost" data-a="save">🖼 이미지 저장</button><button class="act act-primary" data-a="submit">📤 미션 제출</button>'
+        : '<button class="act act-primary" data-a="save">🖼 이미지 저장하기</button>';
+    areas.forEach(area=>{ area.innerHTML=html;
+      area.querySelectorAll('[data-a]').forEach(btn=>{ const a=btn.dataset.a;
+        btn.onclick = a==='create'?openMissionCreate : a==='submit'?openSubmit : saveImage; }); });
   }
 
   ov.addEventListener('click',e=>{ if(e.target===ov) close(); });
